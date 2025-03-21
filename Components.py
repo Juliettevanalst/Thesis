@@ -1,9 +1,9 @@
 from mesa import Agent
 import numpy as np
 import random
-from Functions import yield_productivity, calculate_income
+from Functions import education_levels, calculate_livelihood_agrifarm,  calculate_cost, calculate_yield, calculate_income_farming, MOTA_framework
 
-class Farmer (Agent):
+class Agri_farmer (Agent):
     def __init__(self, model, agent_type):
         super().__init__(model)
         self.agent_type = agent_type
@@ -11,26 +11,62 @@ class Farmer (Agent):
     def step(self):
         pass
 
-class Fragile_agri(Farmer):
+class Agri_small(Agri_farmer):
     def __init__(self, model, agent_type, income = 0):
-        super().__init__(model, "Fragile_agri")
+        super().__init__(model, "Agri_small")
         self.income = income
-        self.savings = np.random.normal(53000, 20000) # DETERMINE LATER THE RIGHT INCOME FOR A FRAGILE AGRI FARMER
-        self.land = np.random.normal(20000, 5000) # DETERMINE LATER THE RIGHT AMOUNT OF LAND IN M2
-        self.cost = 0
+        self.household_size = round(np.random.normal(4,1)) # Based on paper by Tran et al., (2020) in An Giang
+        self.savings = np.random.normal(2000, 1000) # DETERMINE LATER THE RIGHT SAVINGS FOR A FRAGILE AGRI FARMER
+        self.land_size = np.random.normal(1.9, 1) # THIS IS AN ASSUMPTION
+        self.cost_farming = 0
+        self.cost_living = 1100 * self.household_size # 1100 euro/year/person
+        self.income_benefits = 0
         self.yield_ = 0
-        self.seeds = 400 # in kg
-        self.crop_type = random.choice(['High_quality_rice', 'Low_quality_rice'])
+        self.crop_type = random.choice(['Triple_rice'])
+        self.seed_quality = random.choice(['High', "Low"])
+        self.salinity = np.random.normal(3, 1) # THIS SHOULD BE DETERMINED LATER
+        self.meeting_agrocensus = 0
+        self.education_level = education_levels(self)
+        self.farming_experience = np.random.normal(0.92, 0.03) # Based on livelihood score farmer experience by Tran et al., (2020) in An Giang, minimum of 5 years experience
+        self.community = 0 
+        self.government_support = 0
+        self.loans = 1 if np.random.rand() > 0.36 else 0 # Based on paper Tran et al., (2020), 0.36% of households gets loans
+        self.loan_size = 0
+        self.measures = [] 
+        self.livelihood = 0
+        
+    def step(self):
+        # Calculate costs based on land size
+        self.cost_farming = calculate_cost(self.crop_type, self.seed_quality, self.land_size)
 
-    def calculate_yield(self):
-        # TO DO: Calculate salinity levels
-        total_yield = self.seeds * self.land * yield_productivity(self.crop_type)
-        return total_yield
+        # Calculate total yield in ton
+        self.yield_ = calculate_yield(self.crop_type, self.salinity, self.land_size)
+
+        # Calculate income based on yield and costs
+        self.income = calculate_income_farming(self.crop_type, self.seed_quality, self.yield_)
+        self.savings += self.income - self.cost_farming - self.cost_living + self.income_benefits
+
+        # Did agrocensus met you this year yes/no?
+        self.meeting_agrocensus = 1 if np.random.rand() > 0.56 else 0 # Based on paper Tran et al., (2020)
+
+        # Calculate livelihood
+        self.livelihood = calculate_livelihood_agrifarm(self.meeting_agrocensus, self.education_level, self.farming_experience,
+        self.community, self.government_support, self.savings, self.loans, self.land_size, self.measures, self.salinity)
+
+        requirements_per_strategy = [{"name": "Drainage", "price": 1000, "knowledge": 0.7, "technical_ability": 1}, 
+        {"name": "Water Reservoir", "price": 1500, "knowledge": 0.5, "technical_ability": 0},
+        {"name": "Crop Diversification", "price": 800, "knowledge": 0.6, "technical_ability": 1}]
+
+        # use MOTA framework
+        livelihood_human = np.average([self.meeting_agrocensus, self.education_level, self.farming_experience])
+        abilities = MOTA_framework(requirements_per_strategy, self.savings, self.loan_size, livelihood_human, self.meeting_agrocensus)
+    
+        
         
 
-    def step(self):
-        total_yield = self.calculate_yield()
-        yearly_income = calculate_income(self.crop_type, total_yield)
-        self.income = yearly_income
-        self.savings += self.income
+        
+        
+
+    
+
 

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import random
 
-from Components import Fragile_agri
+from Components import Agri_small
 
 class Mekong_delta_model(Model):
     def __init__(self, seed, width = 10, height = 10, num_agents = 20):
@@ -15,12 +15,13 @@ class Mekong_delta_model(Model):
         self.grid = SingleGrid(width,height, torus=False) # Agents are for now put on a grid, with 4 neighbours 
 
         model_metrics = {}
-        agent_metrics = {"Income":"income", "Savings":"savings"}
+        agent_metrics = {"Cost_farming": "cost_farming","Cost_living": "cost_living","Income":"income", 
+        "Savings":"savings", "Salinity":"salinity", "livelihood":"livelihood"}
         self.datacollector = DataCollector(model_reporters = model_metrics, agent_reporters = agent_metrics)
 
         for i in range(self.num_agents):
-            agent_type = "Fragile_agri"
-            agent = Fragile_agri(self, agent_type)
+            agent_type = "Agri_small"
+            agent = Agri_small(self, agent_type)
 
             self.agents.add(agent)
 
