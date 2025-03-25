@@ -2,6 +2,33 @@ import random
 from mesa import Agent
 import numpy as np
 
+def create_household(max_number_children, max_number_grandparents):
+    num_parents = 2
+    parent_ages = [np.random.randint(20,50) for _ in range(num_parents)]
+    num_grandparents = np.random.randint(2,max_number_grandparents)
+    grandparent_ages = [np.random.randint(50,80) for _ in range(num_grandparents)]
+    num_children = np.random.randint(0,max_number_children)
+    child_ages = []
+    if num_children > 0:
+        first_child_age = np.random.randint(0,25)
+        child_ages.append(first_child_age)
+        for i in range(num_children-1):
+            min_age = max(0, first_child_age - 5) # Max 5 year difference between children
+            max_age = min(25, first_child_age + 5)
+            new_child_age = np.random.randint(min_age, max_age + 1)
+            child_ages.append(new_child_age)
+    ages = child_ages + parent_ages + grandparent_ages
+    return ages
+
+def die(ages):
+    survived_ages = []
+    for age in ages:
+        chance_death = min(1, max(0, (age - 80 + 10) / (2 * 10))) # Average death age = 80, std = 10 BASED ON NOTHING
+        if np.random.rand() > chance_death:
+            survived_ages.append(age) # These agents survive
+    ages = survived_ages
+    return ages
+
 def education_levels(self): # Based on Tran et al., (2020)
     education_levels = {"Primary":0.3, "Secondary":0.5, "Tertiary":0.6, "Higher education":0.7} # Based on nothing, basic education is useful but higher is less useful?
     probabilities = [0.475, 0.337, 0.158, 0.030] # Based on Tran et al., (2020)
@@ -81,8 +108,6 @@ def MOTA_framework(strategies, savings, loan, human_livelihood, agro_meeting):
             "technical_ability": technical_ability,
             "average_ability": avg_ability
         })
-
-    print(abilities)
     return abilities
 
     

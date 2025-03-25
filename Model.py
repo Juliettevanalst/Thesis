@@ -9,14 +9,14 @@ from Components import Agri_small
 
 class Mekong_delta_model(Model):
     def __init__(self, seed, width = 10, height = 10, num_agents = 20):
-        super().__init__(seed = seed)
+        super().__init__(seed = 20)
 
         self.num_agents = num_agents
         self.grid = SingleGrid(width,height, torus=False) # Agents are for now put on a grid, with 4 neighbours 
 
         model_metrics = {}
         agent_metrics = {"Cost_farming": "cost_farming","Cost_living": "cost_living","Income":"income", 
-        "Savings":"savings", "Salinity":"salinity", "livelihood":"livelihood"}
+        "Savings":"savings", "Salinity":"salinity", "livelihood":"livelihood", "Ages":"ages"}
         self.datacollector = DataCollector(model_reporters = model_metrics, agent_reporters = agent_metrics)
 
         for i in range(self.num_agents):
