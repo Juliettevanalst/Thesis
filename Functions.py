@@ -37,12 +37,13 @@ def education_levels(self): # Based on Tran et al., (2020)
     return education
 
 def calculate_livelihood_agrifarm(meeting_agrocensus, education_level, farming_experience,community, government_support, savings, loans, land_size, measures, salinity):
-    livelihood_human = np.average([meeting_agrocensus, education_level, farming_experience])
-    livelihood_social = np.average([community, government_support])
-    livelihood_financial = np.average([(max(0, min(savings / 10000, 1))), loans])
-    livelihood_physical = np.average([(max(0, min(land_size / 2, 1))), (max(0, min(len(measures)*0.3, 1)))]) # Each measure increases the score by 0.3
-    livelihood_natural = min(1, (1-salinity/12)) # maximum sainity = 12
-    livelihood = np.average([livelihood_human, livelihood_social, livelihood_financial, livelihood_physical, livelihood_natural])
+    livelihood = {} 
+    livelihood['human'] = np.average([meeting_agrocensus, education_level, farming_experience])
+    livelihood['social'] = np.average([community, government_support])
+    livelihood['financial'] = np.average([(max(0, min(savings / 10000, 1))), loans])
+    livelihood['physical'] = np.average([(max(0, min(land_size / 2, 1))), (max(0, min(len(measures)*0.3, 1)))]) # Each measure increases the score by 0.3
+    livelihood['natural'] = min(1, (1-salinity/12)) # maximum sainity = 12
+    livelihood['average'] = np.average([livelihood['human'], livelihood['social'], livelihood['financial'], livelihood['physical'], livelihood['natural']])
     return livelihood
 
 def calculate_cost(crop_type, seed_quality, land_size):
@@ -69,46 +70,101 @@ def calculate_income_farming(crop_type, seed_quality,  total_yield):
     yield_income = price * total_yield
     return yield_income 
 
-def MOTA_framework(strategies, savings, loan, human_livelihood, agro_meeting):
+def define_abilities(possible_strategies, strategies_requirements, savings, loan, human_livelihood, agro_meeting):
     abilities = []
 
-    for strategy in strategies:
-        price, knowledge_needed, tech_needed = strategy['price'], strategy['knowledge'], strategy['technical_ability']
+    for strategy in strategies_requirements:
+        if strategy['name'] in possible_strategies: # Check if strategy is possible
 
-        # Financial Ability
-        if savings >= price:
-            financial_ability = 1
-        elif savings + loan >= price:
-            financial_ability = (savings+loan)/price
-        else:
-            financial_ability = 0
+            # Financial Ability
+            if savings >= strategy['price']:
+                financial_ability = 1
+            elif savings + loan >= strategy['price']:
+                financial_ability = (savings+loan)/strategy['price']
+            else:
+                financial_ability = 0
 
-        # Institutional Ability
-        if human_livelihood >= knowledge_needed:
-            institutional_ability = 1
-        else:
-            institutional_ability = max(0, human_livelihood / knowledge_needed)
+            # Institutional Ability
+            if human_livelihood >= strategy['knowledge']:
+                institutional_ability = 1
+            else:
+                institutional_ability = max(0, human_livelihood / strategy['knowledge'])
 
-        # Technical Ability
-        if agro_meeting == 1:
-            technical_ability = 1
-        elif tech_needed == 0:
-            technical_ability = 1
-        else:
-            technical_ability = 0
+            # Technical Ability
+            if agro_meeting == 1:
+                technical_ability = 1
+            elif strategy['technical_ability'] == 0:
+                technical_ability = 1
+            else:
+                technical_ability = 0
 
-        # Average Ability
-        avg_ability = (financial_ability + institutional_ability + technical_ability) / 3
-        
-        # Add results per strategy to a list
-        abilities.append({
-            "strategy": strategy['name'],
-            "financial_ability": financial_ability,
-            "institutional_ability": institutional_ability,
-            "technical_ability": technical_ability,
-            "average_ability": avg_ability
-        })
+            # Average Ability
+            avg_ability = (financial_ability + institutional_ability + technical_ability) / 3
+            
+            # Add results per strategy to a list
+            abilities.append({
+                "strategy": strategy['name'],
+                "financial_ability": financial_ability,
+                "institutional_ability": institutional_ability,
+                "technical_ability": technical_ability,
+                "average_ability": avg_ability
+            })
     return abilities
+
+def motivation__per_strategy(possible_strategies, strategies_requirements, livelihood_financial, livelihood_natural):
+    motivations = {}
+    for strategy in strategies_requirements:
+        name = strategy['name']
+        if name in possible_strategies: # Check if the strategy is possible or not for the farmer
+            if strategy['type'] == "Water":
+                if livelihood_natural < 0.3: # These numbers are based on nothing 
+                    motivation = 1
+                elif livelihood_natural > 0.7:
+                    motivation = 0.1
+                else:
+                    motivation = 0.5
+                motivations[name] = motivation
+            elif strategy['type'] == "Crops":
+                if livelihood_natural < 0.3:
+                    motivation = 1
+                elif livelihood_financial > 0.7:
+                    motivation = 0
+                else:
+                    motivation = 0.5
+                motivations[name] = motivation
+    return motivations
+
+def calculate_MOTA(motivations, abilities):
+    MOTA_scores = {}
+    for strategy in abilities:
+        name = strategy['strategy']
+        average_ability = strategy['average_ability']
+        motivation = motivations[name]
+        MOTA_scores[name] = average_ability * motivation
+    return MOTA_scores
+
+def find_best_strategy(MOTA_scores):
+    highest_score = max(MOTA_scores.values())
+    best_strategies = [name for name, score in MOTA_scores.items() if score == highest_score]
+    best_strategy = random.choice(best_strategies)
+    change = best_strategy if highest_score > 0.2 else None
+    return change
+
+def implement_strategy(change, savings, possible_strategies, requirements):
+    # Delete change from possible strategies
+    for strategy in requirements:
+        if strategy["name"] == change:
+            print("possible strategies are: ", possible_strategies)
+            print("Change is: ", change) 
+            savings -= strategy["price"] # Pay for the strategy based on requirements
+            possible_strategies.remove(change) # It is possible to only implement a strategy ones
+            print("Possible strategies left: ", possible_strategies)
+            # technical abilities should increase, this should be implemented!!! 
+        break
+    return possible_strategies, savings
+
+
+
 
     
 
