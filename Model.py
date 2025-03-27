@@ -16,8 +16,8 @@ class Mekong_delta_model(Model):
         self.grid = SingleGrid(width,height, torus=False) # Agents are for now put on a grid, with 4 neighbours 
 
         model_metrics = {}
-        agent_metrics = {"Cost_farming": "cost_farming","Cost_living": "cost_living","Income":"income", 
-        "Savings":"savings", "Salinity":"salinity", "livelihood":"livelihood", "Ages":"ages", "MOTA scores": "MOTA_scores", "Change":"change", "Possible_strategies" : "possible_strategies"}
+        agent_metrics = {"Cost_farming": "cost_farming","Cost_living": "cost_living","Income":"income", "Crop type":"crop_type", 
+        "Savings":"savings", "Salinity":"salinity", "livelihood":"livelihood", "Ages":"ages", "MOTA scores": "MOTA_scores", "Change":"change", "Possible strategies" : lambda agent: agent.possible_strategies.copy()}
         self.datacollector = DataCollector(model_reporters = model_metrics, agent_reporters = agent_metrics)
 
         for i in range(self.num_agents):
@@ -39,4 +39,5 @@ class Mekong_delta_model(Model):
     def step(self):
         self.datacollector.collect(self)
         self.agents.shuffle_do('step') # Use random activation
+        
         

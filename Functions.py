@@ -3,31 +3,73 @@ from mesa import Agent
 import numpy as np
 
 def create_household(max_number_children, max_number_grandparents):
+    # Define number of parents. There are 2 parents, aged between 20 and 50, and their age difference is maximum 5 years
     num_parents = 2
-    parent_ages = [np.random.randint(20,50) for _ in range(num_parents)]
-    num_grandparents = np.random.randint(2,max_number_grandparents)
+    parent_ages = [np.random.randint(20,50)]
+    mininum_age_2ndparent = max(20, parent_ages[0]- 5)
+    maximum_age_2ndparent = min(45, parent_ages[0]+5)
+    second_parent_age = np.random.randint(mininum_age_2ndparent, maximum_age_2ndparent + 1)
+    parent_ages.append(second_parent_age)
+    parent_ages.sort()
+
+    # Define grandparents. They are between 50 and 80
+    num_grandparents = np.random.randint(0,max_number_grandparents)
     grandparent_ages = [np.random.randint(50,80) for _ in range(num_grandparents)]
+
+    # Define children. The first child should be minimal 16 years younger than the youngest parent. 
+    # When there are already children, the age difference should be maximum of 5 years
     num_children = np.random.randint(0,max_number_children)
     child_ages = []
     if num_children > 0:
-        first_child_age = np.random.randint(0,25)
+        minimum_age_1stchild = parent_ages[0] - 16
+        first_child_age = np.random.randint(0,min(minimum_age_1stchild, 20))
         child_ages.append(first_child_age)
-        for i in range(num_children-1):
-            min_age = max(0, first_child_age - 5) # Max 5 year difference between children
-            max_age = min(25, first_child_age + 5)
-            new_child_age = np.random.randint(min_age, max_age + 1)
-            child_ages.append(new_child_age)
+
+        for i in range(num_children - 1):
+            minimum_age = max(0, first_child_age - 5)
+            maximum_age = min(25, first_child_age - 1)
+            if minimum_age < maximum_age:
+                new_child_age = np.random.randint(minimum_age, maximum_age + 1)
+                child_ages.append(new_child_age)
+                first_child_age = new_child_age
+
+    # Combine all ages together
     ages = child_ages + parent_ages + grandparent_ages
     return ages
 
 def die(ages):
+    # Each step, it is checked if an agent will die or not. The average death age = 80 with a std.dev of 10 years
     survived_ages = []
     for age in ages:
-        chance_death = min(1, max(0, (age - 80 + 10) / (2 * 10))) # Average death age = 80, std = 10 BASED ON NOTHING
+        chance_death = min(1, max(0, (age - 80 + 10) / (2 * 10))) # VALUES SHOULD BE DETERMINED LATER
         if np.random.rand() > chance_death:
             survived_ages.append(age) # These agents survive
+
+    # Return all the agents that did not die, and sort them by age to make it easier
     ages = survived_ages
+    ages.sort()
     return ages
+
+def child_birth(ages, birth_rate, maximum_number_of_children):
+    # When the number of children did not reach the max value, it is possible a child will be created
+    if len([x for x in ages if x < 18]) < maximum_number_of_children:
+        # To give birth to a child, the household members should be aged between 18 and 45
+        if any(18 <= age <= 45 for age in ages): 
+            #  A child is only born when there is a maximum age difference of 5 years old
+            if min(ages) <= 5: 
+                if np.random.rand() < birth_rate:
+                    ages.append(0)
+
+    # It is also possible that this is the first child 
+    elif len([x for x in ages if x < 18]) == 0: 
+        # When a parent is older than 45 it will not get a child anymore
+        if min(ages) < 45: 
+            if np.random.rand() < birth_rate:
+                ages.append(0) 
+                
+    # Return the new ages
+    ages.sort()
+    return ages       
 
 def education_levels(self): # Based on Tran et al., (2020)
     education_levels = {"Primary":0.3, "Secondary":0.5, "Tertiary":0.6, "Higher education":0.7} # Based on nothing, basic education is useful but higher is less useful?
@@ -144,23 +186,19 @@ def calculate_MOTA(motivations, abilities):
     return MOTA_scores
 
 def find_best_strategy(MOTA_scores):
-    highest_score = max(MOTA_scores.values())
+    highest_score = max(MOTA_scores.values()) # Check which strategy has the highest MOTA score 
     best_strategies = [name for name, score in MOTA_scores.items() if score == highest_score]
-    best_strategy = random.choice(best_strategies)
-    change = best_strategy if highest_score > 0.2 else None
+    best_strategy = random.choice(best_strategies) # If multiple strategies have the highest score, this will be random determined
+    change = best_strategy if highest_score > 0.2 else None # If the highest MOTA score is below 0.2, the agent will change nothing (realistic value for 0.2 should be determined later!!)
     return change
 
 def implement_strategy(change, savings, possible_strategies, requirements):
     # Delete change from possible strategies
     for strategy in requirements:
         if strategy["name"] == change:
-            print("possible strategies are: ", possible_strategies)
-            print("Change is: ", change) 
             savings -= strategy["price"] # Pay for the strategy based on requirements
             possible_strategies.remove(change) # It is possible to only implement a strategy ones
-            print("Possible strategies left: ", possible_strategies)
             # technical abilities should increase, this should be implemented!!! 
-        break
     return possible_strategies, savings
 
 
