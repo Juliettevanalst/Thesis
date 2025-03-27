@@ -89,8 +89,8 @@ class Agri_small(Agri_farmer):
         self.land_size = np.random.normal(1.9, 1) # THIS IS AN ASSUMPTION
         self.cost_farming = 0
         self.yield_ = 0
-        self.crop_type = random.choice(['Triple_rice'])
-        self.seed_quality = random.choice(['High', "Low"])
+        self.crop_type = np.random.choice(['Triple_rice'])
+        self.seed_quality = np.random.choice(['High', "Low"])
         self.salinity = np.random.normal(3, 1) # THIS SHOULD BE DETERMINED LATER
         self.meeting_agrocensus = 0
         self.farming_experience = np.random.normal(0.92, 0.03) # Based on livelihood score farmer experience by Tran et al., (2020) in An Giang, minimum of 5 years experience

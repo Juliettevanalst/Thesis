@@ -9,11 +9,15 @@ import numpy as np
 from Components import Agri_small
 
 class Mekong_delta_model(Model):
-    def __init__(self, seed, width = 10, height = 10, num_agents = 20):
-        super().__init__()
+    def __init__(self, seed = 20, width = 10, height = 10, num_agents = 20):
+        super().__init__(seed = seed)
 
         self.num_agents = num_agents
-        self.grid = SingleGrid(width,height, torus=False) # Agents are for now put on a grid, with 4 neighbours 
+        self.grid = SingleGrid(width,height, torus=False) # Agents are for now put on a grid, with 4 neighbours
+
+        self.seed = seed
+        random.seed(20)
+        np.random.seed(20)
 
         model_metrics = {}
         agent_metrics = {"Cost_farming": "cost_farming","Cost_living": "cost_living","Income":"income", "Crop type":"crop_type", 
@@ -31,10 +35,7 @@ class Mekong_delta_model(Model):
                 y = self.random.randrange(self.grid.height)
                 if self.grid.is_cell_empty((x,y)):
                     break
-            self.grid.place_agent(agent, (x,y)) # Distribute agents over the grid
-
-        random.seed(20)
-        np.random.seed(20)
+            self.grid.place_agent(agent, (x,y)) # Distribute agents over the grid        
 
     def step(self):
         self.datacollector.collect(self)

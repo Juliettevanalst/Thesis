@@ -5,10 +5,10 @@ import numpy as np
 def create_household(max_number_children, max_number_grandparents):
     # Define number of parents. There are 2 parents, aged between 20 and 50, and their age difference is maximum 5 years
     num_parents = 2
-    parent_ages = [np.random.randint(20,50)]
+    parent_ages = [random.randint(20,50)]
     mininum_age_2ndparent = max(20, parent_ages[0]- 5)
     maximum_age_2ndparent = min(45, parent_ages[0]+5)
-    second_parent_age = np.random.randint(mininum_age_2ndparent, maximum_age_2ndparent + 1)
+    second_parent_age = random.randint(mininum_age_2ndparent, maximum_age_2ndparent + 1)
     parent_ages.append(second_parent_age)
     parent_ages.sort()
 
@@ -66,12 +66,13 @@ def child_birth(ages, birth_rate, maximum_number_of_children):
         if min(ages) < 45: 
             if np.random.rand() < birth_rate:
                 ages.append(0) 
-                
+
     # Return the new ages
     ages.sort()
     return ages       
 
 def education_levels(self): # Based on Tran et al., (2020)
+    np.random.seed(20)
     education_levels = {"Primary":0.3, "Secondary":0.5, "Tertiary":0.6, "Higher education":0.7} # Based on nothing, basic education is useful but higher is less useful?
     probabilities = [0.475, 0.337, 0.158, 0.030] # Based on Tran et al., (2020)
     education_type = np.random.choice(list(education_levels.keys()), p=probabilities)
@@ -98,7 +99,7 @@ def calculate_cost(crop_type, seed_quality, land_size):
 
 def calculate_yield(crop_type, salinity, land_size):
     if crop_type == 'Triple_rice':
-        yield_per_ha = random.uniform(0.6, 0.8) # Average yield of rice is 0.6 or 0.8 ton/ha
+        yield_per_ha = np.random.uniform(0.6, 0.8) # Average yield of rice is 0.6 or 0.8 ton/ha
         threshold = 3
         slope = 12
         current_salinity = salinity
@@ -188,7 +189,7 @@ def calculate_MOTA(motivations, abilities):
 def find_best_strategy(MOTA_scores):
     highest_score = max(MOTA_scores.values()) # Check which strategy has the highest MOTA score 
     best_strategies = [name for name, score in MOTA_scores.items() if score == highest_score]
-    best_strategy = random.choice(best_strategies) # If multiple strategies have the highest score, this will be random determined
+    best_strategy = np.random.choice(best_strategies) # If multiple strategies have the highest score, this will be random determined
     change = best_strategy if highest_score > 0.2 else None # If the highest MOTA score is below 0.2, the agent will change nothing (realistic value for 0.2 should be determined later!!)
     return change
 
