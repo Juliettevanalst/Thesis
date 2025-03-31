@@ -1,7 +1,7 @@
 from mesa import Agent
 import numpy as np
 import random
-from Functions import create_household, die, child_birth, education_levels, calculate_livelihood_agrifarm,  calculate_cost, calculate_yield, calculate_income_farming, define_abilities, motivation__per_strategy, calculate_MOTA, find_best_strategy, implement_strategy
+from Functions import create_household, die, child_birth, education_levels, calculate_livelihood_agrifarm,  calculate_cost, calculate_yield, calculate_income_farming, calculate_additional_income, define_abilities, motivation__per_strategy, calculate_MOTA, find_best_strategy, implement_strategy
 
 class Agri_farmer (Agent):
     def __init__(self, model, agent_type):
@@ -35,19 +35,24 @@ class Agri_farmer (Agent):
 
         # Calculate income based on yield and costs, and update savings
         self.income = calculate_income_farming(self.crop_type, self.seed_quality, self.yield_)
-        self.savings += self.income - self.cost_farming - self.cost_living + self.income_benefits
 
         # Did agrocensus met you this year yes/no?
         self.meeting_agrocensus = 1 if np.random.rand() > 0.56 else 0 # Based on paper Tran et al., (2020)
 
+        # Check if you can get governmental support if your yield is too low
+        self.government_support, self.additional_income_yield = calculate_additional_income(self.meeting_agrocensus, self.income, self.land_size)
+
+        # Update savings
+        self.savings += self.income - self.cost_farming - self.cost_living + self.income_benefits     
+
         # Calculate livelihood
         self.livelihood = calculate_livelihood_agrifarm(self.meeting_agrocensus, self.education_level, self.farming_experience,
-        self.community, self.government_support, self.savings, self.loans, self.land_size, self.measures, self.salinity)
+        self.community, self.government_support, self.savings, self.loans, self.land_size, self.equipment_level, self.salinity)
 
         #Check if it is possible to change, or if all adaptation and changes have been implemented
         if self.possible_strategies:
             # Define technical ability, institutional ability and financial ability
-            abilities = define_abilities(self.possible_strategies, requirements_per_strategy, self.savings, self.loan_size, self.livelihood['human'], self.meeting_agrocensus)
+            abilities = define_abilities(self.possible_strategies, requirements_per_strategy, self.savings, self.loan_size, self.maximal_debt, self.livelihood['human'], self.meeting_agrocensus)
 
             # Define motivation for each strategy
             motivations = motivation__per_strategy(self.possible_strategies, requirements_per_strategy, self.livelihood['financial'], self.livelihood['natural'])
@@ -65,7 +70,7 @@ class Agri_farmer (Agent):
 
         # Implement change
         if self.change is not None:
-            self.possible_strategies, self.savings = implement_strategy(self.change, self.savings, self.possible_strategies, requirements_per_strategy)
+            self.possible_strategies, self.savings, self.loan_size, self.maximal_debt = implement_strategy(self.change, self.savings, self.possible_strategies, requirements_per_strategy, self.loan_size, self.maximal_debt)
         
         
 
@@ -84,6 +89,7 @@ class Agri_small(Agri_farmer):
         self.livelihood = 0
         self.community = 0 
         self.government_support = 0
+        self.additional_income_yield = 0
 
         # Define farmer characteristics
         self.land_size = np.random.normal(1.9, 1) # THIS IS AN ASSUMPTION
@@ -97,7 +103,10 @@ class Agri_small(Agri_farmer):
         
         self.loans = 1 if np.random.rand() > 0.36 else 0 # Based on paper Tran et al., (2020), 0.36% of households get loans
         self.loan_size = 0
-        self.measures = [] 
+        self.house_price = np.random.normal(2000, 300)
+        self.value_of_assets = self.land_size * 3000 + self.house_price # Value of assets depends on land size and the value of the house
+        self.maximal_debt = self.value_of_assets
+        self.equipment_level = np.random.normal(0.3,0.1) 
         self.possible_strategies = ["Drainage", "Water Reservoir", "Crop Diversification"] # These will be changed later when actual changes are identified
         self.MOTA_scores = {}
         

@@ -21,7 +21,7 @@ class Mekong_delta_model(Model):
 
         model_metrics = {}
         agent_metrics = {"Cost_farming": "cost_farming","Cost_living": "cost_living","Income":"income", "Crop type":"crop_type", 
-        "Savings":"savings", "Salinity":"salinity", "livelihood":"livelihood", "Ages":"ages", "MOTA scores": "MOTA_scores", "Change":"change", "Possible strategies" : lambda agent: agent.possible_strategies.copy()}
+        "Savings":"savings", "Loan size":'loan_size', "Salinity":"salinity", "livelihood":"livelihood", "extra income bad yield": "additional_income_yield" ,"Ages":"ages", "MOTA scores": "MOTA_scores", "Change":"change", "Possible strategies" : lambda agent: agent.possible_strategies.copy()}
         self.datacollector = DataCollector(model_reporters = model_metrics, agent_reporters = agent_metrics)
 
         for i in range(self.num_agents):
