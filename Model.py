@@ -6,10 +6,10 @@ import networkx as nx
 import random
 import numpy as np
 
-from Components import Agri_small_saline, Agri_small_fresh, Agri_middle_saline, Agri_middle_fresh, Agri_corporate_saline, Agri_corporate_fresh
+from Components import Agri_small_saline, Agri_small_fresh, Agri_middle_saline, Agri_middle_fresh, Agri_corporate_saline, Agri_corporate_fresh, Aqua_small
 
 class Mekong_delta_model(Model):
-    def __init__(self, seed=20, width = 15, height = 15, num_agents = {"Agri_small_saline": 20, "Agri_small_fresh": 20, "Agri_middle_saline":20, "Agri_middle_fresh": 20, "Agri_corporate_saline":20, "Agri_corporate_fresh": 20}):
+    def __init__(self, seed=20, width = 15, height = 15, num_agents = {"Agri_small_saline": 0, "Agri_small_fresh": 0, "Agri_middle_saline":0, "Agri_middle_fresh": 0, "Agri_corporate_saline":0, "Agri_corporate_fresh": 0, "Aqua_small":20}):
         super().__init__(seed = seed)
 
         self.num_agents = num_agents
@@ -19,7 +19,7 @@ class Mekong_delta_model(Model):
         random.seed(20)
         np.random.seed(20)
 
-        agent_classes = {"Agri_small_saline": Agri_small_saline, "Agri_small_fresh": Agri_small_fresh, "Agri_middle_saline": Agri_middle_saline,"Agri_middle_fresh": Agri_middle_fresh, "Agri_corporate_saline": Agri_corporate_saline, "Agri_corporate_fresh": Agri_corporate_fresh}
+        agent_classes = {"Agri_small_saline": Agri_small_saline, "Agri_small_fresh": Agri_small_fresh, "Agri_middle_saline": Agri_middle_saline,"Agri_middle_fresh": Agri_middle_fresh, "Agri_corporate_saline": Agri_corporate_saline, "Agri_corporate_fresh": Agri_corporate_fresh, "Aqua_small":Aqua_small}
 
         model_metrics = {}
         for name, cls in agent_classes.items():

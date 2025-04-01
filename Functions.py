@@ -103,7 +103,7 @@ def calculate_cost(crop_or_fish_type, seed_or_feed_quality, land_size):
             costs = 150 * land_size
     return costs
 
-def calculate_yield(crop_type, salinity, land_size):
+def calculate_yield_agri(crop_type, salinity, land_size):
     if crop_type == 'Triple_rice':
         yield_per_ha = np.random.uniform(0.6, 0.8) # Average yield of rice is 0.6 or 0.8 ton/ha
         threshold = 3
@@ -112,12 +112,35 @@ def calculate_yield(crop_type, salinity, land_size):
         actual_yield = (((100 - slope * (current_salinity - threshold))/100) * yield_per_ha * land_size) # Based on Formula FAO
     return actual_yield
 
+def calculate_yield_aqua(fish_type, farm_type, water_quality, disease, land_size):
+    disease_intensity = 0.85 # ASSUMPTION, only 85% of the fish survives
+
+    yield_per_ha = {"Extensive": {"Shrimp": 475}, "Intensive": {"Shrimp": 600}} # this is in kg, based on Joffre et al., 2015
+
+    if farm_type in yield_per_ha:
+        yield_aqua = yield_per_ha[farm_type][fish_type] * land_size * water_quality
+    else:
+        raise ValueError("Ongeldig farm_type opgegeven")
+
+    if disease == 1:
+        yield_aqua *= disease_intensity
+
+    return yield_aqua
+    
+
 def calculate_income_farming(crop_type, seed_quality,  total_yield):
     if crop_type == "Triple_rice":
-        prices = {"High":500, 'Low':400} # Price of rice in euros/ton, based on Tran et al, (2020)
-        price = prices[seed_quality]
+        prices_agri = {"High":500, 'Low':400} # Price of rice in euros/ton, based on Tran et al, (2020)
+        price = prices_agri[seed_quality]
     yield_income = price * total_yield
     return yield_income 
+
+def calculate_income_aqua(fish_type, farm_type, total_yield):
+    if fish_type == "Shrimp":
+        prices_aqua = {"Extensive":4, "Intensive":2} # Based on paper Joffre et al.,(2015)
+        price = prices_aqua[farm_type]
+    yield_income = price * total_yield
+    return yield_income
 
 def calculate_additional_income(meeting_agrocensus, income, land_size):
     average_support = 0.2 # BASED ON NOTHING
