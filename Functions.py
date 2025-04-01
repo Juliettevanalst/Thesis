@@ -72,19 +72,19 @@ def child_birth(ages, birth_rate, maximum_number_of_children):
     return ages       
 
 def education_levels(self): # Based on Tran et al., (2020)
-    np.random.seed(20)
+    #np.random.seed(20)
     education_levels = {"Primary":0.3, "Secondary":0.5, "Tertiary":0.6, "Higher education":0.7} # Based on nothing, basic education is useful but higher is less useful?
     probabilities = [0.475, 0.337, 0.158, 0.030] # Based on Tran et al., (2020)
     education_type = np.random.choice(list(education_levels.keys()), p=probabilities)
     education = education_levels[education_type]
     return education
 
-def calculate_livelihood_agrifarm(meeting_agrocensus, education_level, farming_experience,community, government_support, savings, loans, land_size, equipment, salinity):
+def calculate_livelihood_agrifarm(meeting_agrocensus, education_level, salt_experience,community, government_support, savings, loans, maximal_debt, land_size, equipment, salinity):
     livelihood = {} 
-    livelihood['human'] = np.average([meeting_agrocensus, education_level, farming_experience])
+    livelihood['human'] = np.average([meeting_agrocensus, education_level, salt_experience])
     livelihood['social'] = np.average([community, government_support])
-    livelihood['financial'] = np.average([(max(0, min(savings / 10000, 1))), loans])
-    livelihood['physical'] = np.average([(max(0, min(land_size / 2, 1))), (max(0, min(equipment*0.3, 1)))]) # Each measure increases the score by 0.3
+    livelihood['financial'] = np.average([(max(0, min(savings / 10000, 1))), loans/maximal_debt])
+    livelihood['physical'] = np.average([(max(0, min(land_size / 2, 1))), (max(0, min(equipment, 1)))]) # Each measure increases the score by 0.3
     livelihood['natural'] = min(1, (1-salinity/12)) # maximum sainity = 12
     livelihood['average'] = np.average([livelihood['human'], livelihood['social'], livelihood['financial'], livelihood['physical'], livelihood['natural']])
     return livelihood
@@ -103,31 +103,47 @@ def calculate_yield(crop_type, salinity, land_size):
         threshold = 3
         slope = 12
         current_salinity = salinity
-        actual_yield = ((100 - slope * (current_salinity - threshold))/100) * yield_per_ha * land_size # Based on Formula FAO
+        actual_yield = 3 * (((100 - slope * (current_salinity - threshold))/100) * yield_per_ha * land_size) # Based on Formula FAO
     return actual_yield
 
 def calculate_income_farming(crop_type, seed_quality,  total_yield):
     if crop_type == "Triple_rice":
-        prices = {"High":1500, 'Low':1350} # Price of rice in euros/ton, based on Tran et al, (2020)
+        prices = {"High":500, 'Low':400} # Price of rice in euros/ton, based on Tran et al, (2020)
         price = prices[seed_quality]
     yield_income = price * total_yield
     return yield_income 
 
 def calculate_additional_income(meeting_agrocensus, income, land_size):
-    average_support = 0.5 # BASED ON NOTHING
-    boost = 0.1 if meeting_agrocensus == 1 else 0.0 # If you met agrocensus, the chance you get support from the government increases by 0.1
+    average_support = 0.2 # BASED ON NOTHING
+    boost = 0.4 if meeting_agrocensus == 1 else 0.0 # If you met agrocensus, the chance you get support from the government increases by 0.1
     chance_support = np.clip(np.random.normal(loc = average_support + boost, scale = 0.1), 0, 1)
     if np.random.rand() > chance_support: # if you get zero support:
         additional_income = 0
-        governmental_support = 0
+        support = 0
+        return support, additional_income
     else:
         basis_income = land_size * 1200 # THIS IS RANDOM AND SHOULD BE DETERMIND LATER!!!!! 
-        additional_income = basis_income - income 
-        print(additional_income)
-        governmental_support = 1
-    return governmental_support, additional_income 
+        if income < basis_income:
+            additional_income = basis_income - income 
+            support = 1
+            return support, additional_income 
+        else:
+            additional_income = 0
+            support = 0
+            return support, additional_income
+                    
 
-def define_abilities(possible_strategies, strategies_requirements, savings, loan, maximum_loans, human_livelihood, agro_meeting):
+def calculate_benefits_government(ages):
+    income_benefits = 0
+    for age in ages:
+        if age < 15:
+            income_benefits += 50 # THIS IS TOTALLY RANDOM!!!!!
+        elif age > 60:
+            income_benefits += 50
+    return income_benefits
+
+
+def define_abilities(possible_strategies, strategies_requirements, savings, loan, maximum_loans, human_livelihood, equipment_level, number_of_facilities):
     abilities = []
 
     for strategy in strategies_requirements:
@@ -153,12 +169,7 @@ def define_abilities(possible_strategies, strategies_requirements, savings, loan
                 institutional_ability = max(0, human_livelihood / strategy['knowledge'])
 
             # Technical Ability
-            if agro_meeting == 1:
-                technical_ability = 1
-            elif strategy['technical_ability'] == 0:
-                technical_ability = 1
-            else:
-                technical_ability = 0
+            technical_ability = np.mean([equipment_level, number_of_facilities]) # NEED TO ADD NUMBER OF WAGE WORKERS AND WATER LEVEL!!
 
             # Average Ability
             avg_ability = (financial_ability + institutional_ability + technical_ability) / 3
@@ -209,7 +220,7 @@ def find_best_strategy(MOTA_scores):
     highest_score = max(MOTA_scores.values()) # Check which strategy has the highest MOTA score 
     best_strategies = [name for name, score in MOTA_scores.items() if score == highest_score]
     best_strategy = np.random.choice(best_strategies) # If multiple strategies have the highest score, this will be random determined
-    change = best_strategy if highest_score > 0.2 else None # If the highest MOTA score is below 0.2, the agent will change nothing (realistic value for 0.2 should be determined later!!)
+    change = best_strategy if highest_score > 0.4 else None # If the highest MOTA score is below 0.4, the agent will change nothing (realistic value for 0.4 should be determined later!!)
     return change
 
 def implement_strategy(change, savings, possible_strategies, requirements, loan, maximum_loans):
