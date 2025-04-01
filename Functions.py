@@ -51,21 +51,22 @@ def die(ages):
     return ages
 
 def child_birth(ages, birth_rate, maximum_number_of_children):
-    # When the number of children did not reach the max value, it is possible a child will be created
-    if len([x for x in ages if x < 18]) < maximum_number_of_children:
-        # To give birth to a child, the household members should be aged between 18 and 45
-        if any(18 <= age <= 45 for age in ages): 
-            #  A child is only born when there is a maximum age difference of 5 years old
-            if min(ages) <= 5: 
+    # If there are no children yet
+    if len(ages) > 0:
+        if min(ages) > 18: 
+            # When a parent is older than 45 it will not get a child anymore
+            if min(ages) < 45: 
                 if np.random.rand() < birth_rate:
                     ages.append(0)
-
-    # It is also possible that this is the first child 
-    elif len([x for x in ages if x < 18]) == 0: 
-        # When a parent is older than 45 it will not get a child anymore
-        if min(ages) < 45: 
-            if np.random.rand() < birth_rate:
-                ages.append(0) 
+        
+        # When the number of children did not reach the max value, it is possible a child will be created
+        elif len([x for x in ages if x < 18]) < maximum_number_of_children:
+            # To give birth to a child, the household members should be aged between 18 and 45
+            if any(18 <= age <= 45 for age in ages): 
+                #  A child is only born when there is a maximum age difference of 5 years old
+                if min(ages) <= 5: 
+                    if np.random.rand() < birth_rate:
+                        ages.append(0)
 
     # Return the new ages
     ages.sort()
@@ -89,10 +90,15 @@ def calculate_livelihood_agrifarm(meeting_agrocensus, education_level, salt_expe
     livelihood['average'] = np.average([livelihood['human'], livelihood['social'], livelihood['financial'], livelihood['physical'], livelihood['natural']])
     return livelihood
 
-def calculate_cost(crop_type, seed_quality, land_size):
-    if crop_type == "Triple_rice":
-        if seed_quality == "Low":
+def calculate_cost(crop_or_fish_type, seed_or_feed_quality, land_size):
+    if crop_or_fish_type == "Triple_rice":
+        if seed_or_feed_quality == "Low":
             costs = 100 * land_size # UITZOEKEN, land_size in HA
+        else:
+            costs = 150 * land_size
+    elif crop_or_fish_type == "Shrimp":
+        if seed_or_feed_quality == "Low":
+            costs = 100 * land_size
         else:
             costs = 150 * land_size
     return costs
@@ -103,7 +109,7 @@ def calculate_yield(crop_type, salinity, land_size):
         threshold = 3
         slope = 12
         current_salinity = salinity
-        actual_yield = 3 * (((100 - slope * (current_salinity - threshold))/100) * yield_per_ha * land_size) # Based on Formula FAO
+        actual_yield = (((100 - slope * (current_salinity - threshold))/100) * yield_per_ha * land_size) # Based on Formula FAO
     return actual_yield
 
 def calculate_income_farming(crop_type, seed_quality,  total_yield):
