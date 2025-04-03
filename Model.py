@@ -6,10 +6,10 @@ import networkx as nx
 import random
 import numpy as np
 
-from Components import Agri_small_saline, Agri_small_fresh, Agri_middle_saline, Agri_middle_fresh, Agri_corporate_saline, Agri_corporate_fresh, Aqua_small
+from Components import Agri_farmer, Agri_small_saline, Agri_small_fresh, Agri_middle_saline, Agri_middle_fresh, Agri_corporate_saline, Agri_corporate_fresh, Aqua_small
 
 class Mekong_delta_model(Model):
-    def __init__(self, seed=20, width = 15, height = 15, num_agents = {"Agri_small_saline": 0, "Agri_small_fresh": 0, "Agri_middle_saline":0, "Agri_middle_fresh": 0, "Agri_corporate_saline":0, "Agri_corporate_fresh": 0, "Aqua_small":20}):
+    def __init__(self, seed=20, width = 15, height = 15, num_agents = {"Agri_small_saline": 20, "Agri_small_fresh": 0, "Agri_middle_saline":0, "Agri_middle_fresh": 0, "Agri_corporate_saline":0, "Agri_corporate_fresh": 0, "Aqua_small":20}):
         super().__init__(seed = seed)
 
         self.num_agents = num_agents
@@ -26,7 +26,7 @@ class Mekong_delta_model(Model):
             model_metrics[f"Income_{name}"] = (lambda m, cls = cls: np.mean([a.income for a in m.agents if isinstance(a, cls)]))
             model_metrics[f"Salinity_{name}"] = (lambda m, cls=cls: np.mean([a.salinity for a in m.agents if isinstance(a, cls)]))
             model_metrics[f"Savings_{name}"] = (lambda m, cls=cls: np.mean([a.savings for a in m.agents if isinstance(a, cls)]))
-        agent_metrics = {"Cost_farming": "cost_farming","Cost_living": "cost_living","Income":"income", "Crop type":"crop_type", 
+        agent_metrics = {"Cost_farming": "cost_farming","Cost_living": "cost_living","Income":"income", "Product_type":"product", 
         "Savings":"savings", "Loan size":'loan_size', "Salinity":"salinity", "livelihood":"livelihood", "income_benefits": "income_benefits" ,"Ages":"ages", "MOTA scores": "MOTA_scores", "Change":"change", "Possible strategies" : lambda agent: agent.possible_strategies.copy()}
         self.datacollector = DataCollector(model_reporters = model_metrics, agent_reporters = agent_metrics)
 
@@ -49,6 +49,11 @@ class Mekong_delta_model(Model):
         self.agents.shuffle_do('step') # Use random activation
 
         if self.steps % 12 == 0:
+            self.agents.do("yearly_activities")
             self.datacollector.collect(self)
+
+        yieldtime_crops = {"Triple_rice":4, "Mangos":1, "Double_rice": 6}
+        self.agents.select(lambda agent: isinstance(agent, Agri_farmer)).do(lambda agent: agent.harvest() if self.steps % yieldtime_crops[agent.product]==0 else None)
+
         
         

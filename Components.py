@@ -9,80 +9,75 @@ requirements_per_strategy = [{"name": "Drainage", "type": "Water", "price": 1000
 {"name": "Crop Diversification", "type": "Crops", "price": 800, "knowledge": 0.6, "technical_ability": 1}]
 
 
-class Agri_farmer (Agent):
+class Agri_farmer(Agent):
     def __init__(self, model, agent_type):
         super().__init__(model)
         self.agent_type = agent_type
-       
         
     def step(self):
-        # Define what needs to happen every year:
-        if self.model.steps % 12 == 0:
-            # Each agent is one year older
-            self.ages = [age + 1 for age in self.ages]
+       pass
 
-            # Possibility for an agent to die
-            self.ages = die(self.ages)
+    def harvest(self):
+        # Calculate costs based on land size
+        self.cost_farming += calculate_cost(self.product, self.seed_quality, self.land_size)
 
-            # Possiblity a child is born
-            self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 6)  # NEED TO CHECK DATA
-           
-            # Did agrocensus met you this year yes/no?
-            self.meeting_agrocensus = 1 if np.random.rand() > 0.56 else 0 # Based on paper Tran et al., (2020)
+        # Calculate total yield in ton
+        self.yield_ += calculate_yield_agri(self.product, self.salinity, self.land_size)
 
-            # Check if you can get governmental support if your yield is too low, or if you have childs/elderly
-            self.government_support, self.additional_income_yield = calculate_additional_income(self.meeting_agrocensus, self.income, self.land_size)
-            self.income_benefits = calculate_benefits_government(self.ages)
-
-            # Calculate livelihood
-            self.livelihood = calculate_livelihood_agrifarm(self.meeting_agrocensus, self.education_level, self.salt_experience,
-            self.community, self.government_support, self.savings, self.loan_size, self.value_of_assets, self.land_size, self.equipment_level, self.salinity)
-
-            #Check if it is possible to change, or if all adaptation and changes have been implemented
-            if self.possible_strategies:
-                # Define technical ability, institutional ability and financial ability
-                abilities = define_abilities(self.possible_strategies, requirements_per_strategy, self.savings, self.loan_size, self.maximal_debt, self.livelihood['human'], self.equipment_level, self.facilities_in_neigbourhood)
-
-                # Define motivation for each strategy
-                motivations = motivation__per_strategy(self.possible_strategies, requirements_per_strategy, self.livelihood['financial'], self.livelihood['natural'])
-
-                # Define MOTA score (= ability * motivation) for each strategy
-                self.MOTA_scores = calculate_MOTA(motivations, abilities)
-
-                # The strategy with the highest MOTA score will be implemented. 
-                self.change = find_best_strategy(self.MOTA_scores)
-            
-            # If no strategy can be implemented, change will be none
-            else:
-                self.change = None
-                self.MOTA_scores = {}
-
-            # Implement change
-            if self.change is not None:
-                self.possible_strategies, self.savings, self.loan_size, self.maximal_debt = implement_strategy(self.change, self.savings, self.possible_strategies, requirements_per_strategy, self.loan_size, self.maximal_debt)
-
-            # Update savings
-            self.savings += self.income - self.cost_farming - self.cost_living + self.income_benefits + self.additional_income_yield
-
-            # At the end of each year, income should be set to zero
-            self.income = 0
-            self.cost_farming = 0
-            self.yield_ = 0
-
-        # Dependend on the crops, the agent should harvest ones in a while. Below is a dictionary for the time it takes to grow the crops (in months). When this time is finished, the costs, yield and income is calculated. 
-        yieldtime_crops = {"Triple_rice":4, "Mangos":1, "Double_rice": 6}
-
-        if self.model.steps % yieldtime_crops[self.crop_type] == 0:
-
-            # Calculate costs based on land size
-            self.cost_farming += calculate_cost(self.crop_type, self.seed_quality, self.land_size)
-
-            # Calculate total yield in ton
-            self.yield_ += calculate_yield_agri(self.crop_type, self.salinity, self.land_size)
-
-            # Calculate income based on yield and costs, and update savings
-            self.income += calculate_income_farming(self.crop_type, self.seed_quality, self.yield_)   
+        # Calculate income based on yield and costs, and update savings
+        self.income += calculate_income_farming(self.product, self.seed_quality, self.yield_)   
         
+    def yearly_activities(self):
+        # Each agent is one year older
+        self.ages = [age + 1 for age in self.ages]
+
+        # Possibility for an agent to die
+        self.ages = die(self.ages)
+
+        # Possiblity a child is born
+        self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 6)  # NEED TO CHECK DATA
+        
+        # Did agrocensus met you this year yes/no?
+        self.meeting_agrocensus = 1 if np.random.rand() > 0.56 else 0 # Based on paper Tran et al., (2020)
+
+        # Check if you can get governmental support if your yield is too low, or if you have childs/elderly
+        self.government_support, self.additional_income_yield = calculate_additional_income(self.meeting_agrocensus, self.income, self.land_size)
+        self.income_benefits = calculate_benefits_government(self.ages)
+
+        # Calculate livelihood
+        self.livelihood = calculate_livelihood_agrifarm(self.meeting_agrocensus, self.education_level, self.salt_experience,
+        self.community, self.government_support, self.savings, self.loan_size, self.value_of_assets, self.land_size, self.equipment_level, self.salinity)
+
+        #Check if it is possible to change, or if all adaptation and changes have been implemented
+        if self.possible_strategies:
+            # Define technical ability, institutional ability and financial ability
+            abilities = define_abilities(self.possible_strategies, requirements_per_strategy, self.savings, self.loan_size, self.maximal_debt, self.livelihood['human'], self.equipment_level, self.facilities_in_neigbourhood)
+
+            # Define motivation for each strategy
+            motivations = motivation__per_strategy(self.possible_strategies, requirements_per_strategy, self.livelihood['financial'], self.livelihood['natural'])
+
+            # Define MOTA score (= ability * motivation) for each strategy
+            self.MOTA_scores = calculate_MOTA(motivations, abilities)
+
+            # The strategy with the highest MOTA score will be implemented. 
+            self.change = find_best_strategy(self.MOTA_scores)
+        
+        # If no strategy can be implemented, change will be none
+        else:
+            self.change = None
+            self.MOTA_scores = {}
+
+        # Implement change
+        if self.change is not None:
+            self.possible_strategies, self.savings, self.loan_size, self.maximal_debt = implement_strategy(self.change, self.savings, self.possible_strategies, requirements_per_strategy, self.loan_size, self.maximal_debt)
+
+        # Update savings
+        self.savings += self.income - self.cost_farming - self.cost_living + self.income_benefits + self.additional_income_yield
+
+        # At the end of each year, income should be set to zero
+        self.income = 0
+        self.cost_farming = 0
+        self.yield_ = 0
         
 
 class Agri_small_saline(Agri_farmer):
@@ -108,7 +103,7 @@ class Agri_small_saline(Agri_farmer):
         self.land_size = np.random.normal(1.9, 1) # THIS IS AN ASSUMPTION
         self.cost_farming = 0
         self.yield_ = 0
-        self.crop_type = np.random.choice(['Triple_rice'])
+        self.product = np.random.choice(['Triple_rice'])
         self.seed_quality = np.random.choice(['High', "Low"])
         self.salinity = np.random.normal(4, 1) # THIS SHOULD BE DETERMINED LATER
         self.meeting_agrocensus = 0
@@ -147,7 +142,7 @@ class Agri_small_fresh(Agri_farmer):
         self.land_size = np.random.normal(1.9, 1) # THIS IS AN ASSUMPTION
         self.cost_farming = 0
         self.yield_ = 0
-        self.crop_type = np.random.choice(['Triple_rice'])
+        self.product = np.random.choice(['Triple_rice'])
         self.seed_quality = np.random.choice(['High', "Low"])
         self.salinity = np.random.normal(2, 0.5) # THIS SHOULD BE DETERMINED LATER
         self.meeting_agrocensus = 0
@@ -186,7 +181,7 @@ class Agri_middle_saline(Agri_farmer):
         self.land_size = np.random.normal(4, 1) # THIS IS AN ASSUMPTION
         self.cost_farming = 0
         self.yield_ = 0
-        self.crop_type = np.random.choice(['Triple_rice'])
+        self.product = np.random.choice(['Triple_rice'])
         self.seed_quality = np.random.choice(['High', "Low"])
         self.salinity = np.random.normal(4,1) # THIS SHOULD BE DETERMINED LATER
         self.meeting_agrocensus = 0
@@ -225,7 +220,7 @@ class Agri_middle_fresh(Agri_farmer):
         self.land_size = np.random.normal(4, 1) # THIS IS AN ASSUMPTION
         self.cost_farming = 0
         self.yield_ = 0
-        self.crop_type = np.random.choice(['Triple_rice'])
+        self.product = np.random.choice(['Triple_rice'])
         self.seed_quality = np.random.choice(['High', "Low"])
         self.salinity = np.random.normal(2, 0.5) # THIS SHOULD BE DETERMINED LATER
         self.meeting_agrocensus = 0
@@ -264,7 +259,7 @@ class Agri_corporate_saline(Agri_farmer):
         self.land_size = np.random.normal(10, 4) # THIS IS AN ASSUMPTION
         self.cost_farming = 0
         self.yield_ = 0
-        self.crop_type = np.random.choice(['Triple_rice'])
+        self.product = np.random.choice(['Triple_rice'])
         self.seed_quality = np.random.choice(['High', "Low"])
         self.salinity = np.random.normal(4,1) # THIS SHOULD BE DETERMINED LATER
         self.meeting_agrocensus = 0
@@ -304,7 +299,7 @@ class Agri_corporate_fresh(Agri_farmer):
         self.land_size = np.random.normal(10, 4) # THIS IS AN ASSUMPTION
         self.cost_farming = 0
         self.yield_ = 0
-        self.crop_type = np.random.choice(['Triple_rice'])
+        self.product = np.random.choice(['Triple_rice'])
         self.seed_quality = np.random.choice(['High', "Low"])
         self.salinity = np.random.normal(2, 0.5) # THIS SHOULD BE DETERMINED LATER
         self.meeting_agrocensus = 0
@@ -328,67 +323,73 @@ class Aqua_farmer (Agent):
         
         
     def step(self):
-        # Define what needs to happen every year:
-        if self.model.steps % 12 == 0:
-            # Each agent is one year older
-            self.ages = [age + 1 for age in self.ages]
+           pass
 
-            # Possibility for an agent to die
-            self.ages = die(self.ages)
+    def harvest(self):
+        # Calculate costs based on land size
+        self.cost_farming += calculate_cost(self.fish_type, self.feeding_quality, self.land_size)
 
-            # Possiblity a child is born
-            self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 6)  # NEED TO CHECK DATA
-           
-            # Did agrocensus met you this year yes/no?
-            self.meeting_agrocensus = 1 if np.random.rand() > 0.56 else 0 # Based on paper Tran et al., (2020)
+        # Calculate total yield in ton
+        self.yield_ += calculate_yield_aqua(self.fish_type, self.farm_type, self.water_quality, self.disease, self.land_size)
 
-            # Chance you have a disease
-            self.disease = random.choice([0,1])
+        # Calculate income based on yield and costs, and update savings
+        self.income += calculate_income_aqua(self.fish_type, self.farm_type, self.yield_) 
+    
+    def yearly_activities(self):
+        self.ages = [age + 1 for age in self.ages]
 
-            # Calculate costs based on land size
-            self.cost_farming += calculate_cost(self.fish_type, self.feeding_quality, self.land_size)
+        # Possibility for an agent to die
+        self.ages = die(self.ages)
 
-            # Calculate total yield in ton
-            self.yield_ += calculate_yield_aqua(self.fish_type, self.farm_type, self.water_quality, self.disease, self.land_size)
+        # Possiblity a child is born
+        self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 6)  # NEED TO CHECK DATA
+        
+        # Did agrocensus met you this year yes/no?
+        self.meeting_agrocensus = 1 if np.random.rand() > 0.56 else 0 # Based on paper Tran et al., (2020)
 
-            # Calculate income based on yield and costs, and update savings
-            self.income += calculate_income_aqua(self.fish_type, self.farm_type, self.yield_) 
+        # Chance you have a disease
+        self.disease = random.choice([0,1])
 
-            # Check if you can get governmental support if your yield is too low, or if you have childs/elderly
-            # self.government_support, self.additional_income_yield = calculate_additional_income(self.meeting_agrocensus, self.income, self.land_size)
-            # self.income_benefits = calculate_benefits_government(self.ages)
+        
 
-            # Calculate livelihood
-            self.livelihood = calculate_livelihood_agrifarm(self.meeting_agrocensus, self.education_level, self.experience,
-            self.community, self.government_support, self.savings, self.loan_size, self.value_of_assets, self.land_size, self.equipment_level, self.salinity)
+        # Check if you can get governmental support if your yield is too low, or if you have childs/elderly
+        # self.government_support, self.additional_income_yield = calculate_additional_income(self.meeting_agrocensus, self.income, self.land_size)
+        # self.income_benefits = calculate_benefits_government(self.ages)
 
-            #Check if it is possible to change, or if all adaptation and changes have been implemented
-            if self.possible_strategies:
-                # Define technical ability, institutional ability and financial ability
-                abilities = define_abilities(self.possible_strategies, requirements_per_strategy, self.savings, self.loan_size, self.maximal_debt, self.livelihood['human'], self.equipment_level, self.facilities_in_neigbourhood)
+        # Calculate livelihood
+        self.livelihood = calculate_livelihood_agrifarm(self.meeting_agrocensus, self.education_level, self.experience,
+        self.community, self.government_support, self.savings, self.loan_size, self.value_of_assets, self.land_size, self.equipment_level, self.salinity)
 
-                # Define motivation for each strategy
-                motivations = motivation__per_strategy(self.possible_strategies, requirements_per_strategy, self.livelihood['financial'], self.livelihood['natural'])
+        #Check if it is possible to change, or if all adaptation and changes have been implemented
+        if self.possible_strategies:
+            # Define technical ability, institutional ability and financial ability
+            abilities = define_abilities(self.possible_strategies, requirements_per_strategy, self.savings, self.loan_size, self.maximal_debt, self.livelihood['human'], self.equipment_level, self.facilities_in_neigbourhood)
 
-                # Define MOTA score (= ability * motivation) for each strategy
-                self.MOTA_scores = calculate_MOTA(motivations, abilities)
+            # Define motivation for each strategy
+            motivations = motivation__per_strategy(self.possible_strategies, requirements_per_strategy, self.livelihood['financial'], self.livelihood['natural'])
 
-                # The strategy with the highest MOTA score will be implemented. 
-                self.change = find_best_strategy(self.MOTA_scores)
-            
-            # If no strategy can be implemented, change will be none
-            else:
-                self.change = None
-                self.MOTA_scores = {}
+            # Define MOTA score (= ability * motivation) for each strategy
+            self.MOTA_scores = calculate_MOTA(motivations, abilities)
 
-            # Implement change
-            if self.change is not None:
-                self.possible_strategies, self.savings, self.loan_size, self.maximal_debt = implement_strategy(self.change, self.savings, self.possible_strategies, requirements_per_strategy, self.loan_size, self.maximal_debt)
+            # The strategy with the highest MOTA score will be implemented. 
+            self.change = find_best_strategy(self.MOTA_scores)
+        
+        # If no strategy can be implemented, change will be none
+        else:
+            self.change = None
+            self.MOTA_scores = {}
 
-            # Update savings
-            self.savings += self.income - self.cost_farming - self.cost_living + self.income_benefits + self.additional_income_yield
+        # Implement change
+        if self.change is not None:
+            self.possible_strategies, self.savings, self.loan_size, self.maximal_debt = implement_strategy(self.change, self.savings, self.possible_strategies, requirements_per_strategy, self.loan_size, self.maximal_debt)
 
+        # Update savings
+        self.savings += self.income - self.cost_farming - self.cost_living + self.income_benefits + self.additional_income_yield
 
+         # At the end of each year, income should be set to zero
+        self.income = 0
+        self.cost_farming = 0
+        self.yield_ = 0
         
 
 class Aqua_small(Aqua_farmer):
@@ -414,7 +415,7 @@ class Aqua_small(Aqua_farmer):
         self.land_size = np.random.normal(1.9, 1) # THIS IS AN ASSUMPTION
         self.cost_farming = 0
         self.yield_ = 0
-        self.fish_type = np.random.choice(['Shrimp'])
+        self.product = np.random.choice(['Shrimp'])
         self.feeding_quality = np.random.choice(['High', "Low"])
         self.water_quality = 1 # THIS SHOULD CHANGE LATER, THE BEST STIUATION IS 1 BUT IT WILL WORSEN OVER TIME
         self.farm_type = np.random.choice(['Extensive', 'Intensive'])
