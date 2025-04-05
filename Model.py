@@ -52,8 +52,8 @@ class Mekong_delta_model(Model):
             self.agents.do("yearly_activities")
             self.datacollector.collect(self)
 
-        yieldtime_crops = {"Triple_rice":4, "Mangos":1, "Double_rice": 6}
-        self.agents.select(lambda agent: isinstance(agent, Agri_farmer)).do(lambda agent: agent.harvest() if self.steps % yieldtime_crops[agent.product]==0 else None)
+        yieldtime_crops = {"Triple_rice":4, "Mangos":1, "Double_rice": 6, "Shrimp": 8}
+        self.agents.do(lambda agent: agent.harvest() if self.steps % yieldtime_crops[agent.product]==0 else None)
 
         
         

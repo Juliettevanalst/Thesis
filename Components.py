@@ -327,13 +327,13 @@ class Aqua_farmer (Agent):
 
     def harvest(self):
         # Calculate costs based on land size
-        self.cost_farming += calculate_cost(self.fish_type, self.feeding_quality, self.land_size)
+        self.cost_farming += calculate_cost(self.product, self.feeding_quality, self.land_size)
 
         # Calculate total yield in ton
-        self.yield_ += calculate_yield_aqua(self.fish_type, self.farm_type, self.water_quality, self.disease, self.land_size)
+        self.yield_ += calculate_yield_aqua(self.product, self.farm_type, self.water_quality, self.disease, self.land_size)
 
         # Calculate income based on yield and costs, and update savings
-        self.income += calculate_income_aqua(self.fish_type, self.farm_type, self.yield_) 
+        self.income += calculate_income_aqua(self.product, self.farm_type, self.yield_) 
     
     def yearly_activities(self):
         self.ages = [age + 1 for age in self.ages]
