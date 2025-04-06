@@ -255,6 +255,13 @@ def calculate_income_farming(crop_type,  total_yield):
     yield_income = price * total_yield
     return yield_income 
 
+def calculate_farmers_spend_on_ww(income, number_of_ww, household_size):
+    required_income = 1100 * household_size
+    maximum_income_ww = 3000 * number_of_ww
+    total_spend_ww = max(0, min((income - required_income), maximum_income_ww))
+    return total_spend_ww
+
+
 
 
             

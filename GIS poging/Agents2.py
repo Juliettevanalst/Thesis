@@ -3,7 +3,7 @@ from mesa import Agent, Model
 import numpy as np
 import random
 from Functions2 import create_household, die, child_birth, education_levels, salinity_influence_neighbours, calculate_livelihood_agrifarm, advice_agrocensus, advice_neighbours, define_abilities, define_motivations
-from Functions2 import calculate_MOTA,  best_MOTA, change_crops, calculate_cost, calculate_yield_agri, calculate_income_farming 
+from Functions2 import calculate_MOTA,  best_MOTA, change_crops, calculate_cost, calculate_yield_agri, calculate_income_farming, calculate_farmers_spend_on_ww
 class Agri_farmer(Agent):
     def __init__(self, model, agent_type, node_id):
         super().__init__(model)
@@ -17,7 +17,6 @@ class Agri_farmer(Agent):
         self.facilities_in_neighbourhood = 1
 
         # Define income
-        self.income = 1000
         self.government_support = 0
         self.meeting_agrocensus = 0
         self.cost_farming = 0
@@ -64,7 +63,9 @@ class Agri_farmer(Agent):
             # Change savings based on crop choice
             self.savings, self.loan_size, self.maximum_debt = change_crops(self.new_crop, self.savings, self.loan_size, self.maximum_debt)
 
-        self.savings += self.income - self.cost_farming
+        # Need to pay for the wage workers:
+        self.income_spent_on_ww = calculate_farmers_spend_on_ww(self.income, self.number_of_ww, self.household_size)
+        self.savings += self.income - self.cost_farming - self.income_spent_on_ww
 
     def reset_income(self):
         self.income = 0
@@ -100,7 +101,7 @@ class Agri_small_saline(Agri_farmer):
         self.current_crop = random.choice(["Rice"])
         self.new_crop = self.current_crop
         self.water_level = 6
-
+        self.number_of_ww = random.choice([0,1,2])
 
         # Financial
         self.savings = np.random.normal(4000, 1000)
@@ -125,8 +126,7 @@ class Agri_small_fresh(Agri_farmer):
         self.current_crop = "Rice"
         self.new_crop = self.current_crop
         self.water_level = 8
-
-        
+        self.number_of_ww = random.choice([0,1,2])
 
         # Financial
         self.savings = np.random.normal(4000, 1000)
@@ -137,3 +137,25 @@ class Agri_small_fresh(Agri_farmer):
 
     def step(self):
         pass
+
+class Low_skilled_wage_worker(Agent):
+    def __init__(self, model, agent_type):
+        super().__init__(model)
+
+        self.agent_type = agent_type
+        self.ages = create_household(5,2)        
+        self.household_size = len(self.ages)
+
+        self.income = 100
+        self.minimum_income = self.household_size * 1100 # ASSUMPTION how much life costs per household member per year
+        self.working_force = 0
+
+    def step(self):
+        pass
+
+    def yearly_activities(self):
+        self.working_force = [num for num in self.ages if 15 <= num <= 59]
+
+        
+
+
