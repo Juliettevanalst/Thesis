@@ -18,7 +18,8 @@ from Agents2 import Agri_small_saline, Agri_small_fresh
 
 class RiverDeltaModel(Model):
     def __init__(self, seed=20, province = 'Bac Lieu',
-    num_agents = {"Agri_small_saline": 20, "Agri_small_fresh": 20}): #, "Agri_middle_saline":0, "Agri_middle_fresh": 0, "Agri_corporate_saline":0, "Agri_corporate_fresh": 0, "Aqua_small":20}):
+    num_agents = {"Agri_small_saline": 200, "Agri_small_fresh": 200},
+    salinity_shock_step = [120, 600]): #, "Agri_middle_saline":0, "Agri_middle_fresh": 0, "Agri_corporate_saline":0, "Agri_corporate_fresh": 0, "Aqua_small":20}):
 
         super().__init__(seed = seed)
 
@@ -31,6 +32,15 @@ class RiverDeltaModel(Model):
         self.polygon = self.gather_shapefiles(province) 
         self.G = self.initialize_network(self.polygon, sum(num_agents.values()), seed=self.seed)
         self.grid = NetworkGrid(self.G)
+
+        # Possibility for a shock
+        self.salinity_shock_step = salinity_shock_step
+        self.salinity_shock = False
+
+        # Set up data collector
+        model_metrics = {}
+        agent_metrics = {"Age":'ages', "Salinity": 'salinity', "Savings":"savings", "Loan_size": 'loan_size','maximum_debt':"maximum_debt", 'income':'income', 'abilities':'abilities', 'current_crop':'current_crop', "New crop":"new_crop"}
+        self.datacollector = DataCollector(model_reporters = model_metrics, agent_reporters = agent_metrics)
 
         # Create agents
         self.num_agents = num_agents
@@ -49,11 +59,35 @@ class RiverDeltaModel(Model):
                 agent = AgentClass(self, agent_type, node_id)
                 self.agents.add(agent)
                 self.grid.place_agent(agent, node_id)
-
         
     
     def step(self):
         self.agents.shuffle_do('step')
+
+        if self.steps % 12 == 0:
+            # Check if a shock is happening
+            if self.steps in self.salinity_shock_step:
+                self.salinity_shock = True
+                for agent in self.agents:
+                    agent.salinity = random.uniform (1.5, 2) * agent.salinity # NEED TO DECIDE TOMORROW WITH SEPHER HOW TO DO THIS
+            
+            if self.steps in [step + 12 for step in self.salinity_shock_step]: # I make the assumption that a shock is happening the whole year
+                self.salinity_shock = False
+                for agent in self.agents:
+                    agent.salinity = 1.05 * agent.salinity # NEED TO DECIDE TOMORROW WITH SEPTHER HOW TO DO THIS
+
+            self.agents.do("yearly_activities")
+
+            # Collect data
+            self.datacollector.collect(self)
+
+            # Set income to zero, to calculate everything new for the next year
+            self.agents.do("reset_income")
+                
+        
+        yieldtime_crops = {"Rice":6, "Mango":12, "Coconut": 12}
+        self.agents.do(lambda agent: agent.harvest() if self.steps % yieldtime_crops[agent.current_crop]==0 else None)
+
 
     def gather_shapefiles(self, province):
         # Define path
