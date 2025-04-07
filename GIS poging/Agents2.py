@@ -3,7 +3,7 @@ from mesa import Agent, Model
 import numpy as np
 import random
 from Functions2 import create_household, die, child_birth, education_levels, salinity_influence_neighbours, calculate_livelihood_agrifarm, advice_agrocensus, advice_neighbours, define_abilities, define_motivations
-from Functions2 import calculate_MOTA,  best_MOTA, change_crops, calculate_cost, calculate_yield_agri, calculate_income_farming, calculate_farmers_spend_on_ww
+from Functions2 import calculate_MOTA,  best_MOTA, change_crops, calculate_cost, calculate_yield_agri, calculate_income_farming, calculate_farmers_spend_on_ww, calculate_migration_ww, decide_change_ww
 class Agri_farmer(Agent):
     def __init__(self, model, agent_type, node_id):
         super().__init__(model)
@@ -149,13 +149,61 @@ class Low_skilled_wage_worker(Agent):
         self.income = 100
         self.minimum_income = self.household_size * 1100 # ASSUMPTION how much life costs per household member per year
         self.working_force = 0
+        self.child_who_can_work = 0
+
+        self.contacts_in_city = 0
+        self.saw_advertisement = 0
+        self.change_children = None
+        self.change_leaving_household = 0.1
+        self.facilities_in_neighbourhood = 1
 
     def step(self):
         pass
 
     def yearly_activities(self):
-        self.working_force = [num for num in self.ages if 15 <= num <= 59]
+         # Each agent is one year older
+        self.ages = [age + 1 for age in self.ages]
+        # Possibility for an agent to die
+        self.ages = die(self.ages)
+        # Possiblity a child is born
+        self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 5) 
+        # Define working force
+        self.working_force = len([num for num in self.ages if 15 <= num <= 59]) + self.child_who_can_work
 
-        
+    def receive_income(self):
+        # We need to change as household since the income is too low?
+        if self.income < self.minimum_income:
+            self.income_too_low = 1
+            self.possible_changes = ["migration", "increase_working_force", "switch to aqua/agri"]
+        self.chance_migration = calculate_migration_ww(self.income_too_low, self.contacts_in_city,  self.facilities_in_neighbourhood)
+        if np.random.rand() < self.chance_migration:
+            print("agent becomes migrated agent")
+            # AGENT WORDT EEN MIGRATED AGENT
+        else:
+            self.change, self.agent_type, self.working_force, self.child_who_can_work = decide_change_ww(self.model.income_per_agri_ww, self.model.income_per_aqua_ww, self.income, self.working_force, self.agent_type, self.ages)
+
+        # What do the young adults/parents want?
+        num_children = len([num for num in self.ages if 15 <= num <= 35])
+        if np.random.rand() < self.model.chance_leaving_household: # They want to leave
+            self.children_possibilities = ["migration", "work_in_factory"]
+            if self.saw_advertisement == 1 and self.contacts_in_city == 1:
+                self.change_children = "migration"
+            elif self.model.factory_in_neighborhood == True:
+                self.change_children = "work_in_factory"
+
+            if self.change_children == "migration":
+                self.ages = [l for l in self.ages if not (15 <= l <= 35)] # Delete them from the list of ages
+                # HIER MOET DE MIGRATED AGENT KOMEN
+
+            if self.change_children == "work_in_factory":
+                self.ages = [l for l in self.ages if not (15 <= l <= 35)]
+                # HIER MOET KMEN DAT JE DAN EEN FACTORY WAGE WORKER BENT
+
+                
+
+
+
+
+
 
 

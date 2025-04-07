@@ -173,6 +173,7 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
     
     return abilities
 
+
 def define_motivations(possible_next_crops, income, abilities):
     motivations = {}
     for crop in requirements_per_crop:
@@ -206,7 +207,7 @@ def best_MOTA(MOTA_scores, current_crop):
     highest_score = max(MOTA_scores.values()) # Check which strategy has the highest MOTA score 
     most_suitable_crop = [name for name, score in MOTA_scores.items() if score == highest_score]
     most_suitable_crop = np.random.choice(most_suitable_crop) # If multiple crops have the highest score, this will be random determined
-    change = most_suitable_crop if highest_score > 0.0 else current_crop # If the highest MOTA score is below 0.4, the agent will change nothing (realistic value for 0.4 should be determined later!!)
+    change = most_suitable_crop if highest_score > 0.2 else current_crop # If the highest MOTA score is below 0.4, the agent will change nothing (realistic value for 0.4 should be determined later!!)
     return change
 
 def change_crops(change, savings, loan, maximum_loans):
@@ -260,6 +261,51 @@ def calculate_farmers_spend_on_ww(income, number_of_ww, household_size):
     maximum_income_ww = 3000 * number_of_ww
     total_spend_ww = max(0, min((income - required_income), maximum_income_ww))
     return total_spend_ww
+
+def calculate_migration_ww(income_too_low, contacts_in_city, facilities_in_neighbourhood):
+    if income_too_low == 1 and contacts_in_city == 1 and facilities_in_neighbourhood < 0.5:
+        chance = 1
+    elif income_too_low == 1 and contacts_in_city == 1:
+        chance = 0.8
+    elif income_too_low ==1  and contacts_in_city == 0:
+        chance = 0.5
+    elif contacts_in_city == 1:
+        chance = 0.15
+    elif facilities_in_neighbourhood < 0.5:
+        chance = 0.4
+    else:
+        chance = 0.1 # THESE ARE ALL RANDOM!!! DATA ANALYSIS IS REQUIRED 
+    return chance
+
+def decide_change_ww(income_per_agri_ww, income_per_aqua_ww, income, working_force, agent_type, ages):
+    if agent_type == "Aqua":
+        agri_income = income_per_agri_ww * working_force
+        if agri_income > income:
+            change = "Become_agri_ww"
+            agent_type = "Agri"
+        else:
+            change = None
+    elif agent_type == "Agri":
+        aqua_income = income_per_aqua_ww * working_force
+        if aqua_income > income:
+            change = "Become_aqua_ww"
+            agent_type = "Aqua"
+        else:
+            change = None
+
+    child_who_can_work = 0
+
+    if change == None:
+        child_who_can_work = len([num for num in ages if 10 <= num <= 15])
+        if child_who_can_work > 0:
+            change = "increase_working_force"
+            working_force += child_who_can_work
+        
+    return change, agent_type, working_force, child_who_can_work
+
+        
+
+
 
 
 

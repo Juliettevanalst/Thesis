@@ -34,6 +34,9 @@ class RiverDeltaModel(Model):
         self.G = self.initialize_network(self.polygon, sum(num_agents.values()), seed=self.seed)
         self.grid = NetworkGrid(self.G)
 
+        self.factory_in_neighborhood = False
+        self.factory_advertisement = False
+
         # Possibility for a shock
         self.salinity_shock_step = salinity_shock_step
         self.salinity_shock = False
@@ -43,6 +46,12 @@ class RiverDeltaModel(Model):
         self.total_number_ww_agri = 0
         self.total_income_aqua_ww = 0
         self.total_income_agri_ww = 0
+        self.income_per_aqua_ww = 0
+        self.income_per_agri_ww  = 0
+
+        # Chance an agent wants to leave the household
+        self.chance_leaving_household = 0.3 # Should be determined later 
+        
 
         # Set up data collector
         model_metrics = {}
@@ -97,8 +106,12 @@ class RiverDeltaModel(Model):
             self.update_wage_worker_totals()
             self.calculate_income_ww()
 
+            # Wage workers should receive income
+            self.agents.do(lambda agent:agent.receive_income() if isinstance(agent,Low_skilled_wage_worker) else None)
+
             # Collect data
             self.datacollector.collect(self)
+
 
             # Set income to zero, to calculate everything new for the next year
             self.agents.do(lambda agent: setattr(agent, 'income', 0) if isinstance(agent, Agri_farmer) else None)
@@ -156,13 +169,15 @@ class RiverDeltaModel(Model):
         self.total_number_ww_agri = 0
         self.total_income_aqua_ww = 0
         self.total_income_agri_ww = 0
+        self.income_per_aqua_ww = 0
+        self.income_per_agri_ww = 0
 
         for agent in self.agents:
             if isinstance(agent, Low_skilled_wage_worker):
                 if agent.agent_type == "Aqua":
-                    self.total_number_ww_aqua += len(agent.working_force)
+                    self.total_number_ww_aqua += agent.working_force
                 elif agent.agent_type == "Agri":
-                    self.total_number_ww_agri += len(agent.working_force)
+                    self.total_number_ww_agri += agent.working_force
                 
             if isinstance(agent, Agri_farmer):
                 self.total_income_agri_ww += agent.income_spent_on_ww
@@ -171,14 +186,14 @@ class RiverDeltaModel(Model):
 
     def calculate_income_ww(self):
         if self.total_number_ww_aqua > 0:
-            income_per_aqua_ww = self.total_income_aqua_ww / self.total_number_ww_aqua 
+            self.income_per_aqua_ww = self.total_income_aqua_ww / self.total_number_ww_aqua 
             for agent in self.agents:
                 if isinstance(agent, Low_skilled_wage_worker) and agent.agent_type == "Aqua":
-                    agent.income = income_per_aqua_ww * len(agent.working_force)
+                    agent.income = self.income_per_aqua_ww * agent.working_force
                     
 
         if self.total_number_ww_agri > 0:
-            income_per_agri_ww = self.total_income_agri_ww / self.total_number_ww_agri
+            self.income_per_agri_ww = self.total_income_agri_ww / self.total_number_ww_agri
             for agent in self.agents:
                 if isinstance(agent, Low_skilled_wage_worker) and agent.agent_type == "Agri":
-                    agent.income = income_per_agri_ww * len(agent.working_force) 
+                    agent.income = self.income_per_agri_ww * agent.working_force 
