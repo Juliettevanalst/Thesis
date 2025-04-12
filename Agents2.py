@@ -23,6 +23,12 @@ class Agri_farmer(Agent):
         self.cost_farming = 0
         self.yield_ = 0
         self.income = 0
+        self.yield_time_crops = {"Rice":6, "Mango":12, "Coconut": 12}
+
+        # Related to crops
+        self.growth_time = 0
+        self.salinity_during_shock = 0
+        self.yield_time = 2
         
         
     def step(self):
@@ -35,10 +41,6 @@ class Agri_farmer(Agent):
         self.ages = die(self.ages)
         # Possiblity a child is born
         self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 5) 
-
-        # Change salinity levels based on neighbours
-        #self.salinity = salinity_influence_neighbours(self.model, self.node_id) apparently this does not happen
-
         
         # Did you visit a governmental meeting?
         self.meeting_agrocensus = 1 if np.random.rand() > 0.1 else 0 # Based on paper Tran et al., (2020)
@@ -75,17 +77,23 @@ class Agri_farmer(Agent):
 
 
     def harvest(self):
+        # if a shock happened during growth time, we need to take that salinity into account, otherwise, current salinity
+        if self.model.time_since_shock > self.growth_time:
+            self.salinity_during_shock = self.salinity
+
         # Calculate costs based on land size
         self.cost_farming += calculate_cost(self.current_crop, self.land_size)
 
         # Calculate total yield in ton
-        self.yield_ += calculate_yield_agri(self.current_crop, self.salinity, self.land_size)
+        self.yield_ += calculate_yield_agri(self.current_crop, self.salinity_during_shock, self.land_size)
 
         # Calculate income based on yield and costs, and update savings
         self.income += calculate_income_farming(self.current_crop, self.yield_)
         
 
         self.current_crop = self.new_crop
+        self.growth_time = 0
+        self.yield_time = self.yield_time_crops[self.current_crop]
 
         
 

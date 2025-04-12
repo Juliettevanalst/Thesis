@@ -92,8 +92,11 @@ class RiverDeltaModel(Model):
     def step(self):
         self.agents.shuffle_do('step')
 
+
         # Check if a shock is happening
         self.check_shock()
+        self.agents.do(lambda agent: setattr(agent, 'growth_time', agent.growth_time + 1) if isinstance(agent, Agri_farmer) else None)
+
 
         if self.steps % 12 == 0:
 
@@ -114,10 +117,11 @@ class RiverDeltaModel(Model):
             print(total_migrated)
 
             # Set income to zero, to calculate everything new for the next year
-            self.agents.do(lambda agent: setattr(agent, 'income', 0) if isinstance(agent, Agri_farmer) else None)
+            self.agents.do(lambda agent: agent.reset_income() if isinstance(agent, Agri_farmer) else None)
       
-        yieldtime_crops = {"Rice":6, "Mango":12, "Coconut": 12} # THESE ARE NOT REAL NUMBERS YET
-        self.agents.do(lambda agent: agent.harvest() if isinstance(agent, Agri_farmer) and self.steps % yieldtime_crops[agent.current_crop]==0 else None) 
+        # Time to harvest!
+        #yieldtime_crops = {"Rice":6, "Mango":12, "Coconut": 12} # THESE ARE NOT REAL NUMBERS YET
+        self.agents.do(lambda agent: agent.harvest() if isinstance(agent, Agri_farmer) and agent.growth_time == agent.yield_time else None) 
 
 
     def gather_shapefiles(self, district):
@@ -181,15 +185,17 @@ class RiverDeltaModel(Model):
 
     def check_shock(self):
         if self.steps in self.salinity_shock_step:
-                self.salinity_shock = True
-                for agent in self.agents:
-                    if hasattr(agent, "salinity"):
-                        agent.salinity = random.uniform (1.5, 2) * agent.salinity # ASSUMPTION, NEED TO DETERMINE HOW INTENSE A SHOCK IS
+            self.salinity_shock = True
+            for agent in self.agents:
+                if hasattr(agent, "salinity"):
+                    agent.salinity = random.uniform (1.5, 2) * agent.salinity # ASSUMPTION, NEED TO DETERMINE HOW INTENSE A SHOCK IS
+                    agent.salinity_during_shock = agent.salinity
 
-                self.time_since_shock = 0
-                print("shock is happening!!")
+            self.time_since_shock = 0
+            print("shock is happening!!")
 
         else:
+            self.salinity_shock = False
             self.time_since_shock +=1
             if self.time_since_shock == 1:
                 for agent in self.agents:
