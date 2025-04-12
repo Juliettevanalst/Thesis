@@ -42,6 +42,7 @@ class RiverDeltaModel(Model):
         # Possibility for a shock
         self.salinity_shock_step = salinity_shock_step
         self.salinity_shock = False
+        self.time_since_shock = 0
 
         # Keep track of the wage workers and their income
         self.total_number_ww_aqua = 0
@@ -57,7 +58,7 @@ class RiverDeltaModel(Model):
 
         # Set up data collector
         model_metrics = {}
-        agent_metrics = {"Age":'ages', "Salinity": 'salinity', "Savings":"savings", "Loan_size": 'loan_size',
+        agent_metrics = {"Agent_type": "agent_type","Age":'ages', "Salinity": 'salinity', "Savings":"savings", "Loan_size": 'loan_size',
         'maximum_debt':"maximum_debt", 'income':'income', 'abilities':'abilities', 'current_crop':'current_crop', "New crop":"new_crop"}
         self.datacollector = DataCollector(model_reporters = model_metrics, agent_reporters = agent_metrics)
 
@@ -85,30 +86,19 @@ class RiverDeltaModel(Model):
 
         # Create migrated agents
         for i in range(number_of_migrated_agents):
-            migrated_agent = Migrated(self)
+            migrated_agent = Migrated(self, agent_type = "migrated")
             self.agents.add(migrated_agent)
     
     def step(self):
         self.agents.shuffle_do('step')
 
+        # Check if a shock is happening
+        self.check_shock()
+
         if self.steps % 12 == 0:
-            # Check if a shock is happening
-            if self.steps in self.salinity_shock_step:
-                self.salinity_shock = True
-                for agent in self.agents:
-                    if hasattr(agent, "salinity"):
-                        agent.salinity = random.uniform (1.5, 2) * agent.salinity 
-            
-            # Determine when a shock is happening
-            if self.steps in [step + 12 for step in self.salinity_shock_step]: # I will change this as soon as possible, apparently, a shock happens for only a few days instead of a whole year
-                self.salinity_shock = False
-                for agent in self.agents:
-                    if hasattr(agent, "salinity"):
-                        agent.salinity = 1.05 * agent.salinity # Each year, salinity will rise by 5% due to climate change, is an assumption for now
 
             # All agents should do their yearly activities, except for the migrated agents, they do not have those yet
             self.agents.do(lambda agent: agent.yearly_activities() if not isinstance(agent, Migrated) else None)
-            
 
             # Give wage workers income, based on the total number of wage workers
             self.update_wage_worker_totals()
@@ -120,8 +110,8 @@ class RiverDeltaModel(Model):
             # Collect data
             self.datacollector.collect(self)
 
-            #total_migrated = sum(1 for agent in self.agents if isinstance(agent, Migrated))
-            #print(total_migrated)
+            total_migrated = sum(1 for agent in self.agents if isinstance(agent, Migrated))
+            print(total_migrated)
 
             # Set income to zero, to calculate everything new for the next year
             self.agents.do(lambda agent: setattr(agent, 'income', 0) if isinstance(agent, Agri_farmer) else None)
@@ -188,6 +178,23 @@ class RiverDeltaModel(Model):
                 G.add_edge(i, j)
 
         return G
+
+    def check_shock(self):
+        if self.steps in self.salinity_shock_step:
+                self.salinity_shock = True
+                for agent in self.agents:
+                    if hasattr(agent, "salinity"):
+                        agent.salinity = random.uniform (1.5, 2) * agent.salinity # ASSUMPTION, NEED TO DETERMINE HOW INTENSE A SHOCK IS
+
+                self.time_since_shock = 0
+                print("shock is happening!!")
+
+        else:
+            self.time_since_shock +=1
+            if self.time_since_shock == 1:
+                for agent in self.agents:
+                    if hasattr(agent, "salinity"):
+                        agent.salinity = agent.salinity/random.uniform(1.5, 2) # ASSUMPTION, NEED TO DETERMINE HOW INTENSE A SHOCK IS
 
     def update_wage_worker_totals(self):
         # Reset totals before each step

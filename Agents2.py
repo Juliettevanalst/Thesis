@@ -179,36 +179,32 @@ class Low_skilled_wage_worker(Agent):
         self.chance_migration = calculate_migration_ww(self.income_too_low, self.contacts_in_city,  self.facilities_in_neighbourhood)
         if np.random.rand() < self.chance_migration:
             pass #print("agent becomes migrated agent")
-            # AGENT WORDT EEN MIGRATED AGENT
+            for i in range(len(self.ages)):
+                migrated = Migrated(self.model, agent_type = "migrated")
+                self.model.agents.add(migrated)
+            self.model.agents.remove(self) # Delete the household as 
+            
         else:
             self.change, self.agent_type, self.working_force, self.child_who_can_work = decide_change_ww(self.model.income_per_agri_ww, self.model.income_per_aqua_ww, self.income, self.working_force, self.agent_type, self.ages)
 
         # What do the young adults/parents want?
         num_children = len([num for num in self.ages if 15 <= num <= 35])
         if np.random.rand() < self.model.chance_leaving_household: # They want to leave
-            self.children_possibilities = ["migration", "work_in_factory"]
+            self.children_possibilities = ["migration"]
             if self.saw_advertisement == 1 and self.contacts_in_city == 1:
                 self.change_children = "migration"
-            elif self.model.factory_in_neighborhood == True:
-                self.change_children = "work_in_factory"
-
-            if self.change_children == "migration":
                 migrated_agent_ages  = len([l for l in self.ages if (15 <= l <= 35)])
                 self.ages = [l for l in self.ages if not (15 <= l <= 35)] # Delete them from the list of ages
                 for i in range(migrated_agent_ages):
-                    migrated = Migrated(self)
-                    print("agent migrates")
+                    migrated = Migrated(self.model, agent_type = "migrated")
                     self.model.agents.add(migrated)
-
-            if self.change_children == "work_in_factory":
-                self.ages = [l for l in self.ages if not (15 <= l <= 35)]
-                # HIER MOET KMEN DAT JE DAN EEN FACTORY WAGE WORKER BENT
+        
 
 class Migrated(Agent):
-    def __init__(self, model):
+    def __init__(self, model, agent_type):
         super().__init__(model)
 
-        self.ages = 0
+        self.agent_type = agent_type
 
     def step(self):
         pass
