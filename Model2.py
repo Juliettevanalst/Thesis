@@ -13,13 +13,13 @@ from mesa import Model, Agent
 from mesa.space import NetworkGrid
 from mesa.datacollection import DataCollector
 
-from Agents2 import Agri_farmer, Agri_small_saline, Agri_small_fresh, Low_skilled_wage_worker, Migrated
+from Agents2 import Agri_farmer, Agri_small_saline, Agri_small_fresh, Low_skilled_wage_worker, Migrated, Aqua_small_saline, Aqua_farmer
 
 
 class RiverDeltaModel(Model):
-    def __init__(self, seed=20, district = 'Hóc Môn',
-    num_agents = {"Agri_small_saline": 50, "Agri_small_fresh": 50},
-    num_low_skilled_ww = {"Aqua":10, "Agri": 10},
+    def __init__(self, seed=20, district = 'Nhà Bè',
+    num_agents = {"Agri_small_saline": 50, "Agri_small_fresh": 50, "Aqua_small_saline":10},
+    num_low_skilled_ww = {"Aqua":0, "Agri": 0},
     number_of_migrated_agents = 0,
     salinity_shock_step = [120, 600]):
 
@@ -44,6 +44,10 @@ class RiverDeltaModel(Model):
         self.salinity_shock = False
         self.time_since_shock = 0
 
+        # Possibility for disease
+        self.chance_disease = {"Extensive": 0.16, "Intensive": 0.5, "MS": 0.1}
+        self.use_antibiotics = {"Aqua_small_saline": 0.8}
+
         # Keep track of the wage workers and their income
         self.total_number_ww_aqua = 0
         self.total_number_ww_agri = 0
@@ -67,7 +71,7 @@ class RiverDeltaModel(Model):
         available_nodes = list(self.G.nodes())
         random.shuffle(available_nodes)
 
-        agent_classes = { "Agri_small_saline": Agri_small_saline, "Agri_small_fresh": Agri_small_fresh}
+        agent_classes = { "Agri_small_saline": Agri_small_saline, "Agri_small_fresh": Agri_small_fresh, "Aqua_small_saline": Aqua_small_saline}
 
         for agent_type, count in num_agents.items():
             AgentClass = agent_classes[agent_type]
@@ -95,7 +99,7 @@ class RiverDeltaModel(Model):
 
         # Check if a shock is happening
         self.check_shock()
-        self.agents.do(lambda agent: setattr(agent, 'growth_time', agent.growth_time + 1) if isinstance(agent, Agri_farmer) else None)
+        self.agents.do(lambda agent: setattr(agent, 'growth_time', agent.growth_time + 1) if isinstance(agent, (Agri_farmer, Aqua_farmer)) else None)
 
 
         if self.steps % 12 == 0:
@@ -117,11 +121,11 @@ class RiverDeltaModel(Model):
             print(total_migrated)
 
             # Set income to zero, to calculate everything new for the next year
-            self.agents.do(lambda agent: agent.reset_income() if isinstance(agent, Agri_farmer) else None)
+            self.agents.do(lambda agent: agent.reset_income() if isinstance(agent, (Agri_farmer, Aqua_farmer)) else None)
       
         # Time to harvest!
         #yieldtime_crops = {"Rice":6, "Mango":12, "Coconut": 12} # THESE ARE NOT REAL NUMBERS YET
-        self.agents.do(lambda agent: agent.harvest() if isinstance(agent, Agri_farmer) and agent.growth_time == agent.yield_time else None) 
+        self.agents.do(lambda agent: agent.harvest() if isinstance(agent, (Agri_farmer, Aqua_farmer)) and agent.growth_time == agent.yield_time else None) 
 
 
     def gather_shapefiles(self, district):

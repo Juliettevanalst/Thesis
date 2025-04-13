@@ -4,6 +4,9 @@ import numpy as np
 import random
 from Functions2 import create_household, die, child_birth, education_levels, calculate_livelihood_agrifarm, advice_agrocensus, advice_neighbours, define_abilities, define_motivations
 from Functions2 import calculate_MOTA,  best_MOTA, change_crops, calculate_cost, calculate_yield_agri, calculate_income_farming, calculate_farmers_spend_on_ww, calculate_migration_ww, decide_change_ww
+from Functions2 import calculate_cost_aqua, calculate_income_aqua, calculate_yield_aqua
+
+# Agri farmers
 class Agri_farmer(Agent):
     def __init__(self, model, agent_type, node_id, salinity):
         super().__init__(model)
@@ -14,6 +17,9 @@ class Agri_farmer(Agent):
         # Define households
         self.ages = create_household(5,2)        
         self.household_size = len(self.ages)
+        self.living_costs = self.household_size * 1000 # ASSUMPTION, EACH HOUSEHOLD MEMBERS LIVING COSTS ARE 1100 EUROS PER YEAR
+        self.loan_size = 0
+        self.required_income = self.living_costs + 0.2 * self.loan_size
         self.education_level = education_levels(self)
         self.facilities_in_neighbourhood = 1
 
@@ -23,12 +29,11 @@ class Agri_farmer(Agent):
         self.cost_farming = 0
         self.yield_ = 0
         self.income = 0
-        self.yield_time_crops = {"Rice":6, "Mango":12, "Coconut": 12}
+        self.yield_time_crops = {"Rice":6, "Mango":12, "Coconut": 12, "Shrimp":8}
 
         # Related to crops
         self.growth_time = 0
         self.salinity_during_shock = 0
-        self.yield_time = 2
         
         
     def step(self):
@@ -41,6 +46,9 @@ class Agri_farmer(Agent):
         self.ages = die(self.ages)
         # Possiblity a child is born
         self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 5) 
+
+        # update savings
+        self.savings += self.income - self.cost_farming - self.living_costs
         
         # Did you visit a governmental meeting?
         self.meeting_agrocensus = 1 if np.random.rand() > 0.1 else 0 # Based on paper Tran et al., (2020)
@@ -56,9 +64,9 @@ class Agri_farmer(Agent):
         # Check what your neighbours are doing
         self.possible_next_crops = advice_neighbours(self.possible_next_crops, self.model, self.node_id)
         # Check your abilities per possible crop:
-        self.abilities = define_abilities(self.possible_next_crops, self.savings, self.loan_size, self.maximum_debt, self.livelihood['human'], self.salinity, self.water_level)
+        self.abilities = define_abilities(self.possible_next_crops, self.savings, self.loan_size, self.maximum_debt, self.livelihood['human'], self.salinity, self.current_crop)
         # Check your motivations per possible crop:
-        self.motivations = define_motivations(self.possible_next_crops, self.income, self.abilities)
+        self.motivations = define_motivations(self.possible_next_crops, self.income, self.abilities, self.current_crop, self.required_income)
         # Calculate MOTA scores and find the best crop:
         self.MOTA_scores = calculate_MOTA(self.motivations, self.abilities)
         self.new_crop = best_MOTA(self.MOTA_scores, self.current_crop)
@@ -68,7 +76,7 @@ class Agri_farmer(Agent):
 
         # Need to pay for the wage workers:
         self.income_spent_on_ww = calculate_farmers_spend_on_ww(self.income, self.number_of_ww, self.household_size)
-        self.savings += self.income - self.cost_farming - self.income_spent_on_ww
+        self.savings -= self.income_spent_on_ww
 
     def reset_income(self):
         self.income = 0
@@ -109,12 +117,11 @@ class Agri_small_saline(Agri_farmer):
         self.land_size = np.random.normal(1.9, 1)
         self.current_crop = random.choice(["Rice"])
         self.new_crop = self.current_crop
-        self.water_level = 6
         self.number_of_ww = random.choice([0,1,2])
+        self.yield_time = self.yield_time_crops[self.current_crop]
 
         # Financial
         self.savings = np.random.normal(4000, 1000)
-        self.loan_size = 0
         self.house_price = np.random.normal(2000, 300) # Define later
         self.value_of_assets = self.land_size * 3000 + self.house_price # Define later
         self.maximum_debt = self.value_of_assets
@@ -129,23 +136,142 @@ class Agri_small_fresh(Agri_farmer):
         np.random.seed(agent_seed)
 
         # Farm related
-        #self.salinity = np.random.normal(2, 0.5)
         self.salt_experience = 0
         self.land_size = np.random.normal(1.9, 1)
         self.current_crop = "Rice"
         self.new_crop = self.current_crop
-        self.water_level = 8
         self.number_of_ww = random.choice([0,1,2])
+        self.yield_time = self.yield_time_crops[self.current_crop]
 
         # Financial
         self.savings = np.random.normal(4000, 1000)
-        self.loan_size = 0
         self.house_price = np.random.normal(2000, 300) # Define later
         self.value_of_assets = self.land_size * 3000 + self.house_price # Define later
         self.maximum_debt = self.value_of_assets
 
     def step(self):
         pass
+
+# Aqua farmers
+class Aqua_farmer(Agent):
+    def __init__(self, model, agent_type, node_id, salinity):
+        super().__init__(model)
+        self.agent_type = agent_type
+        self.node_id = node_id
+        self.salinity = salinity
+
+        # Define households
+        self.ages = create_household(5,2)        
+        self.household_size = len(self.ages)
+        self.living_costs = self.household_size * 1000 # ASSUMPTION, EACH HOUSEHOLD MEMBERS LIVING COSTS ARE 1100 EUROS PER YEAR
+        self.loan_size = 0
+        self.required_income = self.living_costs + 0.2 * self.loan_size
+        self.education_level = education_levels(self)
+        self.facilities_in_neighbourhood = 1
+
+        # Define income
+        self.government_support = 0
+        self.meeting_agrocensus = 0
+        self.cost_farming = 0
+        self.yield_ = 0
+        self.income = 0
+        self.yield_time_crops = {"Shrimp":8}
+        self.farm_type = random.choice(["Extensive"]) # Later add intensive and integrated mangrove shrimp
+
+        # Related to fish
+        self.growth_time = 0
+        self.salinity_during_shock = 0
+        self.yield_time = 2
+        self.disease = 0
+
+    def step(self):
+        pass
+
+    def yearly_activities(self):
+        # Each agent is one year older
+        self.ages = [age + 1 for age in self.ages]
+        # Possibility for an agent to die
+        self.ages = die(self.ages)
+        # Possiblity a child is born
+        self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 5) 
+
+        # update savings
+        self.savings += self.income - self.cost_farming - self.living_costs
+        
+        # Did you visit a governmental meeting?
+        self.meeting_agrocensus = 1 if np.random.rand() > 0.1 else 0 # Based on paper Tran et al., (2020)
+
+        # Determine farming time the farmer has left
+        if self.use_antibiotics == 1:
+            self.farming_time_left -= 1
+        
+        # If a farm has 0 time left, they will migrate to the city ASSUMPTION
+        if self.farming_time_left <= 0:
+            print("This farm failed due to antibiotic use")
+            for i in range(len(self.ages)):
+                migrated = Migrated(self.model, agent_type = "migrated")
+                self.model.agents.add(migrated)
+            self.model.agents.remove(self) 
+
+        # Calculate livelihood
+        self.livelihood = calculate_livelihood_agrifarm(self.meeting_agrocensus, self.education_level, self.salt_experience, 
+        self.government_support, self.savings, self.loan_size, self.maximum_debt, self.land_size, self.salinity)
+
+    def reset_income(self): # At the end of each year, we should reset the income for the next year. However, this should happen after the datacollector collected the data, therefore there is a new function for this. 
+        self.income = 0
+        self.yield_ = 0
+        self.cost_farming = 0
+
+    def harvest(self):
+        print("weharvesten!")
+        # Did you get a disease this season?
+        self.disease = 1 if np.random.rand() <= self.model.chance_disease[self.farm_type] else 0
+
+        # Do you want to use antibiotics? DEZE KOSTEN GELD!! 
+        if self.disease == 1:
+            if np.random.rand() <= self.model.use_antibiotics[self.agent_type]:
+                self.use_antibiotics = 1
+            else:
+                self.use_antibiotics = 0
+
+        # Calculate costs based on land size
+        self.cost_farming += calculate_cost_aqua(self.current_crop, self.farm_type, self.land_size, self.disease)
+
+        # Calculate yield
+        self.yield_ = calculate_yield_aqua(self.land_size, self.current_crop, self.disease, self.farm_type)
+
+        # Calculate income based on yield 
+        self.income += calculate_income_aqua(self.current_crop, self.yield_)        
+
+        # Reset growth time, and determine time it takes to grow the next crop
+        self.growth_time = 0
+        self.yield_time = self.yield_time_crops[self.current_crop]
+
+
+class Aqua_small_saline(Aqua_farmer):
+    def __init__(self, model, agent_type, node_id, salinity):
+        super().__init__(model, "Aqua_small_saline", node_id, salinity)  
+        agent_seed = self.model.random.randint(0,1000)
+        np.random.seed(agent_seed)
+
+        self.salt_experience = 0
+        self.land_size = np.random.normal(1.9, 1)
+        self.current_crop = "Shrimp"
+        self.number_of_ww = random.choice([0,1,2])
+        self.farming_time = np.random.randint(0,10) # How long are we already farming?
+        self.farming_time_left = 10 # You can farm for 10 years on antibiotics, if you used antibiotics, your farming time will decrease by 1 each year. Otherwise, this will stay the same
+        self.use_antibiotics = 0
+
+        # Financial
+        self.savings = np.random.normal(4000, 1000)
+        self.house_price = np.random.normal(2000, 300) # Define later
+        self.value_of_assets = self.land_size * 3000 + self.house_price # Define later
+        self.maximum_debt = self.value_of_assets
+
+
+    def step(self):
+        pass
+
 
 class Low_skilled_wage_worker(Agent):
     def __init__(self, model, agent_type):
@@ -154,12 +280,15 @@ class Low_skilled_wage_worker(Agent):
         self.agent_type = agent_type
         self.ages = create_household(5,2)        
         self.household_size = len(self.ages)
+        self.living_costs = 1100 * self.household_size # ASSUMPTION
 
+        # Related to working
         self.income = 100
         self.minimum_income = self.household_size * 1100 # ASSUMPTION how much life costs per household member per year
         self.working_force = 0
         self.child_who_can_work = 0
 
+        # Related to migrating
         self.contacts_in_city = 1
         self.saw_advertisement = 1
         self.change_children = None
@@ -186,7 +315,6 @@ class Low_skilled_wage_worker(Agent):
             self.possible_changes = ["migration", "increase_working_force", "switch to aqua/agri"]
         self.chance_migration = calculate_migration_ww(self.income_too_low, self.contacts_in_city,  self.facilities_in_neighbourhood)
         if np.random.rand() < self.chance_migration:
-            pass #print("agent becomes migrated agent")
             for i in range(len(self.ages)):
                 migrated = Migrated(self.model, agent_type = "migrated")
                 self.model.agents.add(migrated)

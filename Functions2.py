@@ -121,30 +121,35 @@ def advice_neighbours(possible_next_crops, model,node_id):
     possible_next_crops = list(set(possible_next_crops))
     return possible_next_crops
 
-def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_livelihood, salinity, water_level):
+def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_livelihood, salinity, current_crop):
     abilities = []
     global requirements_per_crop
-    requirements_per_crop = [{"name": "Rice", "switch_price": 1000, "knowledge": 0.7, "Water_level": 5, "salinity":3, "profit_over_five_years":9000}, 
-    {"name": "Mango", "switch_price": 1500, "knowledge": 0.5, "Water_level": 4, "salinity":5, "profit_over_five_years":10000},
-    {"name": "Coconut", "switch_price": 800, "knowledge": 0.6, "Water_level": 6, "salinity": 9, "profit_over_five_years":10000},
-    {"name": "Shrimp", "switch_price": 1600, "knowledge": 0.6, "Water_level": 6, "salinity": 12, "profit_over_five_years":10000}] # THESE ARE ASSUMPTIONS AND CHANGE LATER BASED ON INTERVIEWS
+    requirements_per_crop = [{"name": "Rice", "switch_price": 1000, "knowledge": 0.7, "salinity":(0,4), "profit_over_five_years":9000}, 
+    {"name": "Mango", "switch_price": 1500, "knowledge": 0.5,  "salinity":(4,8), "profit_over_five_years":10000},
+    {"name": "Coconut", "switch_price": 800, "knowledge": 0.6,  "salinity": (8,12), "profit_over_five_years":10000},
+    {"name": "Shrimp", "switch_price": 1600, "knowledge": 0.6, "salinity": (12,35), "profit_over_five_years":10000}] # THESE ARE ASSUMPTIONS AND CHANGE LATER BASED ON INTERVIEWS
 
     for crop in requirements_per_crop:
         if crop['name'] in possible_next_crops: # Check if crop change is possible, based on agrocensus meeting and neighbour
 
             # Financial Ability
             possible_debt_left = maximum_loans - loan
-            if savings >= crop['switch_price']:
+            if current_crop == crop['name']:
+                # You already have the crop! Therefore, there won't be a switching price
                 financial_ability = 1
-            elif savings + possible_debt_left >= crop['switch_price']:
-                required_loan = crop['switch_price'] - savings
-                # ASSUMPTION, PROFIT OVER FIVE YEAR SHOULD BE TWICE AS YOUR LOAN (since you also have other costs)
-                if crop['profit_over_five_years'] / 2 > required_loan:
-                    financial_ability = 0.5
+            else:
+                # You do need to pay the switching price
+                if savings >= crop['switch_price']:
+                    financial_ability = 1
+                elif savings + possible_debt_left >= crop['switch_price']:
+                    required_loan = crop['switch_price'] - savings
+                    # ASSUMPTION, PROFIT OVER FIVE YEAR SHOULD BE TWICE AS YOUR LOAN (since you also have other costs)
+                    if crop['profit_over_five_years'] / 2 > required_loan:
+                        financial_ability = 0.5
+                    else:
+                        financial_ability = 0
                 else:
                     financial_ability = 0
-            else:
-                financial_ability = 0
 
             # Institutional Ability
             if human_livelihood >= crop['knowledge']:
@@ -153,10 +158,8 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
                 institutional_ability = max(0, human_livelihood / crop['knowledge'])
 
             # Technical Ability
-            if salinity in range((crop['salinity']-2), (crop['salinity']+2)) and water_level in range((crop['salinity']-2), (crop['salinity']+2)):
+            if crop['salinity'][0] <= salinity < crop['salinity'][1]:
                 technical_ability = 1
-            elif salinity in range((crop['salinity']-2), (crop['salinity']+2)) or water_level in range((crop['salinity']-2), (crop['salinity']+2)):
-                technical_ability = 0.5
             else:
                 technical_ability = 0
             
@@ -178,7 +181,7 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
     return abilities
 
 
-def define_motivations(possible_next_crops, income, abilities):
+def define_motivations(possible_next_crops, income, abilities, current_crop, required_income):
     # Determine motivations per crop change
     motivations = {}
     for crop in requirements_per_crop:
@@ -187,15 +190,21 @@ def define_motivations(possible_next_crops, income, abilities):
                 financial_ability = ability['FA']
                 break
         if crop['name'] in possible_next_crops:
-            # When the income of the crop is higher than your current income, you are motivated! If you also do not need a loan, you are more motivated 
-            if crop['profit_over_five_years'] > income and financial_ability == 1: 
-                motivation = 1
-            elif crop['profit_over_five_years'] > income and financial_ability == 0.5: # You need a loan
-                motivation = 0.5
+            if crop['name'] != current_crop:
+                # When the income of the crop is higher than your current income, you are motivated! If you also do not need a loan, you are more motivated 
+                if crop['profit_over_five_years'] > income and financial_ability == 1: 
+                    motivation = 1
+                elif crop['profit_over_five_years'] > income and financial_ability == 0.5: # You need a loan
+                    motivation = 0.5
+                else:
+                    motivation = 0 # sensitivity analysis is required, since these numbers are based on my own imagination
             else:
-                motivation = 0 # sensitivity analysis is required, since these numbers are based on my own imagination
+                if income > required_income:
+                    motivation = 1
+                else:
+                    motivation = 0.2 # je hebt al wel kennis en je hoeft niet te switchen, dus motivatie is niet gelijk 0
             motivations[crop['name']] = motivation
-   
+            # print("motivation voor ", crop['name'], " is ", motivation)   
     return motivations
 
 def calculate_MOTA(motivations, abilities):
@@ -230,9 +239,21 @@ def change_crops(change, savings, loan, maximum_loans):
     return savings, loan, maximum_loans
 
 def calculate_cost(crop_type, land_size):
-    costs_per_crop = {"Rice": 100, "Mango":100, "Coconut":200} # THIS IS TOTALLYL RANDOM, will be based on interview later
+    costs_per_crop = {"Rice": 100, "Mango":100, "Coconut":200, "Shrimp":400} # THIS IS TOTALLYL RANDOM, will be based on interview later
     costs_per_ha = costs_per_crop[crop_type]
     costs = costs_per_ha * land_size
+    return costs
+
+def calculate_cost_aqua(crop_type, farm_type, land_size, disease):
+    if crop_type == "Shrimp":
+        if farm_type == "Extensive":
+            costs = np.random.normal(150, 40) * land_size # based on joffre et al., (2015)
+        elif farm_type == "Intensive":
+            costs = np.random.normal(8000, 3000) * land_size
+        elif farm_type == "MS":
+            costs = np.random.normal(190, 40) * land_size
+    if disease == 1:
+        costs+= 20* land_size # ASSUMPTION, NEEDS SENSITIVITY ANALYSIS LATER, HOW MUCH DO ANTIBIOTICS COSTS??
     return costs
 
 def calculate_yield_agri(crop_type, salinity, land_size):
@@ -248,10 +269,35 @@ def calculate_yield_agri(crop_type, salinity, land_size):
         yield_per_ha = np.random.uniform(5, 7)
         threshold = 9
         slope = 15    # numbers are based on FAO
+    else:
+        yield_per_ha = 0
+        threshold = 0
+        slope = 0 
+
     
     current_salinity = salinity
     actual_yield = (((100 - slope * (current_salinity - threshold))/100) * yield_per_ha * land_size) # Based on Formula FAO
     return actual_yield
+
+def calculate_yield_aqua(land_size, current_crop, disease, farm_type):
+    if current_crop == "Shrimp":
+        if farm_type == "Extensive" and disease == 1:
+            yield_ = np.random.normal(37, 6.8) * land_size # this is in kg, based on paper joffre et al., 2015
+        elif farm_type == "Extensive":
+            yield_ = np.random.normal(140, 20.9) * land_size
+        elif farm_type == "Intensive" and disease == 1:
+            yield_ = np.random.normal(1046, 460) * land_size
+        elif farm_type == "Intensive":
+            yield_ = np.random.normal(3600, 1045)
+        elif farm_type == "MS" and disease == 1:
+            yield_ = np.random.normal(45, 6.8) * land_size
+        elif farm_type == "MS":
+            yield_ = np.random.normal(91.45, 14.61) * land_size
+
+    return yield_
+
+
+
 
 def calculate_income_farming(crop_type,  total_yield):
     if crop_type == "Rice":
@@ -260,8 +306,17 @@ def calculate_income_farming(crop_type,  total_yield):
         price = 100
     elif crop_type == "Coconut":
         price = 200
+    else:
+        price = 0
     yield_income = price * total_yield
     return yield_income 
+
+def calculate_income_aqua(crop_type, total_yield):
+    if crop_type == "Shrimp":
+        income = np.random.uniform(7, 11) * total_yield # DATA IS NEEDED, this is the assumption from the Rijksoverheid for shrimps in general
+    return income
+
+
 
 def calculate_farmers_spend_on_ww(income, number_of_ww, household_size):
     # this function calculates the amount of money farmers spend on wage workers. They will only spend money on wage workers when they earn enough themselves
