@@ -61,9 +61,16 @@ class RiverDeltaModel(Model):
         self.start_number_of_inhabitants = 0
         self.number_of_inhabitants = 0
         self.reduce_service_income_migrations = 0
+        self.total_migrated = 0
+        self.migration_ratio = 0
+        self.start_number_of_service_hh = 0
+        self.total_service_workers = 0
 
         # Chance an agent wants to leave the household
         self.chance_leaving_household = 0.3 # Should be determined later 
+
+        # facilities in the neighbourhood:
+        self.facilities_in_district = 1
 
         # Income
         self.interest_rate_savings = 0.05
@@ -114,6 +121,8 @@ class RiverDeltaModel(Model):
         # At the first step, check number of inhabitants. this is the 100% income for the service workers
         if self.steps == 1:
             self.start_number_of_inhabitants = sum(agent.household_size for agent in self.agents if hasattr(agent, 'household_size'))
+            # Also count the number of service workers for the number of facilities in the district
+            self.start_number_of_service_hh = len([agent for agent in self.agents if isinstance(agent, Service_workers)])
 
         # Check if a shock is happening
         self.check_shock()
@@ -136,11 +145,20 @@ class RiverDeltaModel(Model):
             # Wage workers should receive income
             self.agents.do(lambda agent:agent.receive_income() if isinstance(agent,(Low_skilled_wage_worker, Service_workers)) else None)
 
-            # Collect data
-            self.datacollector.collect(self)
+            # Check migration ratio
+            self.total_migrated = sum(1 for agent in self.agents if isinstance(agent, Migrated))
+            self.migration_ratio = self.total_migrated / self.start_number_of_inhabitants
 
-            # total_migrated = sum(1 for agent in self.agents if isinstance(agent, Migrated))
-            # print(total_migrated)
+            # Check the facilities that are left in the region:
+            self.total_service_workers = len([agent for agent in self.agents if isinstance(agent, Service_workers)])
+            self.facilities_in_district = self.total_service_workers / self.start_number_of_service_hh
+            for agent in self.agents:
+                if hasattr(agent, "facilities_in_neighbourhood"):
+                    agent.facilities_in_neighbourhood = self.facilities_in_district
+                    
+
+             # Collect data
+            self.datacollector.collect(self)
 
             # Set income to zero, to calculate everything new for the next year
             self.agents.do(lambda agent: agent.reset_income() if isinstance(agent, (Agri_farmer, Aqua_farmer)) else None)
@@ -216,6 +234,9 @@ class RiverDeltaModel(Model):
                 if hasattr(agent, "salinity"):
                     agent.salinity = random.uniform (1.5, 2) * agent.salinity # ASSUMPTION, NEED TO DETERMINE HOW INTENSE A SHOCK IS
                     agent.salinity_during_shock = agent.salinity
+                if hasattr(agent, "salt_experience"):
+                    agent.salt_experience = min(agent.salt_experience + 0.2, 1) #ASSUMPTION, SALT EXPERIENCE INCREASES BY 0.2 with a maximum value of 1
+                    
 
             self.time_since_shock = 0
             print("shock is happening!!")

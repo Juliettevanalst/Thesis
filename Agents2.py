@@ -23,6 +23,7 @@ class Agri_farmer(Agent):
         self.required_income = self.living_costs + 0.2 * self.loan_size
         self.education_level = education_levels(self)
         self.facilities_in_neighbourhood = 1
+        self.contacts_in_city = 0
 
         # Define income
         self.government_support = 0
@@ -54,6 +55,11 @@ class Agri_farmer(Agent):
         
         # Did you visit a governmental meeting?
         self.meeting_agrocensus = 1 if np.random.rand() > 0.1 else 0 # Based on paper Tran et al., (2020)
+
+        # Do you have contacts in the city?
+        if random.random() < self.model.migration_ratio and self.contacts_in_city == 0:
+            self.contacts_in_city = 1
+
         # Calculate livelihood
         self.livelihood = calculate_livelihood_agrifarm(self.meeting_agrocensus, self.education_level, self.salt_experience, 
         self.government_support, self.savings, self.loan_size, self.maximum_debt, self.land_size, self.salinity)
@@ -187,6 +193,7 @@ class Aqua_farmer(Agent):
         self.required_income = self.living_costs + 0.2 * self.loan_size
         self.education_level = education_levels(self)
         self.facilities_in_neighbourhood = 1
+        self.contacts_in_city = 0
 
         # Define income
         self.government_support = 0
@@ -217,6 +224,10 @@ class Aqua_farmer(Agent):
         # update savings
         self.savings += self.income - self.cost_farming - self.living_costs
         self.savings = self.savings * (self.model.interest_rate_savings + 1) # Receive interest 
+
+        # Do you have contacts in the city?
+        if random.random() < self.model.migration_ratio and self.contacts_in_city == 0:
+            self.contacts_in_city = 1
         
         # Did you visit a governmental meeting?
         self.meeting_agrocensus = 1 if np.random.rand() > 0.1 else 0 # Based on paper Tran et al., (2020)
@@ -310,7 +321,7 @@ class Low_skilled_wage_worker(Agent):
         self.child_who_can_work = 0
 
         # Related to migrating
-        self.contacts_in_city = 1
+        self.contacts_in_city = 0
         self.saw_advertisement = 1
         self.change_children = None
         self.change_leaving_household = 0.1
@@ -328,6 +339,10 @@ class Low_skilled_wage_worker(Agent):
         self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 5) 
         # Define working force
         self.working_force = len([num for num in self.ages if 15 <= num <= 59]) + self.child_who_can_work
+
+        # Do you have contacts in the city?
+        if random.random() < self.model.migration_ratio and self.contacts_in_city == 0:
+            self.contacts_in_city = 1
 
     def receive_income(self):
         # We need to change as household since the income is too low?
@@ -375,7 +390,7 @@ class Service_workers(Agent):
         self.child_who_can_work = 0
 
         # Related to migrating
-        self.contacts_in_city = 1
+        self.contacts_in_city = 0
         self.saw_advertisement = 1
         self.change_children = None
         self.change_leaving_household = 0.1
@@ -398,9 +413,12 @@ class Service_workers(Agent):
         # Define working force
         self.working_force = len([num for num in self.ages if 15 <= num <= 59]) + self.child_who_can_work
 
+        # Do you have contacts in the city?
+        if random.random() < self.model.migration_ratio and self.contacts_in_city == 0:
+            self.contacts_in_city = 1
+
     def receive_income(self):
         self.income = self.model.reduce_service_income_migrations * self.original_income
-        print(self.income)
         # We need to change as household since the income is too low?
         if self.income < self.minimum_income:
             self.income_too_low = 1
