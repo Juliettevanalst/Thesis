@@ -13,15 +13,16 @@ from mesa import Model, Agent
 from mesa.space import NetworkGrid
 from mesa.datacollection import DataCollector
 
-from Agents2 import Agri_farmer, Agri_small_saline, Agri_small_fresh, Low_skilled_wage_worker, Migrated, Aqua_small_saline, Aqua_farmer
+from Agents2 import Agri_farmer, Agri_small_saline, Agri_small_fresh, Low_skilled_wage_worker, Migrated, Aqua_small_saline, Aqua_farmer, Service_workers
 
 
 class RiverDeltaModel(Model):
     def __init__(self, seed=20, district = 'Nhà Bè',
-    num_agents = {"Agri_small_saline": 50, "Agri_small_fresh": 50, "Aqua_small_saline":10},
-    num_low_skilled_ww = {"Aqua":0, "Agri": 0},
+    num_agents = {"Agri_small_saline": 50, "Agri_small_fresh": 50, "Aqua_small_saline":50},
+    num_low_skilled_ww = {"Aqua":10, "Agri": 10},
+    num_service_workers  = 10,
     number_of_migrated_agents = 0,
-    salinity_shock_step = [120, 600]):
+    salinity_shock_step = [125, 191]):
 
         super().__init__(seed = seed)
         # Set seeds
@@ -56,9 +57,17 @@ class RiverDeltaModel(Model):
         self.income_per_aqua_ww = 0
         self.income_per_agri_ww  = 0
 
+        # Keep track of total_population
+        self.start_number_of_inhabitants = 0
+        self.number_of_inhabitants = 0
+        self.reduce_service_income_migrations = 0
+
         # Chance an agent wants to leave the household
         self.chance_leaving_household = 0.3 # Should be determined later 
-        
+
+        # Income
+        self.interest_rate_savings = 0.05
+        self.interest_rate_loans = 0.1
 
         # Set up data collector
         model_metrics = {}
@@ -88,14 +97,23 @@ class RiverDeltaModel(Model):
                 low_skilled_ww = Low_skilled_wage_worker(self, work_type)
                 self.agents.add(low_skilled_ww)
 
+        # Create service worker agents
+        for i in range (num_service_workers):
+            service_worker = Service_workers(self, work_type)
+            self.agents.add(service_worker)
+
         # Create migrated agents
         for i in range(number_of_migrated_agents):
             migrated_agent = Migrated(self, agent_type = "migrated")
             self.agents.add(migrated_agent)
     
+# HIER IS DE STEP FUNCTIE (voor de blinde mensen zoals ik die elke keer zoeken)
     def step(self):
         self.agents.shuffle_do('step')
 
+        # At the first step, check number of inhabitants. this is the 100% income for the service workers
+        if self.steps == 1:
+            self.start_number_of_inhabitants = sum(agent.household_size for agent in self.agents if hasattr(agent, 'household_size'))
 
         # Check if a shock is happening
         self.check_shock()
@@ -111,14 +129,18 @@ class RiverDeltaModel(Model):
             self.update_wage_worker_totals()
             self.calculate_income_ww()
 
+            # Calculate income for service workers if agents migrated
+            self.number_of_inhabitants = sum(agent.household_size for agent in self.agents if hasattr(agent, 'household_size'))
+            self.reduce_service_income_migrations = self.number_of_inhabitants/self.start_number_of_inhabitants
+
             # Wage workers should receive income
-            self.agents.do(lambda agent:agent.receive_income() if isinstance(agent,Low_skilled_wage_worker) else None)
+            self.agents.do(lambda agent:agent.receive_income() if isinstance(agent,(Low_skilled_wage_worker, Service_workers)) else None)
 
             # Collect data
             self.datacollector.collect(self)
 
-            total_migrated = sum(1 for agent in self.agents if isinstance(agent, Migrated))
-            print(total_migrated)
+            # total_migrated = sum(1 for agent in self.agents if isinstance(agent, Migrated))
+            # print(total_migrated)
 
             # Set income to zero, to calculate everything new for the next year
             self.agents.do(lambda agent: agent.reset_income() if isinstance(agent, (Agri_farmer, Aqua_farmer)) else None)
@@ -227,6 +249,8 @@ class RiverDeltaModel(Model):
                 self.total_income_agri_ww += agent.income_spent_on_ww
 
             # LATER ADD AQUA FARMERS HERE TOO
+            # if isinstance(agent, Aqua_farmer):
+            #     self.total_income_aqua_ww += agent.income_spent_on_ww
 
     def calculate_income_ww(self):
         # Count the total income of aqua and agri wage workers, and determine the income per household, based on their working force

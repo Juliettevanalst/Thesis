@@ -4,7 +4,7 @@ import numpy as np
 import random
 from Functions2 import create_household, die, child_birth, education_levels, calculate_livelihood_agrifarm, advice_agrocensus, advice_neighbours, define_abilities, define_motivations
 from Functions2 import calculate_MOTA,  best_MOTA, change_crops, calculate_cost, calculate_yield_agri, calculate_income_farming, calculate_farmers_spend_on_ww, calculate_migration_ww, decide_change_ww
-from Functions2 import calculate_cost_aqua, calculate_income_aqua, calculate_yield_aqua
+from Functions2 import calculate_cost_aqua, calculate_income_aqua, calculate_yield_aqua, calculate_migration_chance_agri, transfer_land, annual_loan_payment
 
 # Agri farmers
 class Agri_farmer(Agent):
@@ -19,6 +19,7 @@ class Agri_farmer(Agent):
         self.household_size = len(self.ages)
         self.living_costs = self.household_size * 1000 # ASSUMPTION, EACH HOUSEHOLD MEMBERS LIVING COSTS ARE 1100 EUROS PER YEAR
         self.loan_size = 0
+        self.pay_loan = 0
         self.required_income = self.living_costs + 0.2 * self.loan_size
         self.education_level = education_levels(self)
         self.facilities_in_neighbourhood = 1
@@ -48,13 +49,26 @@ class Agri_farmer(Agent):
         self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 5) 
 
         # update savings
-        self.savings += self.income - self.cost_farming - self.living_costs
+        self.savings += self.income - self.cost_farming - self.living_costs - self.pay_loan
+        self.savings = self.savings * (self.model.interest_rate_savings + 1)
         
         # Did you visit a governmental meeting?
         self.meeting_agrocensus = 1 if np.random.rand() > 0.1 else 0 # Based on paper Tran et al., (2020)
         # Calculate livelihood
         self.livelihood = calculate_livelihood_agrifarm(self.meeting_agrocensus, self.education_level, self.salt_experience, 
         self.government_support, self.savings, self.loan_size, self.maximum_debt, self.land_size, self.salinity)
+
+        # Check if the agent will migrate or not
+        self.chance_migration = calculate_migration_chance_agri(self.livelihood)
+        self.chance_migration
+        if random.random() < self.chance_migration:
+            # neighbor with the highest livelihood will get your land. However, this is possible after the first year, since otherwise not all agents do have a livelihood defined
+            if self.model.steps > 12:
+                transfer_land(self.land_size, self.node_id, self.model)
+            for i in range(len(self.ages)):
+                migrated = Migrated(self.model, agent_type = "migrated")
+                self.model.agents.add(migrated)
+            self.model.agents.remove(self) 
 
         # Decide on next crop
         self.possible_next_crops = [self.current_crop] # It is always possible to change nothing and have the same crop as the previous year
@@ -73,6 +87,8 @@ class Agri_farmer(Agent):
         if self.new_crop != self.current_crop:
             # Change savings based on crop choice
             self.savings, self.loan_size, self.maximum_debt = change_crops(self.new_crop, self.savings, self.loan_size, self.maximum_debt)
+            # Calculate how much you need to pay each year to pay back your loan in 5 years
+            self.pay_loan = annual_loan_payment (self.loan_size, self.model.interest_rate_loans)
 
         # Need to pay for the wage workers:
         self.income_spent_on_ww = calculate_farmers_spend_on_ww(self.income, self.number_of_ww, self.household_size)
@@ -120,6 +136,8 @@ class Agri_small_saline(Agri_farmer):
         self.number_of_ww = random.choice([0,1,2])
         self.yield_time = self.yield_time_crops[self.current_crop]
 
+       
+
         # Financial
         self.savings = np.random.normal(4000, 1000)
         self.house_price = np.random.normal(2000, 300) # Define later
@@ -142,6 +160,7 @@ class Agri_small_fresh(Agri_farmer):
         self.new_crop = self.current_crop
         self.number_of_ww = random.choice([0,1,2])
         self.yield_time = self.yield_time_crops[self.current_crop]
+
 
         # Financial
         self.savings = np.random.normal(4000, 1000)
@@ -197,6 +216,7 @@ class Aqua_farmer(Agent):
 
         # update savings
         self.savings += self.income - self.cost_farming - self.living_costs
+        self.savings = self.savings * (self.model.interest_rate_savings + 1) # Receive interest 
         
         # Did you visit a governmental meeting?
         self.meeting_agrocensus = 1 if np.random.rand() > 0.1 else 0 # Based on paper Tran et al., (2020)
@@ -208,6 +228,8 @@ class Aqua_farmer(Agent):
         # If a farm has 0 time left, they will migrate to the city ASSUMPTION
         if self.farming_time_left <= 0:
             print("This farm failed due to antibiotic use")
+            if self.model.steps > 12:
+                transfer_land(self.land_size, self.node_id, self.model)
             for i in range(len(self.ages)):
                 migrated = Migrated(self.model, agent_type = "migrated")
                 self.model.agents.add(migrated)
@@ -223,7 +245,6 @@ class Aqua_farmer(Agent):
         self.cost_farming = 0
 
     def harvest(self):
-        print("weharvesten!")
         # Did you get a disease this season?
         self.disease = 1 if np.random.rand() <= self.model.chance_disease[self.farm_type] else 0
 
@@ -272,7 +293,7 @@ class Aqua_small_saline(Aqua_farmer):
     def step(self):
         pass
 
-
+# Low skilled wage workers
 class Low_skilled_wage_worker(Agent):
     def __init__(self, model, agent_type):
         super().__init__(model)
@@ -285,7 +306,7 @@ class Low_skilled_wage_worker(Agent):
         # Related to working
         self.income = 100
         self.minimum_income = self.household_size * 1100 # ASSUMPTION how much life costs per household member per year
-        self.working_force = 0
+        self.working_force = len([num for num in self.ages if 15 <= num <= 59])
         self.child_who_can_work = 0
 
         # Related to migrating
@@ -313,6 +334,8 @@ class Low_skilled_wage_worker(Agent):
         if self.income < self.minimum_income:
             self.income_too_low = 1
             self.possible_changes = ["migration", "increase_working_force", "switch to aqua/agri"]
+        else:
+            self.income_too_low = 0
         self.chance_migration = calculate_migration_ww(self.income_too_low, self.contacts_in_city,  self.facilities_in_neighbourhood)
         if np.random.rand() < self.chance_migration:
             for i in range(len(self.ages)):
@@ -334,8 +357,84 @@ class Low_skilled_wage_worker(Agent):
                 for i in range(migrated_agent_ages):
                     migrated = Migrated(self.model, agent_type = "migrated")
                     self.model.agents.add(migrated)
-        
 
+class Service_workers(Agent):
+    def __init__(self, model, agent_type):
+        super().__init__(model)
+
+        self.agent_type = agent_type
+        self.ages = create_household(5,2)        
+        self.household_size = len(self.ages)
+        self.living_costs = 1100 * self.household_size # ASSUMPTION
+
+        # Related to working
+        self.working_force = len([num for num in self.ages if 15 <= num <= 59])
+        self.original_income = 1100 * self.working_force # ASSUMPTION
+        self.income = self.original_income
+        self.minimum_income = self.living_costs 
+        self.child_who_can_work = 0
+
+        # Related to migrating
+        self.contacts_in_city = 1
+        self.saw_advertisement = 1
+        self.change_children = None
+        self.change_leaving_household = 0.1
+        self.facilities_in_neighbourhood = 1
+
+        # Related to their own work
+        self.assets = random.choice([0,1])
+        self.competition = random.randrange(0,10)
+
+    def step(self):
+        pass
+
+    def yearly_activities(self):
+         # Each agent is one year older
+        self.ages = [age + 1 for age in self.ages]
+        # Possibility for an agent to die
+        self.ages = die(self.ages)
+        # Possiblity a child is born
+        self.ages = child_birth(self.ages, birth_rate = 0.2, maximum_number_of_children = 5) 
+        # Define working force
+        self.working_force = len([num for num in self.ages if 15 <= num <= 59]) + self.child_who_can_work
+
+    def receive_income(self):
+        self.income = self.model.reduce_service_income_migrations * self.original_income
+        print(self.income)
+        # We need to change as household since the income is too low?
+        if self.income < self.minimum_income:
+            self.income_too_low = 1
+        else:
+            self.income_too_low = 0
+        self.chance_migration = calculate_migration_ww(self.income_too_low, self.contacts_in_city,  self.facilities_in_neighbourhood)
+        if np.random.rand() < self.chance_migration:
+            for i in range(len(self.ages)):
+                migrated = Migrated(self.model, agent_type = "migrated")
+                self.model.agents.add(migrated)
+            self.model.agents.remove(self) # Delete the household 
+
+            # Income for another agent should increase, since competition is decreased
+            other_service_households = [agent for agent in self.model.agents if isinstance(agent, Service_workers)] # select all service worker agents
+            if other_service_households:
+                random_agent = random.choice(other_service_households)
+                original_competition = random_agent.competition
+                random_agent.competition -=1
+                if random_agent.competition > 0:
+                    random_agent.original_income =random_agent.original_income * (1+ (1/random_agent.competition))
+                    
+        # What do the young adults/parents want?
+        num_children = len([num for num in self.ages if 15 <= num <= 35])
+        if np.random.rand() < self.model.chance_leaving_household: # They want to leave
+            self.children_possibilities = ["migration"]
+            if self.saw_advertisement == 1 and self.contacts_in_city == 1:
+                self.change_children = "migration"
+                migrated_agent_ages  = len([l for l in self.ages if (15 <= l <= 35)])
+                self.ages = [l for l in self.ages if not (15 <= l <= 35)] # Delete them from the list of ages
+                for i in range(migrated_agent_ages):
+                    migrated = Migrated(self.model, agent_type = "migrated")
+                    self.model.agents.add(migrated)
+        
+# Migrated agents
 class Migrated(Agent):
     def __init__(self, model, agent_type):
         super().__init__(model)

@@ -2,6 +2,7 @@ import random
 from mesa import Agent, Model
 import numpy as np
 
+
 def create_household(max_number_children, max_number_grandparents):
     # Define number of parents. There are 2 parents, aged between 20 and 50, and their age difference is maximum 5 years
     num_parents = 2
@@ -97,6 +98,33 @@ def calculate_livelihood_agrifarm(meeting_agrocensus, education_level, salt_expe
 #     salinities = [agent.salinity for n in neighbors for agent in model.grid.get_cell_list_contents([n]) if hasattr(agent, 'salinity')]
 #     salinity = np.mean(salinities)
 #     return salinity
+
+def calculate_migration_chance_agri(livelihood):
+    average_livelihood = livelihood['average']
+    if average_livelihood >= 0.5:
+        chance_migrating = 0.01
+    elif average_livelihood <= 0.01:
+        chance_migrating = 1
+    else:
+        chance_migrating = 1 - ((average_livelihood - 0.01) / (0.5-0.01)) # BASED ON ASSUMPTION
+    return chance_migrating
+
+def transfer_land(land_size, node_id, model):
+    from Agents2 import Agri_farmer, Aqua_farmer, Agri_small_saline, Agri_small_fresh
+    neighbors = model.G.neighbors(node_id)
+    max_livelihood = 0
+    best_neighbor = None
+
+    for neighbor in neighbors:
+        agents = model.grid.get_cell_list_contents([neighbor])
+    for agent in agents:
+        if isinstance(agent, (Agri_farmer, Aqua_farmer)):
+            if agent.livelihood['average'] > max_livelihood:
+                max_livelihood = agent.livelihood['average']
+                best_neighbor = agent
+    
+    if best_neighbor:
+        best_neighbor.land_size += land_size
 
 def advice_agrocensus(salinity):
     # Based on certain salinity levels, agrocensus will advice you something. This is their calendar. 
@@ -297,8 +325,6 @@ def calculate_yield_aqua(land_size, current_crop, disease, farm_type):
     return yield_
 
 
-
-
 def calculate_income_farming(crop_type,  total_yield):
     if crop_type == "Rice":
         price = 400 # ASSUMPTION, this is price / ha
@@ -315,6 +341,10 @@ def calculate_income_aqua(crop_type, total_yield):
     if crop_type == "Shrimp":
         income = np.random.uniform(7, 11) * total_yield # DATA IS NEEDED, this is the assumption from the Rijksoverheid for shrimps in general
     return income
+
+def annual_loan_payment(loan_size, interest_rate_loans):
+    annual_loan = loan_size * (interest_rate_loans * (1+ interest_rate_loans)**5) / ((1+interest_rate_loans)**5 - 1) # This is based on annuïteitenberekenings
+    return annual_loan
 
 
 
@@ -337,7 +367,7 @@ def calculate_migration_ww(income_too_low, contacts_in_city, facilities_in_neigh
     elif facilities_in_neighbourhood < 0.5:
         chance = 0.4
     else:
-        chance = 0.1 # THESE ARE ALL RANDOM!!! DATA ANALYSIS IS REQUIRED 
+        chance = 0.1 # THESE ARE ALL RANDOM!!! SENSITIVITY IS REQUIRED 
     return chance
 
 def decide_change_ww(income_per_agri_ww, income_per_aqua_ww, income, working_force, agent_type, ages):
@@ -366,6 +396,12 @@ def decide_change_ww(income_per_agri_ww, income_per_aqua_ww, income, working_for
             working_force += child_who_can_work
         
     return change, agent_type, working_force, child_who_can_work
+
+        
+
+    
+    
+
 
         
 
