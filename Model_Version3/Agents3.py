@@ -16,7 +16,7 @@ class Low_skilled_agri_worker(Agent):
         self.works = works
 
     def step(self):
-        print( "yes pikkies")
+        pass
 
 class Low_skilled_nonAgri(Agent):
     def __init__(self, model, agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works):
@@ -85,7 +85,7 @@ class Non_labourer(Agent):
 
 # Household agents
 class Small_land_households(Agent):
-    def __init__(self, model,agent_type,  household_size, household_members, land_category, land_area, house_quality):
+    def __init__(self, model,agent_type,  household_size, household_members, land_category, land_area, house_quality, salinity, main_crop, node_id):
         super().__init__(model)
         self.agent_type = agent_type
         self.household_size = household_size
@@ -93,9 +93,12 @@ class Small_land_households(Agent):
         self.land_category = land_category
         self.land_area = land_area
         self.house_quality = house_quality
+        self.salinity = salinity
+        self.main_crop = main_crop
+        self.node_id = node_id
 
 class Middle_land_households(Agent):
-    def __init__(self, model, agent_type, household_size, household_members, land_category, land_area, house_quality):
+    def __init__(self, model, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, main_crop, node_id):
         super().__init__(model)
         self.agent_type = agent_type
         self.household_size = household_size
@@ -103,9 +106,12 @@ class Middle_land_households(Agent):
         self.land_category = land_category
         self.land_area = land_area
         self.house_quality = house_quality
+        self.salinity = salinity
+        self.main_crop = main_crop
+        self.node_id = node_id
 
 class Large_land_households(Agent):
-    def __init__(self, model, agent_type, household_size, household_members, land_category, land_area, house_quality):
+    def __init__(self, model, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, main_crop, node_id):
         super().__init__(model)
         self.agent_type = agent_type
         self.household_size = household_size
@@ -113,6 +119,9 @@ class Large_land_households(Agent):
         self.land_category = land_category
         self.land_area = land_area
         self.house_quality = house_quality
+        self.salinity = salinity
+        self.main_crop = main_crop
+        self.node_id = node_id
 
 class Landless_households(Agent):
     def __init__(self, model, agent_type, household_size, household_members, land_area, house_quality):

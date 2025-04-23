@@ -14,33 +14,54 @@ from mesa import Model, Agent
 from mesa.space import NetworkGrid
 from mesa.datacollection import DataCollector
 from collections import defaultdict
+from shapely.geometry import MultiPoint
 
 from Agents3 import Low_skilled_agri_worker, Low_skilled_nonAgri, Manual_worker, Skilled_agri_worker, Skilled_service_worker, Other, Non_labourer, Small_land_households, Middle_land_households, Large_land_households, Landless_households
 # Define path
 path = os.getcwd()
 
 # Import data
-correct_path = path + "\model_input_data_823.xlsx"
+correct_path = path + "\Data\model_input_data_823.xlsx"
 
 class RiverDeltaModel(Model):
-    def __init__(self, seed=20, district = 'An Biên', num_agents = 100, excel_path =correct_path):
+    def __init__(self, seed=20, district = 'Binh Thuy', num_agents = 1000, excel_path =correct_path):
         super().__init__(seed=seed)
         self.seed = seed
         random.seed(20)
         np.random.seed(20)
 
-        # Define area
-        self.district = district
-
+        # Generate agents
+        self.num_agents = num_agents
         self.excel_data = self.get_excel_data(excel_path)
         self.generate_agents()
-        # self.agent_list = []
-        self.num_agents = 100
+
+        # Define area
+        self.district = district
+        self.data_salinity, self.polygon_districts = self.gather_shapefiles(self.district) 
+        households_which_need_a_node = []
+        for agent in self.agents:
+            if agent.agent_type == "Household" and agent.land_area > 0.0:
+                households_which_need_a_node.append(agent)
+        self.G = self.initialize_network(self.data_salinity, self.polygon_districts,len(households_which_need_a_node) , self.seed)
+        self.grid = NetworkGrid(self.G)
+        print(f"Aantal nodes in G: {len(self.G.nodes())}")
+        print(f"Voorbeeld nodes: {list(self.G.nodes())[:5]}")
+
+        # Connect farmer households to the grid
+        available_nodes = list(self.G.nodes())
+        random.shuffle(available_nodes)
+        for agent in households_which_need_a_node:
+            node_id = available_nodes.pop(0)
+            print(node_id)
+            salinity_level = self.G.nodes[node_id]["salinities"]
+            agent.salinity = salinity_level
+            agent.node_id = node_id
+            self.grid.place_agent(agent, agent.node_id)
 
     def generate_agents(self):
         # Create individual agents
         agent_classes = {"low_skilled_agri_worker": Low_skilled_agri_worker, "low_skilled_nonAgri":Low_skilled_nonAgri, "manual_worker":Manual_worker, "other":Other, "skilled_agri_worker":Skilled_agri_worker, "skilled_service_worker": Skilled_service_worker}
-        for i in range(1000):
+        for i in range(self.num_agents):
             age = self.get_age(self.excel_data['age_distribution'])
             works = self.is_working(age, self.excel_data['work_per_agegroup'])
 
@@ -79,11 +100,12 @@ class RiverDeltaModel(Model):
                 continue
             # Define household size
             household_size = max(1, int(self.random.normalvariate(self.excel_data['household_size']['mean'],self.excel_data['household_size']['std_dev'])))
-            print(household_size)
+            main_crop = agent.agent_sector
             # Define land size
             land_category = self.sample_from_distribution(self.excel_data['land_sizes'])
             land_area = self.get_land_area(land_category)
-            print(land_category)
+            salinity = 0
+            node_id = 0
             # Check housing situation
             house_quality = self.get_house_quality()
             # Add household_member to the household:
@@ -113,10 +135,10 @@ class RiverDeltaModel(Model):
                 new_member.assigned = True
                 household_members.append(new_member)
 
-                # Create household
-                AgentClass = Household_agent_classes[land_category]
-                household = AgentClass(self, agent_type, household_size, household_members, land_category, land_area, house_quality)
-                self.agents.add(household)
+            # Create household
+            AgentClass = Household_agent_classes[land_category]
+            household = AgentClass(self, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, main_crop, node_id)
+            self.agents.add(household)
 
         # Time to create landless households
         unassigned_agents = [a for a in self.agents if a.agent_type == "Household_member" and not a.assigned]
@@ -130,7 +152,6 @@ class RiverDeltaModel(Model):
 
             # Define household size
             household_size = max(1,int(self.random.normalvariate(float(self.excel_data['household_size']['mean']),float(self.excel_data['household_size']['std_dev']))))
-
 
             # Each household should have minimal 1 adult
             adult = age_groups["adults"].pop()
@@ -156,9 +177,8 @@ class RiverDeltaModel(Model):
             household = AgentClass(self, agent_type, household_size, household_members, land_area, house_quality)
             self.agents.add(household)
 
-        # All agents which are unassigned will be migrated agents
+        # print number of unassigned agents
         unassigned_agents = [a for a in self.agents if hasattr(a, 'agent_type') and a.agent_type == "Household_member" and not a.assigned]
-
         print("There are", len(unassigned_agents), "agents unassigned!!")
 
     def step(self):
@@ -351,6 +371,64 @@ class RiverDeltaModel(Model):
     def process_housing_quality(self, df):
         df = df.set_index('hh_quality')
         return {'mean': df.loc['mean', 'value'],'std_dev': df.loc['std_dev', 'value']}
+
+    def gather_shapefiles(self, district):
+        path = os.getcwd()
+
+        # Import salinity data and select the correct district, and set meters using epsg
+        path_salinity = path + "\\Data\districts_salinity.gpkg"
+        gdf_salinity = gpd.read_file(path_salinity)
+
+        gdf_salinity = gdf_salinity[gdf_salinity['District']==self.district]
+        gdf_salinity = gdf_salinity.to_crs(epsg=32648) 
+
+        # Import district boundaries and select correct district, and set to correct epsg
+        path_district = path + "\\Data\district_boundaries.gpkg"
+        gdf_district_boundaries = gpd.read_file(path_district)
+
+        gdf_district_boundaries = gdf_district_boundaries[gdf_district_boundaries['Ten_Huyen']==self.district]
+        gdf_district_boundaries = gdf_district_boundaries.to_crs(epsg=32648) 
+
+        # create polygon for the district boundaries file
+        polygon_boundaries = gdf_district_boundaries.unary_union
+        district_series = gpd.GeoSeries(polygon_boundaries)
+
+        return gdf_salinity, district_series
+
+    def initialize_network(self, salinity_data, districts_polygon, land_agents, seed):
+        
+        # Define number of points
+        points = districts_polygon.sample_points(size=land_agents, seed = seed)
+
+        points_list = list(points.geometry[0].geoms)
+        coords = np.array([(pt.x, pt.y) for pt in points_list])
+
+        # Create a network, three nearest nodes are supposed to be your neighbours
+        tree = cKDTree(coords)
+        k = 4  
+        distances, indices = tree.query(coords, k=k)
+
+        G = nx.Graph()
+
+        # Add nodes
+        for i, (x, y) in enumerate(coords):
+            point = Point(x,y)
+
+            get_salinity = salinity_data[salinity_data.contains(point)]
+            if not get_salinity.empty:
+                salinities = get_salinity.iloc[0]['Salinity']
+            else:
+                salinities = None
+                print("dit ging mis")
+            G.add_node(i, pos=(x, y), salinities = salinities)
+
+        # Add edges
+        for i, neighbors in enumerate(indices):
+            for j in neighbors[1:]:  # skip the first one, that is the point itself
+                G.add_edge(i, j)
+
+        return G
+
 
 
 
