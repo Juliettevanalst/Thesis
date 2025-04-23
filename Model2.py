@@ -17,7 +17,7 @@ from Agents2 import Agri_farmer, Agri_small_saline, Agri_small_fresh, Low_skille
 
 
 class RiverDeltaModel(Model):
-    def __init__(self, seed=20, district = 'Nhà Bè',
+    def __init__(self, seed=20, district = 'An Biên',
     num_agents = {"Agri_small_saline": 50, "Agri_small_fresh": 50, "Aqua_small_saline":50},
     num_low_skilled_ww = {"Aqua":10, "Agri": 10},
     num_service_workers  = 10,
@@ -127,7 +127,6 @@ class RiverDeltaModel(Model):
         # Check if a shock is happening
         self.check_shock()
         self.agents.do(lambda agent: setattr(agent, 'growth_time', agent.growth_time + 1) if isinstance(agent, (Agri_farmer, Aqua_farmer)) else None)
-
 
         if self.steps % 12 == 0:
 

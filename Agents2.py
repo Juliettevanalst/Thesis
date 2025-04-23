@@ -51,6 +51,7 @@ class Agri_farmer(Agent):
 
         # update savings
         self.savings += self.income - self.cost_farming - self.living_costs - self.pay_loan
+        self.loan_size - self.pay_loan
         self.savings = self.savings * (self.model.interest_rate_savings + 1)
         
         # Did you visit a governmental meeting?

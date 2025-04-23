@@ -1,6 +1,5 @@
 Created by Juliëtte van Alst
 
-Hoi Alexander, mijn excuses voor de chaos. Er zit een error in als je low skilled wage workers toevoegd in het model, ik wilde hier woensdagochtend (europese tijd) naar kijken. De error is ontstaan toen ik van mijn low skilled agents migrated agents probeerde te maken (regel 198 in agents2.py)
 
 This model simulates the inhabitants of the Mekong Delta in Vietnam. In the final version, there will be different types of houehold agents:
 - Agri farmer agents. These are small, middle size and corporate farmers. These are the households who own land and cultivate rice, vegetables etc. 
