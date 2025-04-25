@@ -16,7 +16,7 @@ from mesa.datacollection import DataCollector
 from collections import defaultdict
 from shapely.geometry import MultiPoint
 
-from Agents3 import Low_skilled_agri_worker, Low_skilled_nonAgri, Manual_worker, Skilled_agri_worker, Skilled_service_worker, Other, Non_labourer, Small_land_households, Middle_land_households, Large_land_households, Landless_households
+from Agents3 import Low_skilled_agri_worker, Low_skilled_nonAgri, Manual_worker, Skilled_agri_worker, Skilled_service_worker, Other, Non_labourer, Small_land_households, Middle_land_households, Large_land_households, Landless_households, Working_hh_member
 # Define path
 path = os.getcwd()
 
@@ -24,7 +24,7 @@ path = os.getcwd()
 correct_path = path + "\Data\model_input_data_823.xlsx"
 
 class RiverDeltaModel(Model):
-    def __init__(self, seed=20, district = 'Binh Thuy', num_agents = 1000, excel_path =correct_path):
+    def __init__(self, seed=20, district = 'Gò Công Tây', num_agents = 1000, excel_path =correct_path):
         super().__init__(seed=seed)
         self.seed = seed
         random.seed(20)
@@ -34,6 +34,7 @@ class RiverDeltaModel(Model):
         self.num_agents = num_agents
         self.excel_data = self.get_excel_data(excel_path)
         self.generate_agents()
+        self.death_agents = 0
 
         # Define area
         self.district = district
@@ -44,15 +45,13 @@ class RiverDeltaModel(Model):
                 households_which_need_a_node.append(agent)
         self.G = self.initialize_network(self.data_salinity, self.polygon_districts,len(households_which_need_a_node) , self.seed)
         self.grid = NetworkGrid(self.G)
-        print(f"Aantal nodes in G: {len(self.G.nodes())}")
-        print(f"Voorbeeld nodes: {list(self.G.nodes())[:5]}")
+    
 
         # Connect farmer households to the grid
         available_nodes = list(self.G.nodes())
         random.shuffle(available_nodes)
         for agent in households_which_need_a_node:
             node_id = available_nodes.pop(0)
-            print(node_id)
             salinity_level = self.G.nodes[node_id]["salinities"]
             agent.salinity = salinity_level
             agent.node_id = node_id
@@ -95,7 +94,6 @@ class RiverDeltaModel(Model):
         farm_owner_agents = [agent for agent in self.agents if not agent.assigned and agent.agent_employment_type=='self_employed' and agent.agent_sector != 'Non_agri'] # This is the main farm owners, they start the farm!!
 
         for agent in farm_owner_agents:
-            print("we starten een farm")
             if agent.assigned == True:
                 continue
             # Define household size
@@ -138,6 +136,8 @@ class RiverDeltaModel(Model):
             # Create household
             AgentClass = Household_agent_classes[land_category]
             household = AgentClass(self, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, main_crop, node_id)
+            for member in household_members:
+                member.household = household
             self.agents.add(household)
 
         # Time to create landless households
@@ -173,8 +173,12 @@ class RiverDeltaModel(Model):
             house_quality = self.get_house_quality()
             land_area = 0
             agent_type = "Household"
+
+            # Create household agent
             AgentClass = Landless_households
             household = AgentClass(self, agent_type, household_size, household_members, land_area, house_quality)
+            for member in household_members:
+                member.household = household
             self.agents.add(household)
 
         # print number of unassigned agents
@@ -182,11 +186,12 @@ class RiverDeltaModel(Model):
         print("There are", len(unassigned_agents), "agents unassigned!!")
 
     def step(self):
-        print("HET WERKT!!!")
         self.agents.shuffle_do('step')
 
+        if self.steps % 12 == 0:
+            self.agents.do(lambda agent: agent.yearly_activities() if hasattr(agent, "age") else None)
+
     def sample_from_distribution(self, land_sizes):
-        print("we komen hier")
         chance_land_size = self.random.random()
         for key, (low, high) in land_sizes.items():
             if low <= chance_land_size <= high:
@@ -286,7 +291,9 @@ class RiverDeltaModel(Model):
         'household_size': self.process_household_size(sheets['Household_size']),
         'land_sizes': self.process_land_sizes(sheets['Land_sizes']),
         'work_type_per_land_size': self.process_work_type_per_land_size(sheets['Work_type_per_land_size']),
-        'housing_quality': self.process_housing_quality(sheets['Housing_quality'])
+        'housing_quality': self.process_housing_quality(sheets['Housing_quality']),
+        'population_statistics': self.process_population_statistics(sheets['Statistics_population_size']),
+        'education_levels': self.process_education_levels(sheets['Education_level'])
 
     }
 
@@ -372,6 +379,24 @@ class RiverDeltaModel(Model):
         df = df.set_index('hh_quality')
         return {'mean': df.loc['mean', 'value'],'std_dev': df.loc['std_dev', 'value']}
 
+    def process_population_statistics(self, df):
+        statistics_population =  dict(zip(df["Statistic"], df["Value"]))
+        return statistics_population
+
+    def process_education_levels(self, df):
+        education_dict = defaultdict(dict)
+        df.reset_index()
+        for i, row in df.iterrows():
+            low, high = map(int, row['age_group'].split('-'))
+            education_dict[(low, high)]['Higher_secondary'] = row['Higher Secondary and above'] / 100
+            education_dict[(low, high)]['lower_secondary'] = row['Lower Secondary'] / 100
+            education_dict[(low, high)]['below_primary'] = row['below primary'] / 100
+            education_dict[(low, high)]['no_schooling'] = row['child or no schooling'] / 100
+            education_dict[(low, high)]['primary_education'] = row['primary'] / 100
+
+
+        return education_dict
+
     def gather_shapefiles(self, district):
         path = os.getcwd()
 
@@ -419,7 +444,7 @@ class RiverDeltaModel(Model):
                 salinities = get_salinity.iloc[0]['Salinity']
             else:
                 salinities = None
-                print("dit ging mis")
+                print("Something went wrong")
             G.add_node(i, pos=(x, y), salinities = salinities)
 
         # Add edges
