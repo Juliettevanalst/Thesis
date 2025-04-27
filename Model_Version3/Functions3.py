@@ -162,7 +162,7 @@ def calculate_livelihood(meeting, education, experience, dissability, social_sit
         savings_livelihood = 0
 
     livelihood['Human'] = np.average([meeting, education, experience, dissability])
-    livelihood['Social'] = np.average([social_situation/100, association])
+    livelihood['Social'] = np.average([social_situation, association])
     livelihood['Financial'] = np.average([savings_livelihood, debt])
     livelihood['Physical'] = np.average([land_size, house_quality])
     livelihood['Natural'] = salinity

@@ -29,6 +29,7 @@ class Working_hh_member(Agent):
         self.experience, self.machines = get_experience(self.agent_occupation, self.model)
         self.dissabilities = get_dissabilities(self.age, self.model)
         self.association = get_association(self.model, self.age)
+        self.time_since_last_income = 0
 
     def step(self):
         pass
@@ -61,6 +62,7 @@ class Low_skilled_agri_worker(Working_hh_member):
         self.works = works
 
         self.income = 0
+        self.time_since_last_income = 0
 
     def step(self):
         pass
@@ -138,6 +140,8 @@ class Non_labourer(Agent):
         self.agent_employment_type = agent_employment_type
         self.assigned = assigned
         self.works = works
+
+        self.income = 0
         
         # self.household = household
         # Define education. For children, the education distribution will be based on their age
@@ -263,6 +267,7 @@ class Land_household(Agent):
         self.MOTA_scores = None
         self.new_crop = None
         self.waiting_time = 0
+        self.livelihood = {"Human":0, "Social":0, "Financial":0, "Physical":0, "Natural":0, "Average":0}
 
         
     def step(self):
@@ -287,7 +292,10 @@ class Land_household(Agent):
         else:
             self.information_meeting = 0
 
-        # we moeten betalen!! 
+        # Update savings and debt
+        self.savings -= self.yearly_loan_payment
+        self.savings = self.savings * (self.model.interest_rate_savings +1)
+        self.debt = self.debt * (self.model.interest_rate_loans + 1)
 
     def harvest(self, crop):
         land_area = self.crops_and_land[crop]
@@ -338,6 +346,24 @@ class Land_household(Agent):
         # update savings
         self.savings += self.total_income_[crop]
 
+    def check_savings(self):
+        total_income_all_crops = sum(self.total_income_.values()) # LATER OPLETTEN!! als je switchet dat je ander crops wel wweg gaan
+        total_wage_income = 0
+        for agent in self.household_members:
+            total_wage_income += agent.income
+        self.total_hh_income = total_income_all_crops + total_wage_income
+        if "Rice" in self.crops_and_land.keys():
+            time_frame = 3
+        elif "Maize" in self.crops_and_land.keys() or "Shrimp" in self.crops_and_land.keys():
+            time_frame = 6
+        else:
+            time_frame = 2 # you do coconut
+        
+        expenditure = self.expenditure / 12 * time_frame 
+        self.monthly_hh_income = self.total_hh_income / time_frame
+        self.savings += self.total_hh_income - expenditure
+
+
     def check_changes(self):
         self.prepare_livelihood()
         self.livelihood = calculate_livelihood(self.information_meeting, self.average_hh_education, self.average_hh_experiences, self.dissability, self.model.current_hh_left, self.association, self.savings, self.debt_ratio, self.land_ratio, self.house_quality, self.salinity_suitability )
@@ -382,11 +408,6 @@ class Land_household(Agent):
                     # Calculate how much you need to pay each year to pay back your loan in 5 years
                     self.yearly_loan_payment = annual_loan_payment(self.debt, self.model.interest_rate_loans)
                     self.growth_time[self.new_crop] = 0
-
-
-
-
-
 
 
     def prepare_livelihood(self):
@@ -558,6 +579,10 @@ class Landless_households(Agent):
             self.household_members.append(new_child)
             self.household_size +=1
             new_child.household = self
+
+        # Receive interest based on interest rate
+        self.savings = self.savings * (self.model.interest_rate_savings +1)
+        
 
 class Migrated_household(Agent):
     def __init__(self, model, agent_type, household_members):
