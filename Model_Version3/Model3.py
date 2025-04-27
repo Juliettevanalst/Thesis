@@ -15,8 +15,9 @@ from mesa.space import NetworkGrid
 from mesa.datacollection import DataCollector
 from collections import defaultdict
 from shapely.geometry import MultiPoint
+from statistics import mean
 
-from Agents3 import Low_skilled_agri_worker, Low_skilled_nonAgri, Manual_worker, Skilled_agri_worker, Skilled_service_worker, Other, Non_labourer, Small_land_households, Middle_land_households, Large_land_households, Landless_households, Working_hh_member
+from Agents3 import Low_skilled_agri_worker, Low_skilled_nonAgri, Manual_worker, Skilled_agri_worker, Skilled_service_worker, Other, Non_labourer, Small_land_households, Middle_land_households, Large_land_households, Landless_households,Land_household, Working_hh_member, Migrated_household, Migrated_hh_member
 # Define path
 path = os.getcwd()
 
@@ -24,7 +25,7 @@ path = os.getcwd()
 correct_path = path + "\Data\model_input_data_823.xlsx"
 
 class RiverDeltaModel(Model):
-    def __init__(self, seed=20, district = 'Gò Công Tây', num_agents = 1000, excel_path =correct_path):
+    def __init__(self, seed=20, district = 'Gò Công Tây', num_agents = 1000, excel_path =correct_path, salinity_shock_step = [125, 191]):
         super().__init__(seed=seed)
         self.seed = seed
         random.seed(20)
@@ -46,7 +47,6 @@ class RiverDeltaModel(Model):
         self.G = self.initialize_network(self.data_salinity, self.polygon_districts,len(households_which_need_a_node) , self.seed)
         self.grid = NetworkGrid(self.G)
     
-
         # Connect farmer households to the grid
         available_nodes = list(self.G.nodes())
         random.shuffle(available_nodes)
@@ -56,6 +56,39 @@ class RiverDeltaModel(Model):
             agent.salinity = salinity_level
             agent.node_id = node_id
             self.grid.place_agent(agent, agent.node_id)
+
+        # Possibility for a shock
+        self.salinity_shock_step = salinity_shock_step
+        self.salinity_shock = False
+        self.time_since_shock = 0
+
+        # Does the agent meet agrocensus?
+        self.chance_info_meeting = 0.1 # Based on paper by Tran et al, (2020)
+
+        # Possibility for disease
+        self.chance_disease = 0.16 # Based on paper by Joffre et al., 2015 on extensive shrimp farming
+
+        # Distribution man_days during preparation time and yield time
+        self.man_days_prep = 1/3
+        self.payment_low_skilled = 190000 # ASSUMPTION, average / day is 200000 based on Pedroso et al., 2017
+        self.payment_high_skilled = 210000 # ASSUMPTION, average / day is 200000 based on Pedroso et al., 2017
+        self.distribution_high_low_skilled = 0 # Need to define later
+
+        # Number_of_households
+        self.number_of_households = 0
+        for agent in self.agents:
+            if agent.agent_type == "Household":
+                self.number_of_households += 1
+
+        self.start_households = self.number_of_households
+        self.current_hh_left = self.number_of_households
+        self.agents_to_remove = []
+
+        # Set up datacollector
+        model_metrics = {"Average_Livelihood": lambda model: mean([agent.livelihood['Average'] for agent in model.agents if hasattr(agent, 'livelihood')]) if model.agents else 0}
+        agent_metrics = {}
+        self.datacollector = DataCollector(model_reporters = model_metrics, agent_reporters = agent_metrics)
+        
 
     def generate_agents(self):
         # Create individual agents
@@ -98,7 +131,7 @@ class RiverDeltaModel(Model):
                 continue
             # Define household size
             household_size = max(1, int(self.random.normalvariate(self.excel_data['household_size']['mean'],self.excel_data['household_size']['std_dev'])))
-            main_crop = agent.agent_sector
+            crop_type = agent.agent_sector
             # Define land size
             land_category = self.sample_from_distribution(self.excel_data['land_sizes'])
             land_area = self.get_land_area(land_category)
@@ -135,7 +168,7 @@ class RiverDeltaModel(Model):
 
             # Create household
             AgentClass = Household_agent_classes[land_category]
-            household = AgentClass(self, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, main_crop, node_id)
+            household = AgentClass(self, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, crop_type, node_id)
             for member in household_members:
                 member.household = household
             self.agents.add(household)
@@ -182,14 +215,101 @@ class RiverDeltaModel(Model):
             self.agents.add(household)
 
         # print number of unassigned agents
-        unassigned_agents = [a for a in self.agents if hasattr(a, 'agent_type') and a.agent_type == "Household_member" and not a.assigned]
+        unassigned_agents = [a for a in self.agents if hasattr(a, 'agent_type') and a.agent_type == "Household_member" and not a.assigned == True]
         print("There are", len(unassigned_agents), "agents unassigned!!")
 
     def step(self):
         self.agents.shuffle_do('step')
 
+        self.number_of_households = 0
+        for agent in self.agents:
+            if agent.agent_type == "Household":
+                self.number_of_households += 1
+
+        self.current_hh_left = self.number_of_households / self.start_households * 100
+
+        # Check if a shock is happening
+        self.check_shock()
+
         if self.steps % 12 == 0:
-            self.agents.do(lambda agent: agent.yearly_activities() if hasattr(agent, "age") else None)
+            self.agents.do(lambda agent: agent.yearly_activities() if isinstance(agent, (Working_hh_member, Land_household, Landless_households, Non_labourer)) else None)
+            # coconut yield
+            # Define distribution high_low_skilled
+
+        if (self.steps + 2) == 0 or (self.steps+2) % 12 ==0: 
+            # rice and coconut yield 
+            for agent in self.agents:
+                if isinstance(agent, Land_household):
+                    if "Rice" in agent.crops_and_land.keys():
+                        agent.harvest("Rice")
+                    if "Coconut" in agent.crops_and_land.keys():
+                        agent.harvest("Coconut")
+                    agent.check_changes()
+            for household in self.agents_to_remove:
+                migrated_hh = Migrated_household(self, agent_type= "Migrated", household_members = household.household_members)
+                self.agents.add(migrated_hh)
+                for household_members in household.household_members:
+                    migrated_member = Migrated_hh_member(self, agent_type = "Migrated_member", household = household_members.household)
+                    self.agents.add(migrated_member)
+                    if household_members in household.household_members:
+                        self.agents.discard(household_members)
+                    else:
+                        print("the same thing went wrong")
+                self.agents.discard(household)
+                
+            # Collect data
+            self.datacollector.collect(self)
+            # Define distribution high_low_skilled
+            
+
+        elif (self.steps + 4) == 0 or (self.steps+4) % 12 ==0: 
+            # coconut yield, maize yield, shrimp yield
+            # Define distribution high_low_skilled
+            pass
+
+        elif (self.steps + 6) == 0 or (self.steps+6) % 12 ==0: 
+            # coconut yield
+            # Define distribution high_low_skilled
+            pass
+
+        elif (self.steps + 8) == 0 or (self.steps+8) % 12 ==0: 
+            # Rice yield, coconut yield, maize yield
+            # Define distribution high_low_skilled
+            pass
+
+        elif (self.steps + 10) == 0 or (self.steps+10) % 12 ==0: 
+            # coconut yield, shrimp yield
+            # Define distribution high_low_skilled
+            pass
+        
+        elif (self.steps + 11) == 0 or (self.steps+11) % 12 ==0: 
+            # triple rice yield
+            # Define distribution high_low_skilled
+            pass
+
+
+    def check_shock(self):
+        if self.steps in self.salinity_shock_step:
+            self.salinity_shock = True
+            for agent in self.agents:
+                if hasattr(agent, "salinity"):
+                    agent.salinity = self.random.uniform(1.5, 2) * agent.salinity # ASSUMPTION, NEED TO DETERMINE HOW INTENSE A SHOCK IS
+                    agent.salinity_during_shock = agent.salinity
+                if hasattr(agent, "salt_experience"):
+                    agent.salt_experience = min(agent.salt_experience + 0.2, 1) #ASSUMPTION, SALT EXPERIENCE INCREASES BY 0.2 with a maximum value of 1
+                    
+
+            self.time_since_shock = 0
+            print("shock is happening!!")
+
+        else:
+            self.salinity_shock = False
+            self.time_since_shock +=1
+            if self.time_since_shock == 1:
+                for agent in self.agents:
+                    if hasattr(agent, "salinity"):
+                        agent.salinity = agent.salinity/random.uniform(1.5, 2) # ASSUMPTION, NEED TO DETERMINE HOW INTENSE A SHOCK IS
+            
 
     def sample_from_distribution(self, land_sizes):
         chance_land_size = self.random.random()
@@ -293,7 +413,10 @@ class RiverDeltaModel(Model):
         'work_type_per_land_size': self.process_work_type_per_land_size(sheets['Work_type_per_land_size']),
         'housing_quality': self.process_housing_quality(sheets['Housing_quality']),
         'population_statistics': self.process_population_statistics(sheets['Statistics_population_size']),
-        'education_levels': self.process_education_levels(sheets['Education_level'])
+        'education_levels': self.process_education_levels(sheets['Education_level']),
+        'experience_occupation': self.process_experience(sheets['Experience_per_occupation']),
+        'dissabilities': self.process_dissabilities(sheets['Dissabilities']),
+        'association':self.process_association(sheets['Member_association'])
 
     }
 
@@ -396,6 +519,42 @@ class RiverDeltaModel(Model):
 
 
         return education_dict
+
+    def process_experience(self, df):
+        experience_dict = defaultdict(dict)
+        df.reset_index()
+        
+        for i, row in df.iterrows():
+            occupation = row['Occupation']
+            experience = row['3+Experience'] / 100
+            machines = row['Machines_equip'] / 100
+            experience_dict[occupation] = {'Experience':experience, 'Machines': machines}
+
+        return experience_dict
+
+    def process_dissabilities(self, df):
+        dissabilities_dict = defaultdict(dict)
+        df.reset_index(drop=True, inplace=True)
+
+        for i, row in df.iterrows():
+            function = row['function']
+            if pd.isna(function):
+                if last_function is not None:
+                    function = last_function
+            for age_group in ['0-15', '16-45', '46-59', '59-85']:
+                low, high = map(int, row['age_group'].split('-'))
+
+                dissabilities_dict[(low, high)][function] = {'No_difficulty': row['No_difficulty']/100, 'Unable': row['Unable']/100,'Some_difficulty': row['Some_difficulty']/100,'Very_difficulty': row['Very_difficulty']/100}
+                last_function = function
+        return dissabilities_dict
+
+    def process_association(self, df):
+        for i, row in df.iterrows():
+            if row['Association'] == "yes":
+                percentage_association = row['Percentage']
+        return percentage_association
+
+
 
     def gather_shapefiles(self, district):
         path = os.getcwd()

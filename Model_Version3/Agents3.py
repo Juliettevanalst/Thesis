@@ -2,6 +2,9 @@ from mesa import Agent, Model
 
 import numpy as np
 import random
+import statistics
+
+from Functions3 import get_education_levels, get_experience, get_dissabilities, get_association, calculate_livelihood, calculate_yield_agri, calculate_farming_costs, calculate_yield_shrimp, calculate_cost_shrimp, calculate_wages_farm_workers,calculate_total_income, advice_neighbours, advice_agrocensus
 
 class Working_hh_member(Agent):
     def __init__(self, model,agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works):
@@ -14,13 +17,17 @@ class Working_hh_member(Agent):
         self.assigned = assigned
         self.works = works
 
-        self.education = None
+        self.education = get_education_levels(self.age, self.model)
+        # self.household = household
 
         # Determine the age the agent will die. To prevent the death age is lower than the current age, the max value of death age and currenct age + 1 is taken
         self.death_age = np.random.normal(loc = self.model.excel_data["population_statistics"]['Mean_death_age'], scale = self.model.excel_data["population_statistics"]['Std_dev_death_age'])
         self.death_age = max(self.death_age, self.age+1)
 
         self.income = 0
+        self.experience, self.machines = get_experience(self.agent_occupation, self.model)
+        self.dissabilities = get_dissabilities(self.age, self.model)
+        self.association = get_association(self.model, self.age)
 
     def step(self):
         pass
@@ -30,6 +37,8 @@ class Working_hh_member(Agent):
         if self.age >= self.death_age:
             # The agent will die
             self.model.death_agents += 1
+            self.household.household_size -= 1
+            self.household.household_members.remove(self)
             self.model.agents.remove(self)
 
         # Check if the agent is still working
@@ -117,17 +126,38 @@ class Non_labourer(Agent):
         self.assigned = assigned
         self.works = works
         
-        self.education = None
+        # self.household = household
+        # Define education. For children, the education distribution will be based on their age
+        self.education = get_education_levels(self.age, self.model)
+        if self.age < 6:
+            self.education = "no_schooling"
+        elif self.age < 10:
+            self.education = "below_primary"
+        elif self.age < 14:
+            self.education = "Primary_school"
+        elif self.age < 17:
+            self.education == "Lower_secondary"
+        elif self.age == 17:
+            self.education == "Higher_secondary"
+
 
         # Determine the age the agent will die. To prevent the death age is lower than the current age, the max value of death age and currenct age + 1 is taken
         self.death_age = np.random.normal(loc = self.model.excel_data["population_statistics"]['Mean_death_age'], scale = self.model.excel_data["population_statistics"]['Std_dev_death_age'])
         self.death_age = max(self.death_age, self.age+1)
+
+        # Even when they are not working, they can be a member of an association and can have difficulties
+        self.experience = 0
+        self.machines = 0
+        self.dissabilities = get_dissabilities(self.age, self.model)
+        self.association = get_association(self.model, self.age)
 
     def yearly_activities(self):
         self.age += 1
         if self.age >= self.death_age:
             # The agent will die
             self.model.death_agents += 1
+            self.household.household_size -= 1
+            self.household.household_members.remove(self)
             self.model.agents.remove(self)
 
         # Updates child education:
@@ -150,11 +180,10 @@ class Non_labourer(Agent):
                     # The agent will work in agri sector
                     if self.household.land_area > 0:
                         # Agent will start working on the family farm
-                        working_agent = Skilled_agri_worker(self.model, agent_type = "Household_member", age = self.age, agent_sector = self.household.main_crop, agent_occupation = "skilled_agri_worker", agent_employment_type = 'family_worker', assigned = True, works = True)
+                        working_agent = Skilled_agri_worker(self.model, agent_type = "Household_member", age = self.age, agent_sector = self.household.crop_type, agent_occupation = "skilled_agri_worker", agent_employment_type = 'family_worker', assigned = True, works = True)
                     else: # Agent  becomes a wage worker
                         working_agent = Skilled_agri_worker(self.model, agent_type = "Household_member", age = self.age, agent_sector = None, agent_occupation = "skilled_agri_worker", agent_employment_type = 'employee', assigned = True, works = True)
                 else:
-                    print("lol iets werkt")
                     new_occupation = self.random.choice(['manual_worker', 'skilled_service_worker']) # There is an almost 50/50% chance you will become a manual or skilled service worker, as can be seen in the data bij "Non_agri" and than occupations 
                     agent_classes = {"manual_worker":Manual_worker, 'skilled_service_worker':Skilled_service_worker}
                     agent_class = agent_classes[new_occupation]
@@ -162,27 +191,26 @@ class Non_labourer(Agent):
                     if self.random.random() < chance_self_employed:
                         employment_type = 'self_employed'
                     else:
-                        print('dit gaat goed')
                         employment_type = 'employee'
                     working_agent = agent_class(self.model, agent_type = 'Household_member', age = self.age, agent_sector = 'Non_agri', agent_occupation = new_occupation, agent_employment_type =employment_type, assigned=True, works = True)
-                    print("working agent employee is goed gegaan")
                 
                 # Add working agent to the household, and remove old agent from the household
                 working_agent.household = self.household
-                # print(self.household.household_members, "before")
-                self.household.household_members.remove(self)
+                if self in self.household.household_members:
+                    self.household.household_members.remove(self)
+                else:
+                    print("something went wrong")
                 self.household.household_members.append(working_agent)
-                # print(self.household.household_members, "after")
-
+                
                 # Update working agent in the model itself
                 self.model.agents.add(working_agent)
-                self.model.agents.remove(self)
+                self.model.agents.discard(self)
                 
                 
 
 # Household agents
-class Small_land_households(Agent):
-    def __init__(self, model,agent_type,  household_size, household_members, land_category, land_area, house_quality, salinity, main_crop, node_id):
+class Land_household(Agent):
+    def __init__(self, model, agent_type, household_size, household_members, land_category ,land_area, house_quality):
         super().__init__(model)
         self.agent_type = agent_type
         self.household_size = household_size
@@ -190,13 +218,208 @@ class Small_land_households(Agent):
         self.land_category = land_category
         self.land_area = land_area
         self.house_quality = house_quality
+
+        self.salinity_during_shock = 0
+
+        self.growth_time = {}
+
+        self.house_price = np.random.normal(52000000, 7800000) # ASSUMPTION!!
+        self.value_of_assets = self.land_area * 78000000 + self.house_price # ASSUMPTION
+        self.maximum_debt = self.value_of_assets
+        self.debt = 0
+
+        self.savings = 10000000 # ASSUMPTION!!
+        self.total_cost_farming_ = {}
+        self.wage_costs_ = {}
+        self.total_income_ = {}
+        self.information_meeting = 0
+        
+    def step(self):
+        if self.household_size == 0:
+            self.model.agents.remove(self)
+            #print("household died")
+        
+
+    def yearly_activities(self):
+        # Possibility for birth
+        birth_rate_mekong = self.model.excel_data["population_statistics"]['Birth_rate'] * self.household_size # I took the birth rate of the whole population, not only women
+        if self.random.random() <= birth_rate_mekong:
+            # A child is born!
+            new_child = Non_labourer(self.model, agent_type = 'Household_member', age = 0, agent_employment_type = None, assigned=True, works=False)
+            self.model.agents.add(new_child)
+            self.household_members.append(new_child)
+            self.household_size +=1
+            new_child.household = self
+
+        if self.random.random() > self.model.chance_info_meeting:
+            self.information_meeting = 1
+        else:
+            self.information_meeting = 0
+
+    def harvest(self, crop):
+        land_area = self.crops_and_land[crop]
+        # if a shock happened during growth time, we need to take that salinity into account, otherwise, current salinity
+        if self.model.time_since_shock > self.growth_time[crop]:
+            self.salinity_during_shock = self.salinity
+
+        if crop == "Shrimp":
+            # Did you get a disease this season?
+            self.disease = 1 if np.random.rand() <= self.model.chance_disease else 0
+
+            # Do you want to use antibiotics? D 
+            if self.disease == 1:
+                if (self.livelihood['Human']+self.livelihood['Financial'])/2 >= 0.5: # THIS IS AN ASSUMPTION, IF YOU ARE SMART YOU WILL NOT USE ANTIBIOTICS
+                    # Use no antibiotics
+                    self.use_antibiotics = 0
+                else:
+                    self.use_antibiotics = 1
+            self.yield_["Shrimp"] = calculate_yield_shrimp(self.land_area, self.disease, self.use_antibiotics)
+            self.total_cost_farming_["Shrimp"] = calculate_cost_shrimp(self.land_area, self.use_antibiotics) 
+
+        else:
+            # Calculate yield
+            self.yield_[crop] = calculate_yield_agri(crop, self.land_area, self.salinity)
+            
+            # Calculate cost farming
+            self.total_cost_farming_[crop] = calculate_farming_costs(crop, self.land_area)
+
+        # Calculate costs wage costs + determine number of wage workers you had during yield time
+        self.wage_costs_[crop], self.wage_workers = calculate_wages_farm_workers(crop, self.land_area, self.household_members, self.model)
+
+        # calculate total income based on yield and costs
+        self.total_income_[crop] = calculate_total_income(crop, self.yield_[crop], self.total_cost_farming_[crop])
+        # print(crop, "total income is: ", self.total_income_[crop])
+        # print(crop, "total costs is: ", self.total_cost_farming_[crop])
+        # print(crop, "wage worker costs is: ", self.wage_costs_[crop])
+        # print(crop, "yield was: ", self.yield_[crop])
+        # print(crop, "number of wage workers required: ", self.wage_workers)
+        if self.wage_costs_[crop] > self.total_cost_farming_[crop]:
+            print("hier ging iets grandioos mis")
+
+        # update savings
+        self.savings += self.total_income_[crop]
+
+    def check_changes(self):
+        self.prepare_livelihood()
+        self.livelihood = calculate_livelihood(self.information_meeting, self.average_hh_education, self.average_hh_experiences, self.dissability, self.model.current_hh_left, self.association, self.savings, self.debt_ratio, self.land_ratio, self.house_quality, self.salinity_suitability )
+        if self.livelihood['Average'] < 0.3: # ASSUMPTION!!!!
+            # migrated_hh = Migrated_household(self.model, agent_type= "Migrated", household_members = self.household_members)
+            # self.model.agents.add(migrated_hh)
+            self.model.agents_to_remove.append(self)
+        
+        # Decide on next crop
+        # Check if there is advice from agrocensus meeting you attended
+        if self.information_meeting == 1:
+            self.possible_next_crops = advice_agrocensus(self.salinity, self.average_hh_education, list(self.crops_and_land.keys()))
+        # It is always possible to  keep the current crop
+        self.possible_next_crops.append(list(self.crops_and_land.keys()))
+        # Check what your neighbors are doing
+        self.possible_next_crops = advice_neighbours(self.possible_next_crops, self.model, self.node_id)
+
+
+
+
+    def prepare_livelihood(self):
+        # average_education
+        education_levels = []
+        for agent in self.household_members:
+            if agent.age > 15: # Otherwise you also get the no education of the childs
+                education  = agent.education
+                if education == 'no_schooling' or education == 'below_primary':
+                    education_levels.append(0)
+                elif education == "primary_education":
+                    education_levels.append(0.5)
+                else:
+                    education_levels.append(1) # SENSITIVITY ANALYSIS IS REQUIRED FOR THE 0, 0.5 AND 1
+        if len(education_levels) == 0:
+            education_levels = [0] # DE DEATH RATE STAAT TE HOOG
+        self.average_hh_education = statistics.mean(education_levels)
+
+        # Check experience
+        experience_levels = []
+        for agent in self.household_members:
+            if agent.age > 15:
+                experience = (agent.experience + agent.machines) / 2
+                experience_levels.append(experience)
+        if len(experience_levels) == 0:
+            experience_levels = [0] # DE DEATH RATE STAAT TE HOOG
+        self.average_hh_experiences = statistics.mean(experience_levels)
+
+        # Dissabilities
+        dissability_list = []
+        for agent in self.household_members:
+            dissability = agent.dissabilities
+            dissability_list.append(dissability)
+        # one person with dissability = 0.5, more than 1 your dissabilities = 0
+        if sum(dissability_list) < 1:
+            self.dissability = 0
+        elif sum(dissability_list) == 1:
+            self.dissability = 0.5
+        else:
+            self.dissability = 1
+
+        # Check if someone is member of an association
+        self.association = 0
+        for agent in self.household_members:
+            if agent.association == 1:
+                self.association = 1
+
+        # Check debt ratio
+        self.debt_ratio = self.debt / self.maximum_debt
+
+        # check land size
+        if self.land_category == 'small':
+            self.land_ratio = self.land_area / 0.5
+        elif self.land_category == "medium":
+            self.land_ratio = self.land_area / 2
+        elif self.land_category == 'large':
+            self.land_ratio = self.land_area / 5 # These are the maximum values per category as defined in def get_land_area in model3.py
+
+        # Check salinity level
+        largest_crop = max(self.crops_and_land, key=self.crops_and_land.get)
+        if largest_crop == "Shrimp" or largest_crop == "Coconut":
+            self.salinity_suitability = 1
+        elif largest_crop == "Rice":
+            if 0 <= self.salinity <= 3: # So you do not waste yield on salinity
+                self.salinity_suitability = 1
+            elif self.salinity <= 6: # So you have 75% of your yield
+                self.salinity_suitability = 0.5
+            else:
+                self.salinity_suitability = 0
+        elif largest_crop == "Maize":
+            if 0 <= self.salinity <= 1.7: # So you do not waste yield on salinity
+                self.salinity_suitability = 1
+            elif self.salinity <= 4.2: # So you have 75% of your yield
+                self.salinity_suitability = 0.5
+            else:
+                self.salinity_suitability = 0
+                    
+
+class Small_land_households(Land_household):
+    def __init__(self, model,agent_type,  household_size, household_members, land_category, land_area, house_quality, salinity, crop_type, node_id):
+        super().__init__(model, agent_type, household_size, household_members, land_category , land_area, house_quality)
+        self.agent_type = agent_type
+        self.household_size = household_size
+        self.household_members = household_members
+        self.land_category = land_category
+        self.land_area = land_area
+        self.house_quality = house_quality
         self.salinity = salinity
-        self.main_crop = main_crop
+        self.crop_type = crop_type
         self.node_id = node_id
 
-class Middle_land_households(Agent):
-    def __init__(self, model, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, main_crop, node_id):
-        super().__init__(model)
+        sector_crop_dict = {'Annual crops':'Maize', "Aquaculture":"Shrimp", "Perennial crops":"Coconut", "Other agriculture":"Rice"}
+        self.crops = []
+        self.crops.append(sector_crop_dict[self.crop_type])
+        self.crops_and_land = {}
+        self.crops_and_land = {self.crops[0]:self.land_area}
+        self.growth_time = {self.crops[0]:0}
+
+        self.yield_ = {}
+
+class Middle_land_households(Land_household):
+    def __init__(self, model, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, crop_type, node_id):
+        super().__init__(model, agent_type, household_size, household_members, land_category , land_area, house_quality)
         self.agent_type = agent_type
         self.household_size = household_size
         self.household_members = household_members
@@ -204,12 +427,21 @@ class Middle_land_households(Agent):
         self.land_area = land_area
         self.house_quality = house_quality
         self.salinity = salinity
-        self.main_crop = main_crop
+        self.crop_type = crop_type
         self.node_id = node_id
 
-class Large_land_households(Agent):
-    def __init__(self, model, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, main_crop, node_id):
-        super().__init__(model)
+        sector_crop_dict = {'Annual crops':'Maize', "Aquaculture":"Shrimp", "Perennial crops":"Coconut", "Other agriculture":"Rice"}
+        self.crops = []
+        self.crops.append(sector_crop_dict[self.crop_type])
+        self.crops_and_land = {}
+        self.crops_and_land = {self.crops[0]:self.land_area}
+        self.growth_time = {self.crops[0]:0}
+
+        self.yield_ = {}
+
+class Large_land_households(Land_household):
+    def __init__(self, model, agent_type, household_size, household_members, land_category, land_area, house_quality, salinity, crop_type, node_id):
+        super().__init__(model, agent_type, household_size, household_members, land_category , land_area, house_quality)
         self.agent_type = agent_type
         self.household_size = household_size
         self.household_members = household_members
@@ -217,8 +449,17 @@ class Large_land_households(Agent):
         self.land_area = land_area
         self.house_quality = house_quality
         self.salinity = salinity
-        self.main_crop = main_crop
+        self.crop_type = crop_type
         self.node_id = node_id
+
+        sector_crop_dict = {'Annual crops':'Maize', "Aquaculture":"Shrimp", "Perennial crops":"Coconut", "Other agriculture":"Rice"}
+        self.crops = []
+        self.crops.append(sector_crop_dict[self.crop_type])
+        self.crops_and_land = {}
+        self.crops_and_land = {self.crops[0]:self.land_area}
+        self.growth_time = {self.crops[0]:0}
+
+        self.yield_ = {}
 
 class Landless_households(Agent):
     def __init__(self, model, agent_type, household_size, household_members, land_area, house_quality):
@@ -228,6 +469,36 @@ class Landless_households(Agent):
         self.household_members = household_members
         self.land_area = land_area
         self.house_quality = house_quality
+
+        self.house_price = np.random.normal(52000000, 7800000) # ASSUMPTION!!
+        self.maximum_debt = self.house_price
+
+        self.debt = 0
+
+    def yearly_activities(self):
+        # Possibility for birth
+        birth_rate_mekong = self.model.excel_data["population_statistics"]['Birth_rate'] * self.household_size # I took the birth rate of the whole population, not only women
+        if self.random.random() <= birth_rate_mekong:
+            # A child is born!
+            new_child = Non_labourer(self.model, agent_type = 'Household_member', age = 0, agent_employment_type = None, assigned=True, works=False)
+            self.model.agents.add(new_child)
+            self.household_members.append(new_child)
+            self.household_size +=1
+            new_child.household = self
+
+class Migrated_household(Agent):
+    def __init__(self, model, agent_type, household_members):
+        super().__init__(model)
+        self.agent_type = agent_type
+        self.household_members = household_members
+       
+
+class Migrated_hh_member(Agent):
+    def __init__(self, model, agent_type ,household):
+        super().__init__(model)
+        self.agent_type = agent_type
+        self.household = household
+
 
 
 
