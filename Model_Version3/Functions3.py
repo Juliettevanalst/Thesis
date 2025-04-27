@@ -168,7 +168,6 @@ def calculate_livelihood(meeting, education, experience, dissability, social_sit
     livelihood['Natural'] = salinity
 
     livelihood['Average'] = np.average([livelihood['Human'], livelihood['Social'], livelihood['Financial'], livelihood['Physical'], livelihood['Natural']])
-    
     return livelihood
 
 def advice_agrocensus(salinity, education_level, current_crops):
@@ -200,16 +199,21 @@ def advice_neighbours(possible_next_crops, model,node_id):
     possible_next_crops = list(set(possible_next_crops))  
     return possible_next_crops
 
-def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_livelihood, salinity, current_crop):
+def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_livelihood, salinity, current_crop, land_size):
     abilities = []
     global requirements_per_crop
-    requirements_per_crop = [{"name": "Rice", "switch_price": {"Maize":90000000, "Coconut":6751000, "Rice":0}, "knowledge": 0.5, "salinity":(0,6), "profit_over_five_years":9000}, 
-    {"name": "Maize", "switch_price": {"Maize":0, "Coconut":13833000, "Rice":43154500, "Shrimp":927083333}, "knowledge": 0.5,  "salinity":(0,4), "profit_over_five_years":10000},
-    {"name": "Coconut", "switch_price": {"Maize":3931678, "Coconut":0, "Rice":52533000}, "knowledge": 0.5,  "salinity": (0,35), "profit_over_five_years":10000},
-    {"name": "Shrimp", "switch_price": {"Maize":50000000, "Coconut":333333000, "Rice":46365195}, "knowledge": 0.7, "salinity": (0,35), "profit_over_five_years":10000}] # THESE ARE ASSUMPTIONS AND CHANGE LATER BASED ON INTERVIEWS
+    requirements_per_crop = [{"name": "Rice", "switch_price": {"Maize":90000000, "Coconut":6751000, "Rice":0}, "knowledge": 0.5, "salinity":(0,6), "profit_over_five_years":3*34800000*5}, 
+    {"name": "Maize", "switch_price": {"Maize":0, "Coconut":13833000, "Rice":43154500}, "knowledge": 0.5,  "salinity":(0,4), "profit_over_five_years":2*30450000*5},
+    {"name": "Coconut", "switch_price": {"Maize":3931678, "Coconut":0, "Rice":52533000}, "knowledge": 0.5,  "salinity": (0,35), "profit_over_five_years":17500*12000*5},
+    {"name": "Shrimp", "switch_price": {"Maize":50000000, "Coconut":333333000, "Rice":46365195}, "knowledge": 0.7, "salinity": (0,35), "profit_over_five_years":42838*140*2*5}] 
 
     for crop in requirements_per_crop:
         if crop['name'] in possible_next_crops: # Check if crop change is possible, based on agrocensus meeting and neighbour
+            profit_over_five_years = crop['profit_over_five_years'] * land_size
+
+            # If you switch to coconut, you will have half maize half coconut for the first 5 years, so your profit will be based on the maize
+            if crop['name'] == "Coconut":
+                profit_over_five_years = next(item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Maize") * 0.5 * land_size 
 
             # Financial Ability
             possible_debt_left = maximum_loans - loan
@@ -218,12 +222,12 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
                 financial_ability = 1
             else:
                 # You do need to pay the switching price
-                if savings >= crop['switch_price']:
+                if savings >= crop['switch_price'][current_crop] * land_size:
                     financial_ability = 1
-                elif savings + possible_debt_left >= crop['switch_price']:
-                    required_loan = crop['switch_price'] - savings
+                elif savings + possible_debt_left >= crop['switch_price'][current_crop] * land_size:
+                    required_loan = crop['switch_price'][current_crop] * land_size - savings
                     # ASSUMPTION, PROFIT OVER FIVE YEAR SHOULD BE TWICE AS YOUR LOAN (since you also have other costs)
-                    if crop['profit_over_five_years'] / 2 > required_loan:
+                    if profit_over_five_years / 2 > required_loan:
                         financial_ability = 0.5
                     else:
                         financial_ability = 0
@@ -256,8 +260,84 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
                 "TA": technical_ability,
                 "average_ability": avg_ability
             })
-    
+
+    # for ability in abilities:
+    #     print(ability['average_ability'])
     return abilities
+
+def define_motivations(possible_next_crops, yearly_income, abilities, current_crop, required_income, land_size):
+    # Determine motivations per crop change
+    motivations = {}
+    for crop in requirements_per_crop:
+        for ability in abilities:
+            if ability['strategy'] == crop['name']:
+                financial_ability = ability['FA']
+                break
+        if crop['name'] in possible_next_crops:
+            if crop['name'] != current_crop:
+                # The same as by abilities, if you have coconut your profit will be defined on half maize
+                if crop['name'] == "Coconut":
+                    profit_over_five_years = next(item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Maize") * 0.5 * land_size
+                else:
+                    profit_over_five_years = crop['profit_over_five_years']
+                
+                # When the income of the crop is higher than your current income, you are motivated! If you also do not need a loan, you are more motivated 
+                if profit_over_five_years*land_size/5 > yearly_income and financial_ability == 1: 
+                    motivation = 1
+                elif profit_over_five_years*land_size/5 > yearly_income and financial_ability == 0.5: # You need a loan
+                    motivation = 0.5
+                else:
+                    motivation = 0 # sensitivity analysis is required, since these numbers are based on my own imagination
+            else:
+                if yearly_income > required_income:
+                    motivation = 1
+                else:
+                    motivation = 0.2 # ASSUMPTION,  you already have the knowledge so you are little motivated
+            motivations[crop['name']] = motivation
+            # print("motivation voor ", crop['name'], " is ", motivation)   
+    return motivations
+
+def calculate_MOTA(motivations, abilities):
+    
+    MOTA_scores = {}
+    # Calculate MOTA score, by multiplying ability by motivation 
+    for ability in abilities:
+        name = ability['strategy']
+        average_ability = ability['average_ability']
+        motivation = motivations[name]
+        MOTA_scores[name] = average_ability * motivation
+    return MOTA_scores
+
+def best_MOTA(MOTA_scores, current_crop):
+    highest_score = max(MOTA_scores.values()) # Check which strategy has the highest MOTA score 
+    most_suitable_crop = [name for name, score in MOTA_scores.items() if score == highest_score]
+    most_suitable_crop = np.random.choice(most_suitable_crop) # If multiple crops have the highest score, this will be random determined
+    change = most_suitable_crop if highest_score > 0.2 else current_crop # If the highest MOTA score is below 0.2 (ASSUMPTION), the agent will change nothing (realistic value for 0.4 should be determined later!!)
+    # if change != current_crop:
+        # print("we gaan veranderen naar... ", change)
+    return change
+
+def change_crops(change, savings, loan, maximum_loans, land_size, current_crop):
+    # Delete change from possible strategies
+    for crop in requirements_per_crop:
+        if crop["name"] == change:
+            if crop['switch_price'][current_crop]*land_size >= savings: # When the strategy is too expensive, the agent should implement loans
+                loan += (crop['switch_price'][current_crop]*land_size  - savings)
+                maximum_loans -= loan
+                savings = 0
+            else:
+                savings -= crop["switch_price"][current_crop]*land_size  # Pay for the strategy based on requirements
+    if change != 'Coconut':
+        crops_and_land = {crop['name']:land_size}
+        waiting_time = 0
+    else:
+        crops_and_land = {'Coconut':land_size/2, 'Maize': land_size/2}
+        waiting_time = 60 # You need to wait 5 years untill you can start with your coconut
+    return savings, loan, maximum_loans, crops_and_land, waiting_time
+
+def annual_loan_payment(loan_size, interest_rate_loans):
+    annual_loan = loan_size * (interest_rate_loans * (1+ interest_rate_loans)**5) / ((1+interest_rate_loans)**5 - 1) # This is based on annuïteitenberekenings
+    return annual_loan
     
 
 

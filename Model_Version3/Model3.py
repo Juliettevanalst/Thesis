@@ -68,6 +68,10 @@ class RiverDeltaModel(Model):
         # Possibility for disease
         self.chance_disease = 0.16 # Based on paper by Joffre et al., 2015 on extensive shrimp farming
 
+        # Interest rates for loans and savings
+        self.interest_rate_loans = 0.1
+        self.interest_rate_savings = 0.05
+
         # Distribution man_days during preparation time and yield time
         self.man_days_prep = 1/3
         self.payment_low_skilled = 190000 # ASSUMPTION, average / day is 200000 based on Pedroso et al., 2017
@@ -231,6 +235,8 @@ class RiverDeltaModel(Model):
         # Check if a shock is happening
         self.check_shock()
 
+        # Decrease waiting_time
+
         if self.steps % 12 == 0:
             self.agents.do(lambda agent: agent.yearly_activities() if isinstance(agent, (Working_hh_member, Land_household, Landless_households, Non_labourer)) else None)
             # coconut yield
@@ -242,9 +248,10 @@ class RiverDeltaModel(Model):
                 if isinstance(agent, Land_household):
                     if "Rice" in agent.crops_and_land.keys():
                         agent.harvest("Rice")
-                    if "Coconut" in agent.crops_and_land.keys():
+                    if "Coconut" in agent.crops_and_land.keys() and agent.waiting_time == 0:
                         agent.harvest("Coconut")
                     agent.check_changes()
+            # If agents migrate, create migrated agents and remove household agents
             for household in self.agents_to_remove:
                 migrated_hh = Migrated_household(self, agent_type= "Migrated", household_members = household.household_members)
                 self.agents.add(migrated_hh)
@@ -260,6 +267,7 @@ class RiverDeltaModel(Model):
             # Collect data
             self.datacollector.collect(self)
             # Define distribution high_low_skilled
+            
             
 
         elif (self.steps + 4) == 0 or (self.steps+4) % 12 ==0: 

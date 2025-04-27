@@ -264,7 +264,7 @@ def change_crops(change, savings, loan, maximum_loans):
                 savings -= crop['switch_price'] + loan
             else:
                 savings -= crop["switch_price"] # Pay for the strategy based on requirements
-    return savings, loan, maximum_loans
+    return savings, loan, maximum_loans, crops_and_land, waiting_time
 
 def calculate_cost(crop_type, land_size):
     costs_per_crop = {"Rice": 100, "Mango":100, "Coconut":200, "Shrimp":400} # THIS IS TOTALLYL RANDOM, will be based on interview later

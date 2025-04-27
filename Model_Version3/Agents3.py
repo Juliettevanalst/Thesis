@@ -5,6 +5,7 @@ import random
 import statistics
 
 from Functions3 import get_education_levels, get_experience, get_dissabilities, get_association, calculate_livelihood, calculate_yield_agri, calculate_farming_costs, calculate_yield_shrimp, calculate_cost_shrimp, calculate_wages_farm_workers,calculate_total_income, advice_neighbours, advice_agrocensus
+from Functions3 import define_abilities, define_motivations, calculate_MOTA, best_MOTA, annual_loan_payment, change_crops
 
 class Working_hh_member(Agent):
     def __init__(self, model,agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works):
@@ -205,6 +206,7 @@ class Non_labourer(Agent):
                 # Update working agent in the model itself
                 self.model.agents.add(working_agent)
                 self.model.agents.discard(self)
+
                 
                 
 
@@ -222,17 +224,33 @@ class Land_household(Agent):
         self.salinity_during_shock = 0
 
         self.growth_time = {}
+        self.possible_next_crops = None
+        self.new_crop = None
 
-        self.house_price = np.random.normal(52000000, 7800000) # ASSUMPTION!!
+        self.house_price = np.random.normal(52000000) # ASSUMPTION!!
         self.value_of_assets = self.land_area * 78000000 + self.house_price # ASSUMPTION
         self.maximum_debt = self.value_of_assets
         self.debt = 0
+        self.yearly_loan_payment = 0
 
         self.savings = 10000000 # ASSUMPTION!!
         self.total_cost_farming_ = {}
         self.wage_costs_ = {}
         self.total_income_ = {}
+        self.yearly_income = 0
+        self.expenditure = 0
+        for agent in household_members:
+            if agent.age < 16:
+                self.expenditure += 1755000
+            else:
+                self.expenditure += 2599000
+        self.required_income = self.expenditure
         self.information_meeting = 0
+
+        self.MOTA_scores = None
+        self.new_crop = None
+        self.waiting_time = 0
+
         
     def step(self):
         if self.household_size == 0:
@@ -255,6 +273,8 @@ class Land_household(Agent):
             self.information_meeting = 1
         else:
             self.information_meeting = 0
+
+        # we moeten betalen!! 
 
     def harvest(self, crop):
         land_area = self.crops_and_land[crop]
@@ -288,6 +308,12 @@ class Land_household(Agent):
 
         # calculate total income based on yield and costs
         self.total_income_[crop] = calculate_total_income(crop, self.yield_[crop], self.total_cost_farming_[crop])
+        if crop == "Rice":
+            self.yearly_income = self.total_income_[crop] * 3
+        elif crop == "Shrimp" or crop == "Maize":
+            self.yearly_income = self.total_income_[crop] * 3
+        else:
+            self.yearly_income = self.total_income_[crop] * 6
         # print(crop, "total income is: ", self.total_income_[crop])
         # print(crop, "total costs is: ", self.total_cost_farming_[crop])
         # print(crop, "wage worker costs is: ", self.wage_costs_[crop])
@@ -307,14 +333,45 @@ class Land_household(Agent):
             # self.model.agents.add(migrated_hh)
             self.model.agents_to_remove.append(self)
         
-        # Decide on next crop
-        # Check if there is advice from agrocensus meeting you attended
-        if self.information_meeting == 1:
-            self.possible_next_crops = advice_agrocensus(self.salinity, self.average_hh_education, list(self.crops_and_land.keys()))
-        # It is always possible to  keep the current crop
-        self.possible_next_crops.append(list(self.crops_and_land.keys()))
-        # Check what your neighbors are doing
-        self.possible_next_crops = advice_neighbours(self.possible_next_crops, self.model, self.node_id)
+        if self.waiting_time == 0: # You cannot change if your coconuts are still growing
+            if "Shrimp" in self.crops_and_land.keys():
+                # You cannot switch back to another crop, due to the high salinity and antibiotics in the land. 
+                self.possible_next_crops = ["Shrimp"]
+            # ALS JE KOKOSNOOT DOET MOET JE OOK DIT HIERONDER NIET DOEN, MAAR EERST FF WACHTEN OP JE BOMEN
+            else:
+                # Decide on next crop
+                self.possible_next_crops = []
+                # Check if there is advice from agrocensus meeting you attended
+                if self.information_meeting == 1:
+                    self.possible_next_crops.extend(advice_agrocensus(self.salinity, self.average_hh_education, list(self.crops_and_land.keys())))
+                # It is always possible to  keep the current crop
+                self.possible_next_crops.extend(list(self.crops_and_land.keys()))
+                # Check what your neighbors are doing
+                self.possible_next_crops = advice_neighbours(self.possible_next_crops, self.model, self.node_id)
+                # Check your abilities per possible crop:
+                current_largest_crop = max(self.crops_and_land, key=self.crops_and_land.get)
+                self.abilities = define_abilities(self.possible_next_crops, self.savings, self.debt, self.maximum_debt, self.livelihood['Human'], self.salinity, current_largest_crop, self.land_area)
+                # Check your motivations per possible crop:
+                self.motivations = define_motivations(self.possible_next_crops, self.yearly_income, self.abilities, current_largest_crop, self.required_income, self.land_area)
+                # Calculate MOTA scores and find the best crop:
+                self.MOTA_scores = calculate_MOTA(self.motivations, self.abilities)
+                self.new_crop = best_MOTA(self.MOTA_scores, current_largest_crop)
+                # Implement possible change
+                if self.new_crop not in list(self.crops_and_land.keys()):
+                    # print("old debt is: ", self.debt)
+                    # print("current crop is: ", current_largest_crop, "land_size =", self.land_area)
+                    # print("maximum_loans is: ", self.maximum_debt)
+                    # print("we change to crop: ", self.new_crop)
+                    # Change savings based on crop choice
+                    self.savings, self.debt, self.maximum_debt, self.crops_and_land, self.waiting_time = change_crops(self.new_crop, self.savings, self.debt, self.maximum_debt, self.land_area, current_largest_crop)
+                    # print(self.debt,  " is new debt")
+                    # print("debt ratio is: ", self.debt/self.maximum_debt)
+                    # Calculate how much you need to pay each year to pay back your loan in 5 years
+                    self.yearly_loan_payment = annual_loan_payment(self.debt, self.model.interest_rate_loans)
+                    self.growth_time[self.new_crop] = 0
+
+
+
 
 
 
@@ -365,7 +422,9 @@ class Land_household(Agent):
                 self.association = 1
 
         # Check debt ratio
-        self.debt_ratio = self.debt / self.maximum_debt
+        if self.debt / self.value_of_assets > 1:
+            print("dit gaat mis")
+        self.debt_ratio = min(self.debt / self.maximum_debt, 1)
 
         # check land size
         if self.land_category == 'small':
@@ -471,7 +530,8 @@ class Landless_households(Agent):
         self.house_quality = house_quality
 
         self.house_price = np.random.normal(52000000, 7800000) # ASSUMPTION!!
-        self.maximum_debt = self.house_price
+        self.value_of_assets = self.house_price
+        self.maximum_debt = self.value_of_assets
 
         self.debt = 0
 
