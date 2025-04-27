@@ -89,7 +89,7 @@ class RiverDeltaModel(Model):
         self.agents_to_remove = []
 
         # Set up datacollector
-        model_metrics = {"Average_Livelihood": lambda model: mean([agent.livelihood['Average'] for agent in model.agents if hasattr(agent, 'livelihood')]) if model.agents else 0}
+        model_metrics = {"Average_Livelihood": lambda model: mean([agent.livelihood['Average'] for agent in self.agents if hasattr(agent, 'livelihood')]) if self.agents else 0}
         agent_metrics = {}
         self.datacollector = DataCollector(model_reporters = model_metrics, agent_reporters = agent_metrics)
         
@@ -248,8 +248,12 @@ class RiverDeltaModel(Model):
                 if isinstance(agent, Land_household):
                     if "Rice" in agent.crops_and_land.keys():
                         agent.harvest("Rice")
+                        agent.wage_worker_payment = 1
                     if "Coconut" in agent.crops_and_land.keys() and agent.waiting_time == 0:
                         agent.harvest("Coconut")
+                        agent.wage_worker_payment = 1
+                    else:
+                        agent.wage_worker_payment = 0
                     agent.check_changes()
             # If agents migrate, create migrated agents and remove household agents
             for household in self.agents_to_remove:
@@ -267,7 +271,28 @@ class RiverDeltaModel(Model):
             # Collect data
             self.datacollector.collect(self)
             # Define distribution high_low_skilled
+            # voor alle agents met agent_type == "Household_member", agent_employment_type == employee en has_attr agent_sector en agent_sector != "Non_agri"
+            selected_agents = [agent for agent in self.agents if agent.agent_type == "Household_member" and getattr(agent, 'agent_employment_type', None) == "employee" and hasattr(agent, 'agent_sector') and agent.agent_sector != "Non_agri"]
+            # som low skilled = sum van alle agents met occupation == "low_skilled_agri_worker"
+            sum_low_skilled = sum(1 for agent in selected_agents if getattr(agent, 'agent_occupation', None) == "low_skilled_agri_worker")
+            # # som high skilled = sum van alle agents met occupation == "skilled_agri_worker" 
+            sum_high_skilled = sum(1 for agent in selected_agents if getattr(agent, 'agent_occupation', None) == "skilled_agri_worker")
+
+            self.distribution_high_low_skilled = sum_low_skilled / (sum_low_skilled + sum_high_skilled)
+
+            # voor alle agents kijken hoeveel ww ze hebben gebruikt (in dagen) / aantal wage workers totaal
+            total_days_ww_used = sum(agent.household_size for agent in self.agents if isinstance(agent, Land_household) and agent.wage_worker_payment == 1)
+            total_ww = sum_low_skilled + sum_high_skilled
+            print(total_ww)
+
+            work_days_per_ww = total_days_ww_used / total_ww
+            for agent in selected_agents:
+                if agent.agent_occupation == "low_skilled_agri_worker":
+                    agent.income = 195000 * work_days_per_ww
+                elif agent.agent_occupation == "skilled_agri_worker":
+                    agent.income = 205000* work_days_per_ww
             
+
             
 
         elif (self.steps + 4) == 0 or (self.steps+4) % 12 ==0: 

@@ -60,6 +60,8 @@ class Low_skilled_agri_worker(Working_hh_member):
         self.assigned = assigned
         self.works = works
 
+        self.income = 0
+
     def step(self):
         pass
 
@@ -74,6 +76,8 @@ class Low_skilled_nonAgri(Working_hh_member):
         self.assigned = assigned
         self.works = works
 
+        self.income = 0
+
 class Manual_worker(Working_hh_member):
     def __init__(self, model,agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works):
         super().__init__(model,agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works)
@@ -84,6 +88,8 @@ class Manual_worker(Working_hh_member):
         self.agent_employment_type = agent_employment_type
         self.assigned = assigned
         self.works = works
+
+        self.income = 0
 
 class Skilled_agri_worker(Working_hh_member):
     def __init__(self, model, agent_type,age, agent_sector, agent_occupation, agent_employment_type, assigned, works):
@@ -96,6 +102,8 @@ class Skilled_agri_worker(Working_hh_member):
         self.assigned = assigned
         self.works = works
 
+        self.income = 0
+
 class Skilled_service_worker(Working_hh_member):
     def __init__(self, model,agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works):
         super().__init__(model,agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works)
@@ -107,6 +115,8 @@ class Skilled_service_worker(Working_hh_member):
         self.assigned = assigned
         self.works = works
 
+        self.income = 0
+
 class Other(Working_hh_member):
     def __init__(self, model,agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works):
         super().__init__(model,agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works)
@@ -117,6 +127,8 @@ class Other(Working_hh_member):
         self.agent_employment_type = agent_employment_type
         self.assigned = assigned
         self.works = works
+
+        self.income = 0
 
 class Non_labourer(Agent):
     def __init__(self, model,agent_type, age, agent_employment_type, assigned, works):
@@ -232,6 +244,7 @@ class Land_household(Agent):
         self.maximum_debt = self.value_of_assets
         self.debt = 0
         self.yearly_loan_payment = 0
+        self.wage_worker_payment = 0
 
         self.savings = 10000000 # ASSUMPTION!!
         self.total_cost_farming_ = {}
