@@ -6,6 +6,7 @@ import statistics
 
 from Functions3 import get_education_levels, get_experience, get_dissabilities, get_association, calculate_livelihood, calculate_yield_agri, calculate_farming_costs, calculate_yield_shrimp, calculate_cost_shrimp, calculate_wages_farm_workers,calculate_total_income, advice_neighbours, advice_agrocensus
 from Functions3 import define_abilities, define_motivations, calculate_MOTA, best_MOTA, annual_loan_payment, change_crops
+from Functions3 import calculate_migration_ww
 
 class Working_hh_member(Agent):
     def __init__(self, model,agent_type, age, agent_sector, agent_occupation, agent_employment_type, assigned, works):
@@ -363,6 +364,9 @@ class Land_household(Agent):
         self.monthly_hh_income = self.total_hh_income / time_frame
         self.savings += self.total_hh_income - expenditure
 
+        for agent in self.household_members:
+            agent.income = 0
+
 
     def check_changes(self):
         self.prepare_livelihood()
@@ -568,6 +572,19 @@ class Landless_households(Agent):
         self.maximum_debt = self.value_of_assets
 
         self.debt = 0
+        self.savings = 10000000 # ASSUMPTION!!
+
+        self.expenditure = 0
+        for agent in household_members:
+            if agent.age < 16:
+                self.expenditure += 1755000
+            else:
+                self.expenditure += 2599000
+
+        self.contacts_in_city = 0
+        self.facilities_in_neighbourhood = 1
+        self.migrating = False
+        self.saw_advertisement = 0
 
     def yearly_activities(self):
         # Possibility for birth
@@ -582,6 +599,85 @@ class Landless_households(Agent):
 
         # Receive interest based on interest rate
         self.savings = self.savings * (self.model.interest_rate_savings +1)
+
+        # Check if you have contacts in the city
+        if self.random.random() < self.model.current_hh_left and self.contacts_in_city == 0:
+            self.contacts_in_city = 1
+
+        # Check facilities in neighborhood
+        self.facilities_in_neighbourhood = self.model.current_service_workers / self.model.start_service_workers
+
+    def check_income(self, time_since_income):
+        total_wage_income = 0
+        for agent in self.household_members:
+            total_wage_income += agent.income
+        self.total_hh_income = total_wage_income
+        time_frame = time_since_income 
+        
+        expenditure = self.expenditure / 12 * time_frame 
+        self.monthly_hh_income = self.total_hh_income / time_frame
+        self.savings += self.total_hh_income - expenditure
+        # # zijn er jonge mensen die weg willen van de farm? --> DIT MOETEN DE LAND HOUSEHOLDS OOK NOG HEBBEN
+        
+
+        if self.total_hh_income < expenditure:
+            self.income_too_low =1
+        else:
+            self.income_too_low = 0
+
+        # Are we migrating?
+        self.chance_migration = calculate_migration_ww(self.model, self.income_too_low, self.contacts_in_city,  self.facilities_in_neighbourhood)
+        if self.random.random() < self.chance_migration:
+            self.migrating = True
+            self.model.agents_to_remove.append(self)
+
+        if self.income_too_low == 1 and self.migrating == False:
+            # Can we switch to manual or other work?
+            low_skilled_agents = [agent for agent in self.household_members if isinstance(agent,( Low_skilled_agri_worker, Low_skilled_nonAgri))]
+            manual_other_agents = [agent for agent in self.household_members if isinstance(agent,( Manual_worker, Other))]
+            if len(low_skilled_agents) > 0 and len(manual_other_agents) > 0:
+                for agent in low_skilled_agents:
+                    low_skilled_income = agent.income
+                    break
+                for agent in manual_other_agents:
+                    manual_other_income  = agent.income
+                if manual_other_income > low_skilled_income:
+                    # Switch to manual_other_income
+                    for agent in low_skilled_agents:
+                        self.model.agents_become_manual.append(agent)
+                else:
+                    for agent in manual_other_agents:
+                        self.model.agents_become_low_skilled_farm.append(agent)
+            # If they do not know the other income, they will just try to switch
+            # elif len(low_skilled_agents) > 0:
+            #     for agent in low_skilled_agents:
+            #             self.model.agents_become_manual.append(agent)
+            # elif len(manual_other_agents) > 0:
+            #     for agent in manual_other_agents:
+            #             self.model.agents_become_low_skilled_farm.append(agent)
+
+            else:
+                # Is there a non_labourer who maybe can help?
+                for agent in self.household_members:
+                    if agent.works == False:
+                        if 11 >= agent.age >= 75: # Assumption, 75 is the age you will definitly stop working
+                            agent.works = True
+                            self.model.agents_become_low_skilled_farm.append(agent)
+
+            
+        # Do the young adults (15-35) want to migrate?
+        possible_migrated_members = [agent for agent in self.household_members if agent.age > 15 and agent.age < 35]
+        if len(possible_migrated_members) > 0:
+            chance_migrating = self.model.chance_leaving_household
+            if self.saw_advertisement == 1 and self.contacts_in_city == 1:
+                chance_migrating + 0.1 # ASSUMPTION
+            if self.random.random() < chance_migrating: # They want to leave
+                for agent in possible_migrated_members:
+                    self.model.agents_become_migrated_members.append(agent)
+
+        for agent in self.household_members:
+            agent.income = 0
+        
         
 
 class Migrated_household(Agent):

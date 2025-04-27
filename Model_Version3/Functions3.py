@@ -339,5 +339,20 @@ def annual_loan_payment(loan_size, interest_rate_loans):
     annual_loan = loan_size * (interest_rate_loans * (1+ interest_rate_loans)**5) / ((1+interest_rate_loans)**5 - 1) # This is based on annuïteitenberekenings
     return annual_loan
     
+def calculate_migration_ww(model, income_too_low, contacts_in_city, facilities_in_neighbourhood):
+    chances = model.chances_migration
+    if income_too_low == 1 and contacts_in_city == 1 and facilities_in_neighbourhood < 0.5:
+        chance = chances[0]
+    elif income_too_low == 1 and contacts_in_city == 1:
+        chance = chances[1]
+    elif income_too_low ==1  and contacts_in_city == 0:
+        chance = chances[2]
+    elif contacts_in_city == 1:
+        chance = chances[3]
+    elif facilities_in_neighbourhood < 0.5:
+        chance = chances[4]
+    else:
+        chance = chances[5] # THESE ARE ALL RANDOM!!! SENSITIVITY IS REQUIRED 
+    return chance
 
 

@@ -68,6 +68,10 @@ class RiverDeltaModel(Model):
         # Possibility for disease
         self.chance_disease = 0.16 # Based on paper by Joffre et al., 2015 on extensive shrimp farming
 
+        # possibility for migration
+        self.chances_migration = [0.5, 0.2, 0.2, 0.15, 0.2, 0.1]
+        self.chance_leaving_household = 0.05 #ASSUMPTION
+
         # Interest rates for loans and savings
         self.interest_rate_loans = 0.1
         self.interest_rate_savings = 0.05
@@ -87,13 +91,16 @@ class RiverDeltaModel(Model):
         self.start_households = self.number_of_households
         self.current_hh_left = self.number_of_households
         self.agents_to_remove = []
+        self.agents_become_manual = []
+        self.agents_become_low_skilled_farm = []
+        self.agents_become_migrated_members = []
 
         # number of workers
         self.start_total_low_nonagri = len([agent for agent in self.agents if hasattr(agent, 'agent_occupation') and agent.agent_type == "Household_member" and agent.agent_occupation == "low_skilled_nonAgri"])
         self.work_days_per_week = 20
         self.start_manual_other_workers = len([agent for agent in self.agents if agent.agent_type == "Household_member" and hasattr(agent, 'agent_occupation') and (agent.agent_occupation == "manual_worker" or agent.agent_occupation == "other")])
         self.start_service_workers = len([agent for agent in self.agents if agent.agent_type == "Household_member" and hasattr(agent, 'agent_occupation') and agent.agent_occupation == "skilled_service_worker"])
-
+        self.current_service_workers = self.start_service_workers
         
         # Set up datacollector
         model_metrics = {"Average_Livelihood": lambda model: mean([agent.livelihood['Average'] for agent in self.agents if hasattr(agent, 'livelihood')]) if self.agents else 0}
@@ -269,8 +276,11 @@ class RiverDeltaModel(Model):
             selected_agents = [agent for agent in self.agents if agent.agent_type == "Household_member" and getattr(agent, 'agent_employment_type', None) == "employee" and hasattr(agent, 'agent_sector') and agent.agent_sector != "Non_agri"]
             sum_low_skilled = sum(1 for agent in selected_agents if getattr(agent, 'agent_occupation', None) == "low_skilled_agri_worker")
             sum_high_skilled = sum(1 for agent in selected_agents if getattr(agent, 'agent_occupation', None) == "skilled_agri_worker")
-
-            self.distribution_high_low_skilled = sum_low_skilled / (sum_low_skilled + sum_high_skilled)
+            if sum_low_skilled == 0 and sum_high_skilled == 0:
+                print("niemand wil op de farm werken")
+                self.distribution_high_low_skilled = 0
+            else:
+                self.distribution_high_low_skilled = sum_low_skilled / (sum_low_skilled + sum_high_skilled)
 
             # Check total days wage workers were needed to define number of work days for the wage workers
             total_days_ww_used = sum(agent.household_size for agent in self.agents if isinstance(agent, Land_household) and agent.wage_worker_payment == 1)
@@ -298,12 +308,13 @@ class RiverDeltaModel(Model):
                 income = (self.payment_low_skilled + self.payment_high_skilled )/ 2 # They get paid between the high and low skilled in
                 agent.income += income_increase * agent.time_since_last_income * income * self.work_days_per_week
                 
-
             # Pay for service workers
             selected_agents = [agent for agent in self.agents if agent.agent_type == "Household_member" and hasattr(agent, 'agent_occupation') and agent.agent_occupation == "skilled_service_worker"]
             total_service_workers = len(selected_agents)
+            self.current_service_workers = total_service_workers
             # Income increase is caused by decrease in other service workers
-            increase_in_income = self.start_service_workers / total_service_workers
+            increase_in_income  = self.start_service_workers / total_service_workers
+            
             # Decrease is caused by decrease in total number of agents
             decrease_in_income = self.current_hh_left
             for agent in selected_agents:
@@ -328,31 +339,37 @@ class RiverDeltaModel(Model):
                     else:
                         print("the same thing went wrong")
                 self.agents.discard(household)
+            self.agents_to_remove = []
 
             # Alle landless households moeten kijken of ze willen veranderen (stap 6)
+            for agent in self.agents:
+                if hasattr(agent, 'check_income'):
+                    agent.check_income(2) # NEED TO CHANGE THE TWO BASED ON TIME SINCE LAST INCOME
 
 
-        elif (self.steps + 4) == 0 or (self.steps+4) % 12 ==0: 
+
+        # misschien deze omdraaien omdat anders functies vaak gepakt worden?? ff kijken naar + of - !! 
+        elif (self.steps - 4) == 0 or (self.steps-4) % 12 ==0: 
             # coconut yield, maize yield, shrimp yield
             # Define distribution high_low_skilled
             pass
 
-        elif (self.steps + 6) == 0 or (self.steps+6) % 12 ==0: 
+        elif (self.steps - 6) == 0 or (self.steps-6) % 12 ==0: 
             # coconut yield
             # Define distribution high_low_skilled
             pass
 
-        elif (self.steps + 8) == 0 or (self.steps+8) % 12 ==0: 
+        elif (self.steps - 8) == 0 or (self.steps-8) % 12 ==0: 
             # Rice yield, coconut yield, maize yield
             # Define distribution high_low_skilled
             pass
 
-        elif (self.steps + 10) == 0 or (self.steps+10) % 12 ==0: 
+        elif (self.steps - 10) == 0 or (self.steps-10) % 12 ==0: 
             # coconut yield, shrimp yield
             # Define distribution high_low_skilled
             pass
         
-        elif (self.steps + 11) == 0 or (self.steps+11) % 12 ==0: 
+        elif (self.steps - 11) == 0 or (self.steps-11) % 12 ==0: 
             # triple rice yield
             # Define distribution high_low_skilled
             pass
