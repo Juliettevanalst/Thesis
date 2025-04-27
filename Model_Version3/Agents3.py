@@ -41,7 +41,10 @@ class Working_hh_member(Agent):
             # The agent will die
             self.model.death_agents += 1
             self.household.household_size -= 1
-            self.household.household_members.remove(self)
+            if self in self.household.household_members:
+                    self.household.household_members.remove(self)
+            else:
+                print("something went wrong")
             self.model.agents.remove(self)
 
         # Check if the agent is still working
@@ -175,7 +178,10 @@ class Non_labourer(Agent):
             # The agent will die
             self.model.death_agents += 1
             self.household.household_size -= 1
-            self.household.household_members.remove(self)
+            if self in self.household.household_members:
+                    self.household.household_members.remove(self)
+            else:
+                print("something went wrong")
             self.model.agents.remove(self)
 
         # Updates child education:
@@ -240,7 +246,7 @@ class Land_household(Agent):
 
         self.salinity_during_shock = 0
 
-        self.growth_time = {}
+        # self.growth_time = {}
         self.possible_next_crops = None
         self.new_crop = None
 
@@ -269,6 +275,8 @@ class Land_household(Agent):
         self.new_crop = None
         self.waiting_time = 0
         self.livelihood = {"Human":0, "Social":0, "Financial":0, "Physical":0, "Natural":0, "Average":0}
+
+        self.use_antibiotics = 0
 
         
     def step(self):
@@ -299,9 +307,13 @@ class Land_household(Agent):
         self.debt = self.debt * (self.model.interest_rate_loans + 1)
 
     def harvest(self, crop):
+        # if crop not in self.crops_and_land or crop not in self.growth_time:
+        #     print("mn growth time klopt niet")
+        #     return
         land_area = self.crops_and_land[crop]
+        growth_times = {"Rice": 3,  "Maize": 4, "Coconut": 0, "Shrimp": 6}
         # if a shock happened during growth time, we need to take that salinity into account, otherwise, current salinity
-        if self.model.time_since_shock > self.growth_time[crop]:
+        if self.model.time_since_shock > growth_times[crop]:
             self.salinity_during_shock = self.salinity
 
         if crop == "Shrimp":
@@ -315,18 +327,18 @@ class Land_household(Agent):
                     self.use_antibiotics = 0
                 else:
                     self.use_antibiotics = 1
-            self.yield_["Shrimp"] = calculate_yield_shrimp(self.land_area, self.disease, self.use_antibiotics)
-            self.total_cost_farming_["Shrimp"] = calculate_cost_shrimp(self.land_area, self.use_antibiotics) 
+            self.yield_["Shrimp"] = calculate_yield_shrimp(land_area, self.disease, self.use_antibiotics)
+            self.total_cost_farming_["Shrimp"] = calculate_cost_shrimp(land_area, self.use_antibiotics) 
 
         else:
             # Calculate yield
-            self.yield_[crop] = calculate_yield_agri(crop, self.land_area, self.salinity)
+            self.yield_[crop] = calculate_yield_agri(crop, land_area, self.salinity)
             
             # Calculate cost farming
-            self.total_cost_farming_[crop] = calculate_farming_costs(crop, self.land_area)
+            self.total_cost_farming_[crop] = calculate_farming_costs(crop, land_area)
 
         # Calculate costs wage costs + determine number of wage workers you had during yield time
-        self.wage_costs_[crop], self.wage_workers = calculate_wages_farm_workers(crop, self.land_area, self.household_members, self.model)
+        self.wage_costs_[crop], self.wage_workers = calculate_wages_farm_workers(crop,land_area, self.household_members, self.model)
 
         # calculate total income based on yield and costs
         self.total_income_[crop] = calculate_total_income(crop, self.yield_[crop], self.total_cost_farming_[crop])
@@ -342,7 +354,8 @@ class Land_household(Agent):
         # print(crop, "yield was: ", self.yield_[crop])
         # print(crop, "number of wage workers required: ", self.wage_workers)
         if self.wage_costs_[crop] > self.total_cost_farming_[crop]:
-            print("hier ging iets grandioos mis")
+            print(crop)
+            print("hier ging iets mis")
 
         # update savings
         self.savings += self.total_income_[crop]
@@ -411,7 +424,7 @@ class Land_household(Agent):
                     # print("debt ratio is: ", self.debt/self.maximum_debt)
                     # Calculate how much you need to pay each year to pay back your loan in 5 years
                     self.yearly_loan_payment = annual_loan_payment(self.debt, self.model.interest_rate_loans)
-                    self.growth_time[self.new_crop] = 0
+                    
 
 
     def prepare_livelihood(self):
@@ -649,12 +662,12 @@ class Landless_households(Agent):
                     for agent in manual_other_agents:
                         self.model.agents_become_low_skilled_farm.append(agent)
             # If they do not know the other income, they will just try to switch
-            # elif len(low_skilled_agents) > 0:
-            #     for agent in low_skilled_agents:
-            #             self.model.agents_become_manual.append(agent)
-            # elif len(manual_other_agents) > 0:
-            #     for agent in manual_other_agents:
-            #             self.model.agents_become_low_skilled_farm.append(agent)
+            elif len(low_skilled_agents) > 0:
+                for agent in low_skilled_agents:
+                        self.model.agents_become_manual.append(agent)
+            elif len(manual_other_agents) > 0:
+                for agent in manual_other_agents:
+                        self.model.agents_become_low_skilled_farm.append(agent)
 
             else:
                 # Is there a non_labourer who maybe can help?

@@ -69,7 +69,7 @@ class RiverDeltaModel(Model):
         self.chance_disease = 0.16 # Based on paper by Joffre et al., 2015 on extensive shrimp farming
 
         # possibility for migration
-        self.chances_migration = [0.5, 0.2, 0.2, 0.15, 0.2, 0.1]
+        self.chances_migration = [0.3, 0.1, 0.1, 0.05, 0.1, 0.05]
         self.chance_leaving_household = 0.05 #ASSUMPTION
 
         # Interest rates for loans and savings
@@ -239,7 +239,6 @@ class RiverDeltaModel(Model):
     def step(self):
         self.agents.shuffle_do('step')
 
-
         self.number_of_households = 0
         for agent in self.agents:
             if hasattr(agent, "time_since_last_income"):
@@ -256,127 +255,190 @@ class RiverDeltaModel(Model):
 
         if self.steps % 12 == 0:
             self.agents.do(lambda agent: agent.yearly_activities() if isinstance(agent, (Working_hh_member, Land_household, Landless_households, Non_labourer)) else None)
-            # coconut yield
-            # Define distribution high_low_skilled
-
-        if (self.steps + 2) == 0 or (self.steps+2) % 12 ==0: 
-            # rice and coconut yield 
-            for agent in self.agents:
-                if isinstance(agent, Land_household):
-                    if "Rice" in agent.crops_and_land.keys():
-                        agent.harvest("Rice")
-                        agent.wage_worker_payment = 1
-                    if "Coconut" in agent.crops_and_land.keys() and agent.waiting_time == 0:
-                        agent.harvest("Coconut")
-                        agent.wage_worker_payment = 1
-                    else:
-                        agent.wage_worker_payment = 0
-
-            # Pay farm wage workers:
-            selected_agents = [agent for agent in self.agents if agent.agent_type == "Household_member" and getattr(agent, 'agent_employment_type', None) == "employee" and hasattr(agent, 'agent_sector') and agent.agent_sector != "Non_agri"]
-            sum_low_skilled = sum(1 for agent in selected_agents if getattr(agent, 'agent_occupation', None) == "low_skilled_agri_worker")
-            sum_high_skilled = sum(1 for agent in selected_agents if getattr(agent, 'agent_occupation', None) == "skilled_agri_worker")
-            if sum_low_skilled == 0 and sum_high_skilled == 0:
-                print("niemand wil op de farm werken")
-                self.distribution_high_low_skilled = 0
-            else:
-                self.distribution_high_low_skilled = sum_low_skilled / (sum_low_skilled + sum_high_skilled)
-
-            # Check total days wage workers were needed to define number of work days for the wage workers
-            total_days_ww_used = sum(agent.household_size for agent in self.agents if isinstance(agent, Land_household) and agent.wage_worker_payment == 1)
-            total_ww = sum_low_skilled + sum_high_skilled
-
-            work_days_per_ww = total_days_ww_used / total_ww
-            for agent in selected_agents:
-                if agent.agent_occupation == "low_skilled_agri_worker":
-                    agent.income += self.payment_low_skilled * work_days_per_ww
-                elif agent.agent_occupation == "skilled_agri_worker":
-                    agent.income += self.payment_high_skilled * work_days_per_ww
-
-            # Pay Low skilled non agri workers and other workers 
-            selected_agents = [agent for agent in self.agents if hasattr(agent, 'agent_occupation') and agent.agent_type == "Household_member" and agent.agent_occupation == "low_skilled_nonAgri"]
-            total_low_skilled_nonagri = len(selected_agents)
-            for agent in selected_agents:
-                income_increase = self.start_total_low_nonagri / total_low_skilled_nonagri
-                agent.income += income_increase * agent.time_since_last_income * self.payment_low_skilled * self.work_days_per_week # BIG ASSUMPTION, THAT PEOPLE WORK 20 DAYS/MONTH
-
-            # Pay manual workers and "other" occupation
-            selected_agents = [agent for agent in self.agents if agent.agent_type == "Household_member" and hasattr(agent, 'agent_occupation') and (agent.agent_occupation == "manual_worker" or agent.agent_occupation == "other")]
-            total_manual_other_workers = len(selected_agents)
-            for agent in selected_agents:
-                income_increase = self.start_manual_other_workers / total_manual_other_workers
-                income = (self.payment_low_skilled + self.payment_high_skilled )/ 2 # They get paid between the high and low skilled in
-                agent.income += income_increase * agent.time_since_last_income * income * self.work_days_per_week
-                
-            # Pay for service workers
-            selected_agents = [agent for agent in self.agents if agent.agent_type == "Household_member" and hasattr(agent, 'agent_occupation') and agent.agent_occupation == "skilled_service_worker"]
-            total_service_workers = len(selected_agents)
-            self.current_service_workers = total_service_workers
-            # Income increase is caused by decrease in other service workers
-            increase_in_income  = self.start_service_workers / total_service_workers
-            
-            # Decrease is caused by decrease in total number of agents
-            decrease_in_income = self.current_hh_left
-            for agent in selected_agents:
-                agent.income += increase_in_income * decrease_in_income * agent.time_since_last_income * self.payment_high_skilled * self.work_days_per_week
-
-            # alle farm household agents die nu yield hebben gehad checken hun savings en kijken of iets moet veranderen!!
-            for agent in self.agents:
-                if isinstance(agent, Land_household):
-                    if "Rice" in agent.crops_and_land.keys() or "Coconut" in agent.crops_and_land.keys() and agent.waiting_time == 0:
-                        agent.check_savings()
-                        agent.check_changes
-
-            # If agents migrate, create migrated agents and remove household agents
-            for household in self.agents_to_remove:
-                migrated_hh = Migrated_household(self, agent_type= "Migrated", household_members = household.household_members)
-                self.agents.add(migrated_hh)
-                for household_members in household.household_members:
-                    migrated_member = Migrated_hh_member(self, agent_type = "Migrated_member", household = household_members.household)
-                    self.agents.add(migrated_member)
-                    if household_members in household.household_members:
-                        self.agents.discard(household_members)
-                    else:
-                        print("the same thing went wrong")
-                self.agents.discard(household)
-            self.agents_to_remove = []
-
-            # Alle landless households moeten kijken of ze willen veranderen (stap 6)
-            for agent in self.agents:
-                if hasattr(agent, 'check_income'):
-                    agent.check_income(2) # NEED TO CHANGE THE TWO BASED ON TIME SINCE LAST INCOME
-
-
-
-        # misschien deze omdraaien omdat anders functies vaak gepakt worden?? ff kijken naar + of - !! 
-        elif (self.steps - 4) == 0 or (self.steps-4) % 12 ==0: 
-            # coconut yield, maize yield, shrimp yield
-            # Define distribution high_low_skilled
-            pass
-
-        elif (self.steps - 6) == 0 or (self.steps-6) % 12 ==0: 
-            # coconut yield
-            # Define distribution high_low_skilled
-            pass
-
-        elif (self.steps - 8) == 0 or (self.steps-8) % 12 ==0: 
-            # Rice yield, coconut yield, maize yield
-            # Define distribution high_low_skilled
-            pass
-
-        elif (self.steps - 10) == 0 or (self.steps-10) % 12 ==0: 
-            # coconut yield, shrimp yield
-            # Define distribution high_low_skilled
-            pass
+            self.need_to_yield(["Rice", "Coconut"])
+            self.pay_wage_workers()
+            self.pay_other_agents()
+            self.check_class_switches()
         
-        elif (self.steps - 11) == 0 or (self.steps-11) % 12 ==0: 
-            # triple rice yield
-            # Define distribution high_low_skilled
-            pass
+        month = self.steps % 12
+
+        if month ==2:
+            self.need_to_yield(["Rice", "Coconut"])
+            self.pay_wage_workers()
+            self.farmers_check_situation()
+            self.check_class_switches()
+
+        elif month == 4:
+            self.need_to_yield(["Coconut", "Maize", "Shrimp"])
+            self.pay_wage_workers()
+            self.farmers_check_situation()
+            self.pay_other_agents()
+            self.check_class_switches()
+        
+        elif month == 6:
+            self.need_to_yield(['Coconut'])
+            self.pay_wage_workers()
+            self.farmers_check_situation()
+            self.check_class_switches()
+
+        elif month == 8:
+            self.need_to_yield(["Rice", "Maize",'Coconut'])
+            self.pay_wage_workers()
+            self.farmers_check_situation()
+            self.pay_other_agents()
+            self.check_class_switches()
+
+        elif month == 10:
+            self.need_to_yield(["Shrimp",'Coconut'])
+            self.pay_wage_workers()
+            self.farmers_check_situation()
+            self.check_class_switches()
+
+        elif month == 11:
+            self.need_to_yield(["Rice"])
+            self.pay_wage_workers()
+            self.farmers_check_situation()
+            self.check_class_switches()
 
         if self.steps % 12 == 0:
             # Collect data
             self.datacollector.collect(self)
+
+    def need_to_yield(self, crop_type):
+        for crop in crop_type:
+            if crop != "Coconut":
+                for agent in self.agents:
+                    if isinstance(agent, Land_household):
+                        if crop in agent.crops_and_land.keys():
+                            agent.harvest(crop)
+                            agent.wage_worker_payment = 1
+                        else:
+                            agent.wage_worker_payment = 0
+            elif crop == "Coconut":
+                for agent in self.agents:
+                    if isinstance(agent, Land_household):
+                        if crop in agent.crops_and_land.keys() and agent.waiting_time == 0:
+                            agent.harvest(crop)
+                            agent.wage_worker_payment = 1
+                        else:
+                            agent.wage_worker_payment = 0
+
+    def pay_wage_workers(self):
+        # Pay farm wage workers:
+        selected_agents = [agent for agent in self.agents if agent.agent_type == "Household_member" and getattr(agent, 'agent_employment_type', None) == "employee" and hasattr(agent, 'agent_sector') and agent.agent_sector != "Non_agri"]
+        sum_low_skilled = sum(1 for agent in selected_agents if getattr(agent, 'agent_occupation', None) == "low_skilled_agri_worker")
+        sum_high_skilled = sum(1 for agent in selected_agents if getattr(agent, 'agent_occupation', None) == "skilled_agri_worker")
+        if sum_low_skilled == 0 and sum_high_skilled == 0:
+            print("niemand wil op de farm werken")
+            self.distribution_high_low_skilled = 0
+        else:
+            self.distribution_high_low_skilled = sum_low_skilled / (sum_low_skilled + sum_high_skilled)
+
+        # Check total days wage workers were needed to define number of work days for the wage workers
+        total_days_ww_used = sum(agent.household_size for agent in self.agents if isinstance(agent, Land_household) and agent.wage_worker_payment == 1)
+        total_ww = sum_low_skilled + sum_high_skilled
+
+        work_days_per_ww = total_days_ww_used / total_ww
+        for agent in selected_agents:
+            if agent.agent_occupation == "low_skilled_agri_worker":
+                agent.income += self.payment_low_skilled * work_days_per_ww
+            elif agent.agent_occupation == "skilled_agri_worker":
+                agent.income += self.payment_high_skilled * work_days_per_ww
+
+    def farmers_check_situation(self):
+        # alle farm household agents die nu yield hebben gehad checken hun savings en kijken of iets moet veranderen!!
+        for agent in self.agents:
+            if isinstance(agent, Land_household):
+                if agent.wage_worker_payment == 1:
+                    agent.check_savings()
+                    agent.check_changes()
+
+    def pay_other_agents(self):
+        # Pay Low skilled non agri workers and other workers 
+        selected_agents = [agent for agent in self.agents if hasattr(agent, 'agent_occupation') and agent.agent_type == "Household_member" and agent.agent_occupation == "low_skilled_nonAgri"]
+        total_low_skilled_nonagri = len(selected_agents)
+        for agent in selected_agents:
+            income_increase = self.start_total_low_nonagri / total_low_skilled_nonagri
+            agent.income += income_increase * 4 * self.payment_low_skilled * self.work_days_per_week # BIG ASSUMPTION, THAT PEOPLE WORK 20 DAYS/MONTH
+
+        # Pay manual workers and "other" occupation
+        selected_agents = [agent for agent in self.agents if agent.agent_type == "Household_member" and hasattr(agent, 'agent_occupation') and (agent.agent_occupation == "manual_worker" or agent.agent_occupation == "other")]
+        total_manual_other_workers = len(selected_agents)
+        for agent in selected_agents:
+            income_increase = self.start_manual_other_workers / total_manual_other_workers
+            income = (self.payment_low_skilled + self.payment_high_skilled )/ 2 # They get paid between the high and low skilled income
+            agent.income += income_increase * 4 * income * self.work_days_per_week
+            
+        # Pay for service workers
+        selected_agents = [agent for agent in self.agents if agent.agent_type == "Household_member" and hasattr(agent, 'agent_occupation') and agent.agent_occupation == "skilled_service_worker"]
+        total_service_workers = len(selected_agents)
+        self.current_service_workers = total_service_workers
+        # Income increase is caused by decrease in other service workers
+        increase_in_income  = self.start_service_workers / total_service_workers
+        
+        # Decrease is caused by decrease in total number of agents
+        decrease_in_income = self.current_hh_left
+        for agent in selected_agents:
+            agent.income += increase_in_income * decrease_in_income * 4 * self.payment_high_skilled * self.work_days_per_week  
+
+        # Agents need to update their income and see if it is sufficient
+        for agent in self.agents:
+            if hasattr(agent, 'check_income'):
+                agent.check_income(4)          
+
+    def check_class_switches(self):
+        # There are four type of switches: agents_to_remove = households who are migrating as a whole
+        # self.agents_become_manual = are household members who switch from low skilled agri work to manual work
+        # self.agents_become_low_skilled_farm = are household members who switch from manual/other work to low skilled agri work
+        # self.agents_become_migrated_members = household members between 15 and 35 who want to migrate and leave the household 
+
+        # If agents migrate, create migrated agents and remove household agents
+        for household in self.agents_to_remove:
+            migrated_hh = Migrated_household(self, agent_type= "Migrated", household_members = household.household_members)
+            self.agents.add(migrated_hh)
+            for household_members in household.household_members:
+                migrated_member = Migrated_hh_member(self, agent_type = "Migrated_member", household = household_members.household)
+                self.agents.add(migrated_member)
+                if household_members in household.household_members:
+                    self.agents.discard(household_members)
+                else:
+                    print("the same thing went wrong")
+            self.agents.discard(household)
+        self.agents_to_remove = []
+
+        for household_member in self.agents_become_manual:
+            household = household_member.household
+
+            # Add new agent
+            manual_worker = Manual_worker(self, agent_type = "Household_member", age = household_member.age, agent_sector = "Non_agri", agent_occupation = "manual_worker", agent_employment_type="employee", assigned = True, works = True)
+            self.agents.add(manual_worker)
+            manual_worker.household = household
+
+            # Remove old agent:
+            self.agents.discard(household_member)
+
+        self.agents_become_manual = []
+
+        for household_member in self.agents_become_low_skilled_farm:
+            household = household_member.household
+
+            # Add new agent
+            low_skilled_farm = Low_skilled_agri_worker(self, agent_type = "Household_member", age = household_member.age, agent_sector = "Non_agri", agent_occupation = "manual_worker", agent_employment_type="employee", assigned = True, works = True)
+            self.agents.add(low_skilled_farm)
+            low_skilled_farm.household = household
+
+            # Remove old agent
+            self.agents.discard(household_member)
+
+        self.agents_become_low_skilled_farm = []
+
+        for household_member in self.agents_become_migrated_members:
+            # Add new agent
+            migrated_member = Migrated_hh_member(self, agent_type = "Migrated_member", household = household_member.household)
+            self.agents.add(migrated_member)
+
+            # Remove old agent:
+            self.agents.discard(household_member)
 
 
     def check_shock(self):

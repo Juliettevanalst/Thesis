@@ -107,7 +107,7 @@ def calculate_yield_shrimp(land_area, disease, use_antibiotics):
 
 def calculate_cost_shrimp(land_size, use_antibiotics):
     costs = np.random.normal(3900000, 1000000) * land_size # based on joffre et al., (2015)
-    if use_antibitics == 1:
+    if use_antibiotics == 1:
         costs += 1000000 # Based on Viet Khai et al., (2018)
 
     return costs
@@ -331,7 +331,7 @@ def change_crops(change, savings, loan, maximum_loans, land_size, current_crop):
         crops_and_land = {crop['name']:land_size}
         waiting_time = 0
     else:
-        crops_and_land = {'Coconut':land_size/2, 'Maize': land_size/2}
+        crops_and_land = {'Coconut':(land_size/2), 'Maize': (land_size/2)}
         waiting_time = 60 # You need to wait 5 years untill you can start with your coconut
     return savings, loan, maximum_loans, crops_and_land, waiting_time
 
