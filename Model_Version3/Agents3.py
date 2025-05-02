@@ -286,6 +286,7 @@ class Land_household(Agent):
         self.wage_costs_ = {}
         self.total_income_ = {}
         self.yearly_income = 0
+        self.percentage_yield_ = {}
         self.expenditure = 0
         for agent in household_members:
             if agent.age < 16:
@@ -351,9 +352,6 @@ class Land_household(Agent):
         self.debt = self.debt * (self.model.interest_rate_loans + 1)
 
     def harvest(self, crop):
-        # if crop not in self.crops_and_land or crop not in self.growth_time:
-        #     print("mn growth time klopt niet")
-        #     return
         land_area = self.crops_and_land[crop]
         growth_times = {"Rice": 3,  "Maize": 4, "Coconut": 0, "Shrimp": 6}
         # if a shock happened during growth time, we need to take that salinity into account, otherwise, current salinity
@@ -370,17 +368,22 @@ class Land_household(Agent):
                 if (self.livelihood['Human']+self.livelihood['Financial'])/2 >= 0.5:
                     # Use no antibiotics
                     self.use_antibiotics = 0
+                    self.percentage_yield_["Shrimp"] = 0.26 # 37/140 = 0.26, only 26% of your fish survives
                 else:
                     self.use_antibiotics = 1
+            else:
+                self.use_antibiotics = 0
+                self.percentage_yield_["Shrimp"] = 1
             self.yield_["Shrimp"] = calculate_yield_shrimp(
                 land_area, self.disease, self.use_antibiotics)
             self.total_cost_farming_["Shrimp"] = calculate_cost_shrimp(
                 land_area, self.use_antibiotics)
+            self.percentage_yield_["Shrimp"] = 1
 
         else:
             # Calculate yield
-            self.yield_[crop] = calculate_yield_agri(
-                crop, land_area, self.salinity, self.livelihood['Human'])
+            self.yield_[crop], self.percentage_yield_[crop] = calculate_yield_agri(
+                crop, land_area, self.salinity, self.livelihood['Human'], self.percentage_yield_)
 
             # Calculate cost farming
             self.total_cost_farming_[
@@ -388,7 +391,10 @@ class Land_household(Agent):
 
         # Calculate costs wage costs + determine number of wage workers you had during yield time
         self.wage_costs_[crop], self.wage_workers = calculate_wages_farm_workers(
-            crop, land_area, self.household_members, self.model, self.machines)
+            crop, land_area, self.household_members, self.model, self.machines, self.percentage_yield_[crop])
+
+        if crop == "Maize": # There is a lack of maize data, therefore somethings wage costs are higher than total costs in my model for maize. I decided to solve this by taking Maize, and adding "vaste kosten" of 6.8 million
+            self.total_cost_farming_[crop] = self.wage_costs_[crop] + self.model.maize_fixed_costs * land_area
 
         # calculate total income based on yield and costs
         self.total_income_[crop] = calculate_total_income(
@@ -396,14 +402,19 @@ class Land_household(Agent):
         if crop == "Rice":
             self.yearly_income = self.total_income_[crop] * 3
         elif crop == "Shrimp" or crop == "Maize":
-            self.yearly_income = self.total_income_[crop] * 3
+            self.yearly_income = self.total_income_[crop] * 2
         else:
             self.yearly_income = self.total_income_[crop] * 6
 
-        if self.wage_costs_[crop] > self.total_cost_farming_[crop]:
-            print(self.wage_costs_[crop], " zijn de kosten van wage")
-            print(self.total_cost_farming_[crop], " zijn de kosten totaal van ", crop)
-            # print("hier ging iets mis")
+        if self.total_income_[crop] < 0:
+            print(crop)
+        #     print("dit kan dus niet")
+            # print("mijnl and  is ", land_area)
+            # print("mijn yield  is: ", self.yield_[crop])
+            # print(self.wage_costs_[crop], " zijn de kosten van wage")
+            # print(self.total_cost_farming_[crop], " zijn de kosten totaal van ", crop)
+            # print(self.total_income_[crop], " totale inkomen van ", crop)
+            # print(self.machines, " huishouden heeft wel/geen machine")
 
         # update savings
         self.savings += self.total_income_[crop]
@@ -459,7 +470,7 @@ class Land_household(Agent):
                     self.crops_and_land, key=self.crops_and_land.get)
                 current_crops = list(self.crops_and_land.keys())
                 self.abilities = define_abilities(self.possible_next_crops, self.savings, self.debt, self.maximum_debt,
-                                                  self.livelihood['Human'], self.salinity, current_largest_crop, self.land_area)
+                                                  self.livelihood['Human'], self.salinity, current_largest_crop, self.land_area, self.machines)
                 # Check your motivations per possible crop:
                 self.motivations = define_motivations(
                     self.possible_next_crops, self.yearly_income, self.abilities, current_largest_crop, self.required_income, self.land_area)

@@ -33,7 +33,7 @@ class RiverDeltaModel(Model):
         self,
         seed=20,
         district='Gò Công Tây',
-        num_agents=5000,
+        num_agents=1000,
         excel_path=correct_path,
         salinity_shock_step=[
             125,
@@ -85,6 +85,9 @@ class RiverDeltaModel(Model):
         # Possibility for disease
         # Based on paper by Joffre et al., 2015 on extensive shrimp farming
         self.chance_disease = 0.16
+
+        # Maize costs
+        self.maize_fixed_costs = 3400000 # Based on paper by Ba et al., (2017)
 
         # possibility for migration
         self.chances_migration = [0.3, 0.1, 0.1, 0.05, 0.1, 0.05]

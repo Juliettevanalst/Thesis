@@ -94,23 +94,28 @@ def get_association(model):
         return 0
 
 
-def calculate_yield_agri(crop, land_area, salinity, human_livelihood):
+def calculate_yield_agri(crop, land_area, salinity, human_livelihood, percentage_yield_):
     # Dictionary layout = {"name":["threshold", "slope"]}
     salinity_decrease = {"Rice": [3, 12], "Maize": [1.7, 12]}
-    # Based on FAO statistics ofo 2014. Shrimp is based on paper by Viet Khai et al., 2018
+    # Based on FAO statistics of 2014
     yield_per_ha = {"Rice": 5753, "Maize": 4414, "Coconut": 9871/6}
     if crop in salinity_decrease.keys():
-        percentage_yield = ((100 - salinity_decrease[crop][1] * (
+        percentage_yield_[crop] = ((100 - salinity_decrease[crop][1] * (
             salinity - salinity_decrease[crop][0]))/100)  # Based on function FAO
+        # yield will always be maximum 1, also if your salinity is below the threshold. 
+        percentage_yield_[crop] = min(percentage_yield_[crop], 1)
     else:
-        percentage_yield = 1  # Coconut is salt tolerant
+        percentage_yield_[crop] = 1  # Coconut is salt tolerant
 
     # When you are smarter, yield will be less impacted by salinity:
     if human_livelihood >= 0.5: # THIS VALUE IS AN ASSUMPTION!!
-        percentage_yield = min(percentage_yield + 0.1, 1)
+        percentage_yield_[crop] = min(percentage_yield_[crop] + 0.1, 1)
 
-    yield_ = yield_per_ha[crop] * land_area * percentage_yield
-    return yield_
+    yield_ = yield_per_ha[crop] * land_area * percentage_yield_[crop]
+
+    # if crop == "Maize":
+    #     print(percentage_yield, "is percetage yield maize has, with a salinity of ", salinity)
+    return yield_, percentage_yield_[crop]
 
 def calculate_farming_costs(crop, land_area):
     cost_per_ha = {"Rice": np.random.normal(
@@ -125,23 +130,23 @@ def calculate_farming_costs(crop, land_area):
 def calculate_yield_shrimp(land_area, disease, use_antibiotics):
     if disease == 1 and use_antibiotics == 0:
         # this is in kg, based on paper joffre et al., 2015
-        yield_ = np.random.normal(37, 6.8) * land_area
+        yield_ = 37 * land_area
     else:
-        yield_ = np.random.normal(140, 20.9) * land_area
+        yield_ = 140 * land_area
 
     return yield_
 
 
 def calculate_cost_shrimp(land_size, use_antibiotics):
     # based on joffre et al., (2015)
-    costs = np.random.normal(3900000, 1000000) * land_size
+    costs = 3900000 * land_size
     if use_antibiotics == 1:
-        costs += 1000000  # Based on Viet Khai et al., (2018)
+        costs += 1000000 * land_size  # Based on Viet Khai et al., (2018)
 
     return costs
 
 
-def calculate_wages_farm_workers(crop, land_area, household_members, model, machines):
+def calculate_wages_farm_workers(crop, land_area, household_members, model, machines, percentage_yield):
     # Based on different papers, see documentation
     man_days_per_ha = {"Rice": 48, "Coconut": 8, "Maize": 106, "Shrimp": 33}
     # THIS IS AN ASSUMPTION, IN TWO WEEKS YOU WANT TO HAVE YOUR SEEDS PLANTED. for coconut the trees are already there, so prep time is long
@@ -180,16 +185,22 @@ def calculate_wages_farm_workers(crop, land_area, household_members, model, mach
     # Do we need to hire during cultivation?
     required_during_cultivation_per_day = required_during_cultivation / \
         cultivation_time[crop]
+    # Also take the yield reduction due to salinity into account. If the yield was less, the number of wage workers is decreased. 
     if cnt < required_during_cultivation_per_day:
         # You need to hire wage workers
         wage_workers += int((required_during_cultivation_per_day - cnt)
-                            * cultivation_time[crop])
+                            * cultivation_time[crop] * percentage_yield)
     else:
         wage_workers += 0
+
+    
 
     cost_wage_workers = wage_workers * model.payment_low_skilled * model.distribution_high_low_skilled + \
         wage_workers * model.payment_high_skilled * \
         (1-model.distribution_high_low_skilled)
+
+    # if crop == "Maize":
+    #     print(wage_workers)
     return cost_wage_workers, wage_workers
 
 
@@ -226,7 +237,7 @@ def advice_agrocensus(salinity, education_level, current_crops):
         adviced_crop = "Rice"
     elif salinity <= 3 and "Maize" in current_crops:
         adviced_crop = "Maize"
-    if education_level > 0.5:  # THIS IS A RANDOM ASSUMPTION
+    elif education_level > 0.5:  # THIS IS A RANDOM ASSUMPTION
         adviced_crop = "Shrimp"
     else:
         adviced_crop = "Coconut"
@@ -251,7 +262,7 @@ def advice_neighbours(possible_next_crops, model, node_id):
     return possible_next_crops
 
 
-def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_livelihood, salinity, current_crop, land_size):
+def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_livelihood, salinity, current_crop, land_size, machines):
     abilities = []
     global requirements_per_crop
     requirements_per_crop = [{"name": "Rice", "switch_price": {"Maize": 90000000, "Coconut": 6751000, "Rice": 0}, "knowledge": 0.5, "salinity": (0, 6), "profit_over_five_years": 3*34800000*5},
@@ -266,10 +277,14 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
         if crop['name'] in possible_next_crops:
             profit_over_five_years = crop['profit_over_five_years'] * land_size
 
-            # If you switch to coconut, you will have half maize half coconut for the first 5 years, so your profit will be based on the maize
+            # If you switch to coconut, you will have half maize/rice half coconut for the first 5 years, so your profit will be based on the maize or rice
             if crop['name'] == "Coconut":
-                profit_over_five_years = next(
-                    item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Maize") * 0.5 * land_size
+                if current_crop == "Maize":
+                    profit_over_five_years = next(
+                        item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Maize") * 0.5 * land_size
+                elif current_crop == "Rice":
+                    profit_over_five_years = next(
+                        item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Rice") * 0.5 * land_size
 
             # Financial Ability
             possible_debt_left = maximum_loans - loan
@@ -299,10 +314,19 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
                     0, human_livelihood / crop['knowledge'])
 
             # Technical Ability
+            technical_ability = 0
             if crop['salinity'][0] <= salinity < crop['salinity'][1]:
-                technical_ability = 1
-            else:
-                technical_ability = 0
+                if crop['name'] == "Coconut" or crop['name'] == "Maize":
+                    if crop['name'] == "Coconut":
+                        land_size_maize = land_size / 2
+                    else:
+                        land_size_maize = land_size
+                    # Based on current liturature data, your production costs will be too high if the land size is higher than 1 and you do not have machines. 
+                    if land_size < 1 or machines == 1:
+                        technical_ability = 1
+                else:
+                    technical_ability = 1
+        
 
             # Average Ability
             if financial_ability == 0 or technical_ability == 0:
@@ -337,8 +361,11 @@ def define_motivations(possible_next_crops, yearly_income, abilities, current_cr
             if crop['name'] != current_crop:
                 # The same as by abilities, if you have coconut your profit will be defined on half maize
                 if crop['name'] == "Coconut":
-                    profit_over_five_years = next(
-                        item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Maize") * 0.5 * land_size
+                    if current_crop == "Maize":
+                        profit_over_five_years = next(item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Maize") * 0.5 * land_size
+                    elif current_crop == "Rice":
+                        profit_over_five_years = next(item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Rice") * 0.5 * land_size
+
                 else:
                     profit_over_five_years = crop['profit_over_five_years']
 
@@ -410,7 +437,10 @@ def change_crops(change, savings, loan, maximum_loans, land_size, current_larges
         crops_and_land = {change: land_size}
         waiting_time = 6 # You can not harvest rice in february and harvest a complete shrimp field in april
     else:
-        crops_and_land = {'Coconut': (land_size/2), 'Maize': (land_size/2)}
+        if "Rice" in current_crop:
+            crops_and_land = {'Coconut': (land_size/2), 'Rice': (land_size/2)}
+        elif "Maize" in current_crops:
+            crops_and_land = {'Coconut': (land_size/2), 'Maize': (land_size/2)}
         waiting_time = 60  # You need to wait 5 years untill you can start with your coconut
     return savings, loan, maximum_loans, crops_and_land, waiting_time, new_crop_type
 
