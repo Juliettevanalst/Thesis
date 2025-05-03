@@ -46,7 +46,9 @@ class Working_hh_member(Agent):
             self.household.household_size -= 1
             if self in self.household.household_members:
                 self.household.household_members.remove(self)
-            self.model.agents.remove(self)
+            self.model.agents.discard(self)
+            if self in self.model.agents:
+                print("het verwijderen van de dode ging mis")
 
         # Check if the agent is still working
         if self.works == True:
@@ -193,7 +195,7 @@ class Non_labourer(Agent):
             self.household.household_size -= 1
             if self in self.household.household_members:
                 self.household.household_members.remove(self)
-            self.model.agents.remove(self)
+            self.model.agents.discard(self)
 
         # Updates child education:
         if self.age == 10:
@@ -227,9 +229,20 @@ class Non_labourer(Agent):
                 # Agent will start working on the family farm
                 working_agent = Skilled_agri_worker(self.model, agent_type="Household_member", age=self.age, agent_sector=self.household.crop_type,
                                                     agent_occupation="skilled_agri_worker", agent_employment_type='family_worker', assigned=True, works=True)
+                working_agent.household = self.household
+
+                
+                self.model.agents.add(working_agent)
+                if working_agent not in self.model.agents:
+                    print("het aanmaken van de working agent ging mis")
+                            
             else:  # Agent  becomes a wage worker
                 working_agent = Skilled_agri_worker(self.model, agent_type="Household_member", age=self.age, agent_sector=None,
                                                     agent_occupation="skilled_agri_worker", agent_employment_type='employee', assigned=True, works=True)
+                working_agent.household = self.household
+                self.model.agents.add(working_agent)
+                if working_agent not in self.model.agents:
+                    print("het aanmaken van de working agent ging mis")
         else:
             # There is an almost 50/50% chance you will become a manual or skilled service worker, as can be seen in the data bij "Non_agri" and then occupations
             new_occupation = self.random.choice(
@@ -245,16 +258,19 @@ class Non_labourer(Agent):
                 employment_type = 'employee'
             working_agent = agent_class(self.model, agent_type='Household_member', age=self.age, agent_sector='Non_agri',
                                         agent_occupation=new_occupation, agent_employment_type=employment_type, assigned=True, works=True)
+            working_agent.household = self.household
+            self.model.agents.add(working_agent)
+            if working_agent not in self.model.agents:
+                    print("het aanmaken van de working agent ging mis")
 
         # Add working agent to the household, and remove old agent from the household
-        working_agent.household = self.household
         if self in self.household.household_members:
             self.household.household_members.remove(self)
-        self.household.household_members.append(working_agent)
+        # self.household.household_members.append(working_agent)
 
-        # Update working agent in the model itself
-        self.model.agents.add(working_agent)
         self.model.agents.discard(self)
+        if self in self.model.agents:
+            print("het verwijderen van de hele huishoud ging mis")
 
 # Household agents
 class Land_household(Agent):
@@ -315,16 +331,20 @@ class Land_household(Agent):
         self.facilities_in_neighbourhood = 1
 
     def step(self):
-        if self.household_size == 0:
-            self.model.agents.remove(self)
-            # print("household died")
+        pass
 
     def yearly_activities(self):
         # If the whole household is death, the household will be removed from the model
         if not self.household_members:
             self.model.deceased_households += 1
             # Remove the agent from the model
-            self.model.agents.discard(self)
+            for agent in self.household_members:
+                self.model.agents.discard(agent)
+                if agent in self.model.agents:
+                    print("het verwijderen van de huishoud mmeber ging mis")
+            self.model.agents.discard(self) 
+            if self in self.model.agents:
+                print("het verwijderen van de hele huishouden ging mis")
         
 
         # Possibility for birth
@@ -335,8 +355,11 @@ class Land_household(Agent):
             # A child is born!
             new_child = Non_labourer(self.model, agent_type='Household_member',
                                      age=0, agent_employment_type=None, assigned=True, works=False)
-            self.model.child_births += 1                                     
-            self.model.agents.add(new_child)
+            new_child.household = self
+            self.model.child_births += 1   
+            self.model.agents.add(new_child)  
+            if new_child not in self.model.agents:
+                print("het aanmaken van de child agent ging mis")
             self.household_members.append(new_child)
             self.household_size += 1
             new_child.household = self
@@ -436,7 +459,26 @@ class Land_household(Agent):
                                                self.model.current_hh_left, self.association, self.savings, self.debt_ratio, self.land_ratio, 
                                                self.house_quality, self.salinity_suitability)
         if self.savings < 0:  # ASSUMPTION!!!!
-            self.model.agents_to_remove.append(self)
+            # We are migrating
+            migrated_hh = Migrated_household(
+                self.model, agent_type="Migrated", household_members=self.household_members)
+            self.model.agents.add(migrated_hh)
+            if migrated_hh not in self.model.agents:
+                print("het aanmaken van de migrated household ging mis")
+            for household_members in self.household_members:
+                migrated_member = Migrated_hh_member(
+                    self.model, agent_type="Migrated_member", household = migrated_hh)
+                
+                self.model.agents.add(migrated_member)
+                if migrated_member not in self.model.agents:
+                    print("het aanmaken van de migrated member ging mis")
+                self.model.agents.discard(household_members)
+                if household_members in self.model.agents:
+                    print("het verwijderen van de huishoud mmeber ging mis")
+                
+            self.model.agents.discard(self)
+            if self in self.model.agents:
+                print("het verwijderen van de huishouden zelf ging mis")
 
         if self.monthly_hh_income < self.expenditure:
             # We need to change!!
@@ -493,7 +535,20 @@ class Land_household(Agent):
                 chance_migrating += self.model.increased_chance_migration_familiarity # ASSUMPTION
             if self.random.random() < chance_migrating:  # They want to leave
                 for agent in possible_migrated_members:
-                    self.model.agents_become_migrated_members.append(agent)
+                    for agent in possible_migrated_members:
+                        # Add new agent
+                        migrated_member = Migrated_hh_member(
+                            self.model, agent_type="Migrated_member_young_adult", household=agent.household)
+                        if agent in self.household_members:
+                            self.household_members.remove(agent)
+                        self.household_size -= 1
+                        self.model.agents.add(migrated_member)
+                        if migrated_member not in self.model.agents:
+                            print("het aanmaken van de migrated member ging mis")
+                        self.model.agents.discard(agent)
+                        if agent in self.model.agents:
+                            print("het verwijderen van de young adult mmeber ging mis")
+                
 
         
 
@@ -691,7 +746,15 @@ class Landless_households(Agent):
         if not self.household_members:
             self.model.deceased_households += 1
             # Remove the agent from the model
-            self.model.agents.discard(self)
+            for agent in self.household_members:
+                self.model.agents.discard(agent)
+                if agent in self.model.agents:
+                    print("het verwijderen van de huishoud mmebers ging mis")
+                
+            self.model.agents.discard(self) 
+            if self in self.model.agents:
+                print("het verwijderen van de hele huishoud ging mis")
+                
 
         # Possibility for birth
         # I took the birth rate of the whole population, not only women
@@ -701,8 +764,11 @@ class Landless_households(Agent):
             # A child is born!
             new_child = Non_labourer(self.model, agent_type='Household_member',
                                      age=0, agent_employment_type=None, assigned=True, works=False)
+            new_child.household = self
             self.model.child_births += 1
             self.model.agents.add(new_child)
+            if new_child not in self.model.agents:
+                print("het aanmaken van de nieuw child ging mis")
             self.household_members.append(new_child)
             self.household_size += 1
             new_child.household = self
@@ -739,7 +805,26 @@ class Landless_households(Agent):
             self.model, self.income_too_low, self.contacts_in_city,  self.facilities_in_neighbourhood)
         if self.random.random() < self.chance_migration:
             self.migrating = True
-            self.model.agents_to_remove.append(self)
+            # We are migrating
+            migrated_hh = Migrated_household(
+                self.model, agent_type="Migrated", household_members=self.household_members)
+            self.model.agents.add(migrated_hh)
+            if migrated_hh not in self.model.agents:
+                print("het aanmaken van de migrated hh ging mis")
+            for household_members in self.household_members:
+                migrated_member = Migrated_hh_member(
+                    self.model, agent_type="Migrated_member", household = migrated_hh)
+                
+                self.model.agents.add(migrated_member)
+                if migrated_member not in self.model.agents:
+                    print("het aanmaken van de migrated member ging mis")
+                self.model.agents.discard(household_members)
+                if household_members in self.model.agents:
+                    print("het verwijderen van de huishoud mmebers ging mis")
+                
+            self.model.agents.discard(self)
+            if self in self.model.agents:
+                print("het verwijderen van de coplete huishouden ging mis")
 
         if self.income_too_low == 1 and self.migrating == False:
             # Can we switch to manual or other work?
@@ -756,17 +841,82 @@ class Landless_households(Agent):
                 if manual_other_income > low_skilled_income:
                     # Switch to manual_other_income
                     for agent in low_skilled_agents:
-                        self.model.agents_become_manual.append(agent)
+                        current_household = agent.household
+
+                        # Add new agent
+                        manual_worker = Manual_worker(
+                            self.model,
+                            agent_type="Household_member",
+                            age=agent.age,
+                            agent_sector="Non_agri",
+                            agent_occupation="manual_worker",
+                            agent_employment_type="employee",
+                            assigned=True,
+                            works=True)
+                        self.model.agents.add(manual_worker)
+                        if manual_worker not in self.model.agents:
+                            print("het aanmaken van de manual worker ging mis")
+                        manual_worker.household = current_household
+
+                        # Remove old agent:
+                        self.model.agents.discard(agent)
+                        if agent in self.model.agents:
+                            print("het verwijderen van de manual worker ging mis")
+
+
                 else:
                     for agent in manual_other_agents:
-                        self.model.agents_become_low_skilled_farm.append(agent)
+                        current_household = agent.household
+
+                        # Add new agent
+                        low_skilled_farm = Low_skilled_agri_worker(
+                            self.model,
+                            agent_type="Household_member",
+                            age=agent.age,
+                            agent_sector="Non_agri",
+                            agent_occupation="manual_worker",
+                            agent_employment_type="employee",
+                            assigned=True,
+                            works=True)
+                        self.model.agents.add(low_skilled_farm)
+                        if low_skilled_farm not in self.model.agents:
+                            print("het aanmaken van de low skilled worker ging mis")
+                        low_skilled_farm.household = current_household
+
+                        # Remove old agent
+                        try:
+                            self.model.agents.remove(agent)
+                        except KeyError:
+                            self.model.agents.discard(agent) 
+                            
+
             # If they do not know the other income, they will just try to switch
             elif len(low_skilled_agents) > 0:
                 for agent in low_skilled_agents:
                     self.model.agents_become_manual.append(agent)
             elif len(manual_other_agents) > 0:
                 for agent in manual_other_agents:
-                    self.model.agents_become_low_skilled_farm.append(agent)
+                    current_household = agent.household
+
+                    # Add new agent
+                    low_skilled_farm = Low_skilled_agri_worker(
+                        self.model,
+                        agent_type="Household_member",
+                        age=agent.age,
+                        agent_sector="Non_agri",
+                        agent_occupation="manual_worker",
+                        agent_employment_type="employee",
+                        assigned=True,
+                        works=True)
+                    self.model.agents.add(low_skilled_farm)
+                    if low_skilled_farm not in self.model.agents:
+                        print("het aanmaken van de low skilled worker ging mis")
+                    low_skilled_farm.household = current_household
+
+                    # Remove old agent
+                    self.model.agents.discard(agent)
+                    if agent in self.model.agents:
+                        print("het verwijderen van de low skilled farm ging mis")
 
             else:
                 # Is there a non_labourer who maybe can help?
@@ -774,8 +924,27 @@ class Landless_households(Agent):
                     if agent.works == False:
                         if 11 <= agent.age <= 75:  # Assumption, 75 is the age you will definitly stop working
                             agent.works = True
-                            self.model.agents_become_low_skilled_farm.append(
-                                agent)
+                            current_household = agent.household
+
+                            # Add new agent
+                            low_skilled_farm = Low_skilled_agri_worker(
+                                self.model,
+                                agent_type="Household_member",
+                                age=agent.age,
+                                agent_sector="Non_agri",
+                                agent_occupation="manual_worker",
+                                agent_employment_type="employee",
+                                assigned=True,
+                                works=True)
+                            self.model.agents.add(low_skilled_farm)
+                            if low_skilled_farm not in self.model.agents:
+                                print("het aanmaken van de low skilled farm ging mis")
+                            low_skilled_farm.household = current_household
+
+                            # Remove old agent
+                            self.model.agents.discard(agent)
+                            if agent in self.model.agents:
+                                print("het verwijderen van de low skilled farm ging mis")
 
         # Do the young adults (15-35) want to migrate?
         possible_migrated_members = [
@@ -786,7 +955,19 @@ class Landless_households(Agent):
                 chance_migrating += self.model.increased_chance_migration_familiarity # ASSUMPTION
             if self.random.random() < chance_migrating:  # They want to leave
                 for agent in possible_migrated_members:
-                    self.model.agents_become_migrated_members.append(agent)
+                    # Add new agent
+                    migrated_member = Migrated_hh_member(
+                        self.model, agent_type="Migrated_member_young_adult", household=agent.household)
+                    self.model.agents.add(migrated_member)
+                    if migrated_member not in self.model.agents:
+                        print("het aanmaken van de migrated member ging mis")
+                    # Remove agent from the household
+                    if agent in self.household_members:
+                        self.household_members.remove(agent)
+                        self.household_size -= 1
+                    self.model.agents.discard(agent)
+                    if agent in self.model.agents:
+                        print("het verwijderen van de migrated member ging mis")
 
         for agent in self.household_members:
             agent.income = 0

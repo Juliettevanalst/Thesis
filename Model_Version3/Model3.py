@@ -123,6 +123,9 @@ class RiverDeltaModel(Model):
         self.agents_become_manual = []
         self.agents_become_low_skilled_farm = []
         self.agents_become_migrated_members = []
+        self.agents_to_append = []
+        self.remove_hh_member = []
+        self.remove_hh = []
 
         # number of workers
         self.start_total_low_nonagri = len([agent for agent in self.agents if hasattr(
@@ -201,7 +204,7 @@ class RiverDeltaModel(Model):
                     assigned,
                     works)
                 self.agents.add(agent)
-                # NEED TO PLACE AGENT ON THE GRID HERE!!! TO DO
+                
 
             # If the agent is not working:
             else:
@@ -299,9 +302,9 @@ class RiverDeltaModel(Model):
                 salinity,
                 crop_type,
                 node_id)
-            for member in household_members:
-                member.household = household
             self.agents.add(household)
+            for member in household.household_members:
+                member.household = household
 
         # Time to create landless households
         unassigned_agents = [
@@ -352,14 +355,16 @@ class RiverDeltaModel(Model):
                 household_members,
                 land_area,
                 house_quality)
+            
+            self.agents.add(household)
             for member in household_members:
                 member.household = household
-            self.agents.add(household)
 
         # print number of unassigned agents
         unassigned_agents = [a for a in self.agents if hasattr(
             a, 'agent_type') and a.agent_type == "Household_member" and not a.assigned]
         print("There are", len(unassigned_agents), "agents unassigned!!")
+
 
     def step(self):
         self.agents.shuffle_do('step')
@@ -377,11 +382,11 @@ class RiverDeltaModel(Model):
         self.check_shock()
 
         # Print total number of agents
-        number_of_hh_members = 0
-        for agent in self.agents:
-            if agent.agent_type == "Household_member":
-                number_of_hh_members += 1
-        print(number_of_hh_members)
+        # number_of_hh_members = 0
+        # for agent in self.agents:
+        #     if agent.agent_type == "Household_member":
+        #         number_of_hh_members += 1
+        # print(number_of_hh_members)
 
         # Decrease waiting_time
         for agent in self.agents: 
@@ -451,7 +456,7 @@ class RiverDeltaModel(Model):
 
     def need_to_yield(self, crop_type):
         for crop in crop_type:
-            for agent in self.agents:
+            for agent in list(self.agents):
                 if isinstance(agent, Land_household):
                     if crop in agent.crops_and_land.keys() and agent.waiting_time_[crop] == 0:
                         agent.harvest(crop)
@@ -493,7 +498,7 @@ class RiverDeltaModel(Model):
     def farmers_check_situation(self):
         # alle farm household agents die nu yield hebben gehad checken hun
         # savings en kijken of iets moet veranderen!!
-        for agent in self.agents:
+        for agent in list(self.agents):
             if isinstance(agent, Land_household):
                 if agent.wage_worker_payment == 1:
                     agent.check_savings()
@@ -539,11 +544,12 @@ class RiverDeltaModel(Model):
                 4 * self.payment_high_skilled * self.work_days_per_week
 
         # Agents need to update their income and see if it is sufficient
-        for agent in self.agents:
+        for agent in list(self.agents):
             if hasattr(agent, 'check_income'):
                 agent.check_income(4)
 
     def check_class_switches(self):
+        pass
         # There are four type of switches: agents_to_remove = households who are migrating as a whole
         # self.agents_become_manual = are household members who switch from low skilled agri work to manual work
         # self.agents_become_low_skilled_farm = are household members who switch from manual/other work to low skilled agri work
@@ -551,72 +557,102 @@ class RiverDeltaModel(Model):
         # and 35 who want to migrate and leave the household
 
         # If agents migrate, create migrated agents and remove household agents
-        for household in self.agents_to_remove:
-            migrated_hh = Migrated_household(
-                self, agent_type="Migrated", household_members=household.household_members)
-            self.agents.add(migrated_hh)
-            for household_members in household.household_members:
-                migrated_member = Migrated_hh_member(
-                    self, agent_type="Migrated_member", household=household_members.household)
-                self.agents.add(migrated_member)
-                # Remove old agent
-                self.agents.discard(household_members)
-            # Remove the whole household
-            self.agents.discard(household)
-        self.agents_to_remove = []
+        # for household in self.agents_to_remove:
+        #     migrated_hh = Migrated_household(
+        #         self, agent_type="Migrated", household_members=household.household_members)
+        #     self.agents.add(migrated_hh)
+        #     for household_members in household.household_members:
+        #         # if household_members in self.agents:
+        #         #     print("we zitten erin")
+        #         # else:
+        #         #     print("hier gaat t al mis")
+        #         migrated_member = Migrated_hh_member(
+        #             self, agent_type="Migrated_member", household = migrated_hh)
+                
+        #         self.agents.add(migrated_member)
+        #         self.agents.discard(household_members)
+                
+        #     self.agents.discard(household)
+        # self.agents_to_remove = []
 
-        for household_member in self.agents_become_manual:
-            household = household_member.household
+        # for household_member in self.agents_become_manual:
+        #     current_household = household_member.household
 
-            # Add new agent
-            manual_worker = Manual_worker(
-                self,
-                agent_type="Household_member",
-                age=household_member.age,
-                agent_sector="Non_agri",
-                agent_occupation="manual_worker",
-                agent_employment_type="employee",
-                assigned=True,
-                works=True)
-            self.agents.add(manual_worker)
-            manual_worker.household = household
+        #     # Add new agent
+        #     manual_worker = Manual_worker(
+        #         self,
+        #         agent_type="Household_member",
+        #         age=household_member.age,
+        #         agent_sector="Non_agri",
+        #         agent_occupation="manual_worker",
+        #         agent_employment_type="employee",
+        #         assigned=True,
+        #         works=True)
+        #     self.agents.add(manual_worker)
+        #     manual_worker.household = current_household
 
-            # Remove old agent:
-            self.agents.discard(household_member)
+        #     # Remove old agent:
+        #     self.agents.discard(household_member)
 
-        self.agents_become_manual = []
+        # self.agents_become_manual = []
 
-        for household_member in self.agents_become_low_skilled_farm:
-            household = household_member.household
+        # for household_member in self.agents_become_low_skilled_farm:
+            # current_household = household_member.household
 
-            # Add new agent
-            low_skilled_farm = Low_skilled_agri_worker(
-                self,
-                agent_type="Household_member",
-                age=household_member.age,
-                agent_sector="Non_agri",
-                agent_occupation="manual_worker",
-                agent_employment_type="employee",
-                assigned=True,
-                works=True)
-            self.agents.add(low_skilled_farm)
-            low_skilled_farm.household = household
+            # # Add new agent
+            # low_skilled_farm = Low_skilled_agri_worker(
+            #     self,
+            #     agent_type="Household_member",
+            #     age=household_member.age,
+            #     agent_sector="Non_agri",
+            #     agent_occupation="manual_worker",
+            #     agent_employment_type="employee",
+            #     assigned=True,
+            #     works=True)
+            # self.agents.add(low_skilled_farm)
+            # low_skilled_farm.household = current_household
 
-            # Remove old agent
-            self.agents.discard(household_member)
+            # # Remove old agent
+            # self.agents.discard(household_member)
 
-        self.agents_become_low_skilled_farm = []
+        # self.agents_become_low_skilled_farm = []
 
-        for household_member in self.agents_become_migrated_members:
-            # Add new agent
-            migrated_member = Migrated_hh_member(
-                self, agent_type="Migrated_member_young_adult", household=household_member.household)
-            self.agents.add(migrated_member)
+        # for household_member in self.agents_become_migrated_members:
+        #     # # Add new agent
+        #     # migrated_member = Migrated_hh_member(
+        #     #     self, agent_type="Migrated_member_young_adult", household=household_member.household)
+        #     # self.agents.add(migrated_member)
+        #     # self.agents.discard(household_member)
 
-            # Remove old agent:
-            self.agents.discard(household_member)
+        #     # Remove old agent:
+        #     # Print total number of agents
+        #     # number_of_hh_members = 0
+        #     # for agent in self.agents:
+        #     #     if agent.agent_type == "Household_member":
+        #     #         number_of_hh_members += 1
+        #     # print(number_of_hh_members, "Before removing")
+            
+        #     # number_of_hh_members = 0
+        #     # for agent in self.agents:
+        #     #     if agent.agent_type == "Household_member":
+        #     #         number_of_hh_members += 1
+        #     # print(number_of_hh_members, "After removing")
 
-        self.agents_become_migrated_members = []
+        # self.agents_become_migrated_members = []
+
+        # for agent in self.agents_to_append:
+        #     self.agents.add(agent)
+        # self.agents_to_append = []
+
+        # for agent in self.remove_hh_member:
+        #     self.agents.discard(agent)
+        # self.remove_hh_member = []
+
+        # for agents in self.remove_hh:
+        #     for agent in agents.household_members:
+        #         self.agents.discard(agent)
+        #     self.agents.discard(agents)        
+        # self.remove_hh = []
 
     def check_shock(self):
         if self.steps in self.salinity_shock_step:
