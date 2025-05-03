@@ -218,11 +218,12 @@ def calculate_livelihood(meeting, education, experience, dissability, social_sit
         savings_livelihood = 1
     else:
         savings_livelihood = 0
+   
 
     livelihood['Human'] = np.average(
         [meeting, education, experience, dissability])
     livelihood['Social'] = np.average([social_situation, association])
-    livelihood['Financial'] = np.average([savings_livelihood, debt])
+    livelihood['Financial'] = np.average([savings_livelihood, (1-debt)])
     livelihood['Physical'] = np.average([land_size, house_quality])
     livelihood['Natural'] = salinity
 
@@ -316,13 +317,12 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
             # Technical Ability
             technical_ability = 0
             if crop['salinity'][0] <= salinity < crop['salinity'][1]:
-                if crop['name'] == "Coconut" or crop['name'] == "Maize":
-                    if crop['name'] == "Coconut":
-                        land_size_maize = land_size / 2
-                    else:
-                        land_size_maize = land_size
+                if crop['name'] == "Maize":
                     # Based on current liturature data, your production costs will be too high if the land size is higher than 1 and you do not have machines. 
                     if land_size < 1 or machines == 1:
+                        technical_ability = 1
+                elif crop['name'] == "Coconut" and current_crop == "Maize":
+                    if land_size / 2 < 1 or machines == 1:
                         technical_ability = 1
                 else:
                     technical_ability = 1
@@ -346,6 +346,7 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
 
     # for ability in abilities:
     #     print(ability['average_ability'])
+    
     return abilities
 
 
@@ -383,6 +384,7 @@ def define_motivations(possible_next_crops, yearly_income, abilities, current_cr
                     motivation = 0.2  # ASSUMPTION,  you already have the knowledge so you are little motivated
             motivations[crop['name']] = motivation
             # print("motivation voor ", crop['name'], " is ", motivation)
+    
     return motivations
 
 
@@ -395,6 +397,7 @@ def calculate_MOTA(motivations, abilities):
         average_ability = ability['average_ability']
         motivation = motivations[name]
         MOTA_scores[name] = average_ability * motivation
+    
     return MOTA_scores
 
 
@@ -404,6 +407,8 @@ def best_MOTA(MOTA_scores, current_crop):
     most_suitable_crop = [name for name,
                           score in MOTA_scores.items() if score == highest_score]
     # If multiple crops have the highest score, this will be random determined
+    if len(most_suitable_crop) > 1 and current_crop in most_suitable_crop:
+        most_suitable_crop.remove(current_crop)
     most_suitable_crop = np.random.choice(most_suitable_crop)
     # If the highest MOTA score is below 0.2 (ASSUMPTION), the agent will change nothing (realistic value for 0.4 should be determined later!!)
     change = most_suitable_crop if highest_score > 0.2 else current_crop
@@ -412,7 +417,7 @@ def best_MOTA(MOTA_scores, current_crop):
     return change
 
 
-def change_crops(change, savings, loan, maximum_loans, land_size, current_largest_crop, current_crop):
+def change_crops(change, savings, loan, maximum_loans, land_size, current_largest_crop, current_crop, waiting_time_):
     sector_crop_dict = {'Annual crops': 'Maize', "Aquaculture": "Shrimp",
                             "Perennial crops": "Coconut", "Other agriculture": "Rice"}
     new_crop_type = None
@@ -435,14 +440,14 @@ def change_crops(change, savings, loan, maximum_loans, land_size, current_larges
                     new_crop_type = crop_type
     if change != 'Coconut':
         crops_and_land = {change: land_size}
-        waiting_time = 6 # You can not harvest rice in february and harvest a complete shrimp field in april
+        waiting_time_[change] = 6 # You can not harvest rice in february and harvest a complete shrimp field in april
     else:
         if "Rice" in current_crop:
-            crops_and_land = {'Coconut': (land_size/2), 'Rice': (land_size/2)}
+            crops_and_land = {'Coconut': land_size, 'Rice': (land_size/2)}
         elif "Maize" in current_crops:
-            crops_and_land = {'Coconut': (land_size/2), 'Maize': (land_size/2)}
-        waiting_time = 60  # You need to wait 5 years untill you can start with your coconut
-    return savings, loan, maximum_loans, crops_and_land, waiting_time, new_crop_type
+            crops_and_land = {'Coconut': land_size, 'Maize': (land_size/2)}
+        waiting_time_[change] = 60  # You need to wait 5 years untill you can start with your coconut
+    return savings, loan, maximum_loans, crops_and_land, waiting_time_, new_crop_type
 
 
 def annual_loan_payment(loan_size, interest_rate_loans):

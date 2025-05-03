@@ -36,7 +36,7 @@ class RiverDeltaModel(Model):
         num_agents=1000,
         excel_path=correct_path,
         salinity_shock_step=[
-            125,
+            114,
             191]):
         super().__init__(seed=seed)
         self.seed = seed
@@ -90,7 +90,7 @@ class RiverDeltaModel(Model):
         self.maize_fixed_costs = 3400000 # Based on paper by Ba et al., (2017)
 
         # possibility for migration
-        self.chances_migration = [0.3, 0.1, 0.1, 0.05, 0.1, 0.05]
+        self.chances_migration = [0.03, 0.01, 0.01, 0.005, 0.01, 0.005] # THESE ARE RANDOM
         self.chance_leaving_household = 0.05  # ASSUMPTION
         self.increased_chance_migration_familiarity = 0.1
 
@@ -155,7 +155,10 @@ class RiverDeltaModel(Model):
                         "Died agents":lambda model: self.death_agents,
                         "Child births":lambda model: self.child_births
                         }
-        agent_metrics = {}
+        agent_metrics = {"Crop_type": lambda a: getattr(a, "crop_type", None) if getattr(a, "agent_type", None)=="Household" else None,
+                        "Land_category":lambda a: getattr(a, "land_category", None) if getattr(a, "agent_type", None)=="Household" else None,
+                        "Savings": lambda a: getattr(a, "savings", None) if getattr(a, "agent_type", None)== "Household" else None,
+                        "too low income": lambda a: getattr(a, "income_too_low", None) if hasattr(a, "income_too_low" ) else None}
         self.datacollector = DataCollector(
             model_reporters=model_metrics,
             agent_reporters=agent_metrics)
@@ -373,7 +376,19 @@ class RiverDeltaModel(Model):
         # Check if a shock is happening
         self.check_shock()
 
+        # Print total number of agents
+        number_of_hh_members = 0
+        for agent in self.agents:
+            if agent.agent_type == "Household_member":
+                number_of_hh_members += 1
+        print(number_of_hh_members)
+
         # Decrease waiting_time
+        for agent in self.agents: 
+            if hasattr(agent, "waiting_time_"):
+                for key in agent.waiting_time_:
+                    if agent.waiting_time_[key] > 0:
+                        agent.waiting_time_[key] -= 1
 
         if self.steps % 12 == 0:
             self.agents.do(
@@ -436,22 +451,13 @@ class RiverDeltaModel(Model):
 
     def need_to_yield(self, crop_type):
         for crop in crop_type:
-            if crop != "Coconut":
-                for agent in self.agents:
-                    if isinstance(agent, Land_household):
-                        if crop in agent.crops_and_land.keys():
-                            agent.harvest(crop)
-                            agent.wage_worker_payment = 1
-                        else:
-                            agent.wage_worker_payment = 0
-            elif crop == "Coconut":
-                for agent in self.agents:
-                    if isinstance(agent, Land_household):
-                        if crop in agent.crops_and_land.keys() and agent.waiting_time == 0:
-                            agent.harvest(crop)
-                            agent.wage_worker_payment = 1
-                        else:
-                            agent.wage_worker_payment = 0
+            for agent in self.agents:
+                if isinstance(agent, Land_household):
+                    if crop in agent.crops_and_land.keys() and agent.waiting_time_[crop] == 0:
+                        agent.harvest(crop)
+                        agent.wage_worker_payment = 1
+                    else:
+                        agent.wage_worker_payment = 0
 
     def pay_wage_workers(self):
         # Pay farm wage workers:
@@ -553,10 +559,9 @@ class RiverDeltaModel(Model):
                 migrated_member = Migrated_hh_member(
                     self, agent_type="Migrated_member", household=household_members.household)
                 self.agents.add(migrated_member)
-                if household_members in household.household_members:
-                    self.agents.discard(household_members)
-                else:
-                    print("the same thing went wrong")
+                # Remove old agent
+                self.agents.discard(household_members)
+            # Remove the whole household
             self.agents.discard(household)
         self.agents_to_remove = []
 

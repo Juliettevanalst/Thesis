@@ -290,16 +290,16 @@ class Land_household(Agent):
         self.expenditure = 0
         for agent in household_members:
             if agent.age < 16:
-                self.expenditure += 1755000
+                self.expenditure += self.random.randint(1755600, 2599000) # A child costs between the 25th and 50th percentile
             else:
-                self.expenditure += 2599000
+                self.expenditure += self.random.randint(2599000, 4019000) # An adult costs between the 50th and 75th percentile
         self.required_income = self.expenditure
         self.information_meeting = 0
         self.association = get_association(self.model)
 
         self.MOTA_scores = None
         self.new_crop = None
-        self.waiting_time = 0
+        self.waiting_time_ = {"Coconut":0, "Rice":0, "Shrimp":0, "Maize":0}
         self.livelihood = {"Human": 0, "Social": 0, "Financial": 0,
                            "Physical": 0, "Natural": 0, "Average": 0}
 
@@ -342,6 +342,8 @@ class Land_household(Agent):
             new_child.household = self
 
         if self.random.random() > self.model.chance_info_meeting:
+            self.information_meeting = 1
+        elif self.association == 1:
             self.information_meeting = 1
         else:
             self.information_meeting = 0
@@ -406,18 +408,6 @@ class Land_household(Agent):
         else:
             self.yearly_income = self.total_income_[crop] * 6
 
-        if self.total_income_[crop] < 0:
-            print(crop)
-        #     print("dit kan dus niet")
-            # print("mijnl and  is ", land_area)
-            # print("mijn yield  is: ", self.yield_[crop])
-            # print(self.wage_costs_[crop], " zijn de kosten van wage")
-            # print(self.total_cost_farming_[crop], " zijn de kosten totaal van ", crop)
-            # print(self.total_income_[crop], " totale inkomen van ", crop)
-            # print(self.machines, " huishouden heeft wel/geen machine")
-
-        # update savings
-        self.savings += self.total_income_[crop]
 
     def check_savings(self):
         total_income_all_crops = sum(self.total_income_.values())
@@ -439,53 +429,60 @@ class Land_household(Agent):
         for agent in self.household_members:
             agent.income = 0
 
+
     def check_changes(self):
         self.prepare_livelihood()
         self.livelihood = calculate_livelihood(self.information_meeting, self.average_hh_education, self.average_hh_experiences, self.dissability,
                                                self.model.current_hh_left, self.association, self.savings, self.debt_ratio, self.land_ratio, 
                                                self.house_quality, self.salinity_suitability)
-        if self.livelihood['Average'] < 0.3:  # ASSUMPTION!!!!
-            print("land household migrated")
+        if self.savings < 0:  # ASSUMPTION!!!!
             self.model.agents_to_remove.append(self)
 
-        if self.waiting_time == 0:  # You cannot change if your coconuts are still growing
-            if "Shrimp" in self.crops_and_land.keys():
-                # You cannot switch back to another crop, due to the high salinity and antibiotics in the land.
-                self.possible_next_crops = ["Shrimp"]
-            else:
-                # Decide on next crop
-                self.possible_next_crops = []
-                # Check if there is advice from agrocensus meeting you attended
-                if self.information_meeting == 1:
-                    self.possible_next_crops.extend(advice_agrocensus(
-                        self.salinity, self.average_hh_education, list(self.crops_and_land.keys())))
-                # It is always possible to  keep the current crop
-                self.possible_next_crops.extend(
-                    list(self.crops_and_land.keys()))
-                # Check what your neighbors are doing
-                self.possible_next_crops = advice_neighbours(
-                    self.possible_next_crops, self.model, self.node_id)
-                # Check your abilities per possible crop:
-                current_largest_crop = max(
-                    self.crops_and_land, key=self.crops_and_land.get)
-                current_crops = list(self.crops_and_land.keys())
-                self.abilities = define_abilities(self.possible_next_crops, self.savings, self.debt, self.maximum_debt,
-                                                  self.livelihood['Human'], self.salinity, current_largest_crop, self.land_area, self.machines)
-                # Check your motivations per possible crop:
-                self.motivations = define_motivations(
-                    self.possible_next_crops, self.yearly_income, self.abilities, current_largest_crop, self.required_income, self.land_area)
-                # Calculate MOTA scores and find the best crop:
-                self.MOTA_scores = calculate_MOTA(
-                    self.motivations, self.abilities)
-                self.new_crop = best_MOTA(
-                    self.MOTA_scores, current_largest_crop)
-                # Implement possible change
-                if self.new_crop not in list(self.crops_and_land.keys()):
-                    self.savings, self.debt, self.maximum_debt, self.crops_and_land, self.waiting_time, self.crop_type = change_crops(
-                        self.new_crop, self.savings, self.debt, self.maximum_debt, self.land_area, current_largest_crop, current_crops)
-                    
-                    self.yearly_loan_payment = annual_loan_payment(
-                        self.debt, self.model.interest_rate_loans)
+        if self.monthly_hh_income < self.expenditure:
+            # We need to change!!
+
+            if self.waiting_time_['Coconut'] == 0:  # You cannot change if your coconuts are still growing
+                # If your coconuts are fully grown, you cannot grow maize anymore
+                if "Coconut" in self.crops_and_land.keys() and "Maize" in self.crops_and_land.keys():
+                    self.crops_and_land_["Maize"] = 0
+
+                if "Shrimp" in self.crops_and_land.keys():
+                    # You cannot switch back to another crop, due to the high salinity and antibiotics in the land.
+                    self.possible_next_crops = ["Shrimp"]
+                else:
+                    # Decide on next crop
+                    self.possible_next_crops = []
+                    # Check if there is advice from agrocensus meeting you attended
+                    if self.information_meeting == 1:
+                        self.possible_next_crops.extend(advice_agrocensus(
+                            self.salinity, self.average_hh_education, list(self.crops_and_land.keys())))
+                    # It is always possible to  keep the current crop
+                    self.possible_next_crops.extend(
+                        list(self.crops_and_land.keys()))
+                    # Check what your neighbors are doing
+                    self.possible_next_crops = advice_neighbours(
+                        self.possible_next_crops, self.model, self.node_id)
+                    # Check your abilities per possible crop:
+                    current_largest_crop = max(
+                        self.crops_and_land, key=self.crops_and_land.get)
+                    current_crops = list(self.crops_and_land.keys())
+                    self.abilities = define_abilities(self.possible_next_crops, self.savings, self.debt, self.maximum_debt,
+                                                    self.livelihood['Human'], self.salinity, current_largest_crop, self.land_area, self.machines)
+                    # Check your motivations per possible crop:
+                    self.motivations = define_motivations(
+                        self.possible_next_crops, self.yearly_income, self.abilities, current_largest_crop, self.required_income, self.land_area)
+                    # Calculate MOTA scores and find the best crop:
+                    self.MOTA_scores = calculate_MOTA(
+                        self.motivations, self.abilities)
+                    self.new_crop = best_MOTA(
+                        self.MOTA_scores, current_largest_crop)
+                    # Implement possible change
+                    if self.new_crop not in list(self.crops_and_land.keys()):
+                        self.savings, self.debt, self.maximum_debt, self.crops_and_land, self.waiting_time_, self.crop_type = change_crops(
+                            self.new_crop, self.savings, self.debt, self.maximum_debt, self.land_area, current_largest_crop, current_crops, self.waiting_time_)
+                        
+                        self.yearly_loan_payment = annual_loan_payment(
+                            self.debt, self.model.interest_rate_loans)
 
         # Do the young adults (15-35) want to migrate?
         possible_migrated_members = [
@@ -497,6 +494,9 @@ class Land_household(Agent):
             if self.random.random() < chance_migrating:  # They want to leave
                 for agent in possible_migrated_members:
                     self.model.agents_become_migrated_members.append(agent)
+
+        
+
 
     def update_experience(self):
         # Each year, experience should increase
@@ -691,7 +691,6 @@ class Landless_households(Agent):
         if not self.household_members:
             self.model.deceased_households += 1
             # Remove the agent from the model
-            print(self.model.deceased_households)
             self.model.agents.discard(self)
 
         # Possibility for birth
@@ -729,7 +728,6 @@ class Landless_households(Agent):
         expenditure = self.expenditure / 12 * time_frame
         self.monthly_hh_income = self.total_hh_income / time_frame
         self.savings += self.total_hh_income - expenditure
-        # # zijn er jonge mensen die weg willen van de farm? --> DIT MOETEN DE LAND HOUSEHOLDS OOK NOG HEBBEN
 
         if self.total_hh_income < expenditure:
             self.income_too_low = 1
