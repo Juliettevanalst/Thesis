@@ -376,6 +376,14 @@ class Land_household(Agent):
         self.savings = self.savings * (self.model.interest_rate_savings + 1)
         self.debt = self.debt * (self.model.interest_rate_loans + 1)
 
+        # Check if you have contacts in the city
+        if self.random.random() < self.model.current_hh_left and self.contacts_in_city == 0:
+            self.contacts_in_city = 1
+
+        # Check facilities in neighborhood
+        self.facilities_in_neighbourhood = self.model.current_service_workers / \
+            self.model.start_service_workers
+
     def harvest(self, crop):
         land_area = self.crops_and_land[crop]
         growth_times = {"Rice": 3,  "Maize": 4, "Coconut": 0, "Shrimp": 6}
@@ -384,6 +392,7 @@ class Land_household(Agent):
             self.salinity_during_shock = self.salinity
 
         if crop == "Shrimp":
+            self.percentage_yield_["Shrimp"] = 1
             # Did you get a disease this season?
             self.disease = 1 if np.random.rand() <= self.model.chance_disease else 0
 
@@ -403,12 +412,12 @@ class Land_household(Agent):
                 land_area, self.disease, self.use_antibiotics)
             self.total_cost_farming_["Shrimp"] = calculate_cost_shrimp(
                 land_area, self.use_antibiotics)
-            self.percentage_yield_["Shrimp"] = 1
+            
 
         else:
             # Calculate yield
             self.yield_[crop], self.percentage_yield_[crop] = calculate_yield_agri(
-                crop, land_area, self.salinity, self.livelihood['Human'], self.percentage_yield_)
+                crop, land_area, self.salinity_during_shock, self.livelihood['Human'], self.percentage_yield_)
 
             # Calculate cost farming
             self.total_cost_farming_[
@@ -430,7 +439,6 @@ class Land_household(Agent):
             self.yearly_income = self.total_income_[crop] * 2
         else:
             self.yearly_income = self.total_income_[crop] * 6
-
 
     def check_savings(self):
         total_income_all_crops = sum(self.total_income_.values())
@@ -497,7 +505,7 @@ class Land_household(Agent):
                     # Check if there is advice from agrocensus meeting you attended
                     if self.information_meeting == 1:
                         self.possible_next_crops.extend(advice_agrocensus(
-                            self.salinity, self.average_hh_education, list(self.crops_and_land.keys())))
+                            self.salinity_during_shock, self.average_hh_education, list(self.crops_and_land.keys())))
                     # It is always possible to  keep the current crop
                     self.possible_next_crops.extend(
                         list(self.crops_and_land.keys()))
@@ -509,7 +517,7 @@ class Land_household(Agent):
                         self.crops_and_land, key=self.crops_and_land.get)
                     current_crops = list(self.crops_and_land.keys())
                     self.abilities = define_abilities(self.possible_next_crops, self.savings, self.debt, self.maximum_debt,
-                                                    self.livelihood['Human'], self.salinity, current_largest_crop, self.land_area, self.machines)
+                                                    self.livelihood['Human'], self.salinity_during_shock, current_largest_crop, self.land_area, self.machines)
                     # Check your motivations per possible crop:
                     self.motivations = define_motivations(
                         self.possible_next_crops, self.yearly_income, self.abilities, current_largest_crop, self.required_income, self.land_area)
@@ -548,10 +556,6 @@ class Land_household(Agent):
                         self.model.agents.discard(agent)
                         if agent in self.model.agents:
                             print("het verwijderen van de young adult mmeber ging mis")
-                
-
-        
-
 
     def update_experience(self):
         # Each year, experience should increase
@@ -624,16 +628,16 @@ class Land_household(Agent):
         if largest_crop == "Shrimp" or largest_crop == "Coconut":
             self.salinity_suitability = 1
         elif largest_crop == "Rice":
-            if 0 <= self.salinity <= 3:  # So you do not waste yield on salinity
+            if 0 <= self.salinity_during_shock <= 3:  # So you do not waste yield on salinity
                 self.salinity_suitability = 1
-            elif self.salinity <= 6:  # So you have 75% of your yield
+            elif self.salinity_during_shock <= 6:  # So you have 75% of your yield
                 self.salinity_suitability = 0.5
             else:
                 self.salinity_suitability = 0
         elif largest_crop == "Maize":
-            if 0 <= self.salinity <= 1.7:  # So you do not waste yield on salinity
+            if 0 <= self.salinity_during_shock <= 1.7:  # So you do not waste yield on salinity
                 self.salinity_suitability = 1
-            elif self.salinity <= 4.2:  # So you have 75% of your yield
+            elif self.salinity_during_shock <= 4.2:  # So you have 75% of your yield
                 self.salinity_suitability = 0.5
             else:
                 self.salinity_suitability = 0
@@ -842,7 +846,7 @@ class Landless_households(Agent):
                     # Switch to manual_other_income
                     for agent in low_skilled_agents:
                         current_household = agent.household
-
+            
                         # Add new agent
                         manual_worker = Manual_worker(
                             self.model,
@@ -863,7 +867,6 @@ class Landless_households(Agent):
                         if agent in self.model.agents:
                             print("het verwijderen van de manual worker ging mis")
 
-
                 else:
                     for agent in manual_other_agents:
                         current_household = agent.household
@@ -874,7 +877,7 @@ class Landless_households(Agent):
                             agent_type="Household_member",
                             age=agent.age,
                             agent_sector="Non_agri",
-                            agent_occupation="manual_worker",
+                            agent_occupation="low_skilled_agri_worker",
                             agent_employment_type="employee",
                             assigned=True,
                             works=True)
@@ -893,7 +896,28 @@ class Landless_households(Agent):
             # If they do not know the other income, they will just try to switch
             elif len(low_skilled_agents) > 0:
                 for agent in low_skilled_agents:
-                    self.model.agents_become_manual.append(agent)
+                    current_household = agent.household
+
+                    # Add new agent
+                    manual_worker = Manual_worker(
+                        self.model,
+                        agent_type="Household_member",
+                        age=agent.age,
+                        agent_sector="Non_agri",
+                        agent_occupation="manual_worker",
+                        agent_employment_type="employee",
+                        assigned=True,
+                        works=True)
+                    self.model.agents.add(manual_worker)
+                    if manual_worker not in self.model.agents:
+                        print("het aanmaken van de manual worker ging mis")
+                    manual_worker.household = current_household
+
+                    # Remove old agent:
+                    self.model.agents.discard(agent)
+                    if agent in self.model.agents:
+                        print("het verwijderen van de manual worker ging mis")
+
             elif len(manual_other_agents) > 0:
                 for agent in manual_other_agents:
                     current_household = agent.household
@@ -904,7 +928,7 @@ class Landless_households(Agent):
                         agent_type="Household_member",
                         age=agent.age,
                         agent_sector="Non_agri",
-                        agent_occupation="manual_worker",
+                        agent_occupation="low_skilled_agri_worker",
                         agent_employment_type="employee",
                         assigned=True,
                         works=True)
@@ -932,7 +956,7 @@ class Landless_households(Agent):
                                 agent_type="Household_member",
                                 age=agent.age,
                                 agent_sector="Non_agri",
-                                agent_occupation="manual_worker",
+                                agent_occupation="low_skilled_agri_worker",
                                 agent_employment_type="employee",
                                 assigned=True,
                                 works=True)
@@ -955,12 +979,14 @@ class Landless_households(Agent):
                 chance_migrating += self.model.increased_chance_migration_familiarity # ASSUMPTION
             if self.random.random() < chance_migrating:  # They want to leave
                 for agent in possible_migrated_members:
+        
                     # Add new agent
                     migrated_member = Migrated_hh_member(
                         self.model, agent_type="Migrated_member_young_adult", household=agent.household)
                     self.model.agents.add(migrated_member)
                     if migrated_member not in self.model.agents:
                         print("het aanmaken van de migrated member ging mis")
+
                     # Remove agent from the household
                     if agent in self.household_members:
                         self.household_members.remove(agent)

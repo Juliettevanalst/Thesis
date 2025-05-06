@@ -307,7 +307,7 @@ def define_abilities(possible_next_crops, savings, loan, maximum_loans, human_li
                 else:
                     financial_ability = 0
 
-            # Institutional Ability
+            # Institutional Ability  
             if human_livelihood >= crop['knowledge']:
                 institutional_ability = 1
             else:
