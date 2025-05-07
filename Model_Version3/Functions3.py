@@ -134,8 +134,7 @@ def calculate_farming_costs(crop, land_area):
     cost_per_ha = {
         "Rice": np.random.normal(16511894),
         "Maize": 6800000,
-        "Coconut": 20000000 /
-        6}  # All costs are per ha,
+        "Coconut": 20000000}  # All costs are per ha, HOI, DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD ERG LUXE.
     costs = cost_per_ha[crop]
 
     total_cost = costs * land_area
@@ -279,10 +278,8 @@ def advice_agrocensus(salinity, education_level, current_crops):
         adviced_crop = "Rice"
     elif salinity <= 3 and "Maize" in current_crops:
         adviced_crop = "Maize"
-    elif education_level > 0.5:  # THIS IS A RANDOM ASSUMPTION
-        adviced_crop = "Shrimp"
     else:
-        adviced_crop = "Coconut"
+        adviced_crop = random.choice(["Coconut", "Shrimp"])
     possible_next_crop = [adviced_crop]
     return possible_next_crop
 
@@ -510,9 +507,7 @@ def best_MOTA(MOTA_scores, current_crop):
     most_suitable_crop = np.random.choice(most_suitable_crop)
     # If the highest MOTA score is below 0.2 (ASSUMPTION), the agent will
     # change nothing (realistic value for 0.4 should be determined later!!)
-    change = most_suitable_crop if highest_score > 0.2 else current_crop
-    # if change != current_crop:
-    # print("we gaan veranderen naar... ", change)
+    change = most_suitable_crop if highest_score > 0.2 else None
     return change
 
 
@@ -529,7 +524,7 @@ def change_crops(
         'Annual crops': 'Maize',
         "Aquaculture": "Shrimp",
         "Perennial crops": "Coconut",
-        "Other agriculture": "Rice"}
+        "Rice": "Rice"}
     new_crop_type = None
     # Delete change from possible strategies
     for crop in requirements_per_crop:
@@ -563,6 +558,46 @@ def change_crops(
         # You need to wait 5 years untill you can start with your coconut
         waiting_time_[change] = 60
     return savings, loan, maximum_loans, crops_and_land, waiting_time_, new_crop_type
+
+def transfer_land(land_size, node_id, model, crops_and_land):
+    from Agents3 import Small_land_households, Middle_land_households, Large_land_households
+    # Define neighbors
+    neighbors = model.G.neighbors(node_id)
+    max_livelihood = 0
+    best_neighbor = None
+
+    for neighbor in neighbors:
+        agents = model.grid.get_cell_list_contents([neighbor])
+    # agents is a list, so we need to take the first item of the list
+    if agents:
+        agent = agents[0]
+    if agent.livelihood['Financial'] > max_livelihood:
+        max_livelihood = agent.livelihood['Financial']
+        best_neighbor = agent
+
+    if best_neighbor:
+        # Check if the best neighbor can pay for the land
+        land_costs = land_size * model.land_price_per_ha
+        if best_neighbor.savings > land_costs:
+            best_neighbor.land_area += land_size
+            best_neighbor.savings -= land_costs
+            print("neighbor is rijk en neemt land over")
+
+            # Check in which category the agent now falls
+            if 0 <= land_size <= 0.5:
+                best_neighbor.land_category = "small"
+            elif 0.5 < land_size <= 2:
+                best_neighbor.land_category = "medium"
+            else:
+                best_neighbor.land_category = "large"
+
+            # Add this to the crops_and_land
+            for crop, area in crops_and_land.items():
+                if crop in best_neighbor.crops_and_land:
+                    best_neighbor.crops_and_land[crop] += area
+                else:
+                    best_neighbor.crops_and_land[crop] = area
+
 
 
 def annual_loan_payment(loan_size, interest_rate_loans):

@@ -7,7 +7,7 @@ import statistics
 from Functions3 import get_education_levels, get_experience, get_dissabilities, get_association, calculate_livelihood, calculate_yield_agri
 from Functions3 import calculate_farming_costs, calculate_yield_shrimp, calculate_cost_shrimp, calculate_wages_farm_workers, calculate_total_income, advice_neighbours, advice_agrocensus
 from Functions3 import define_abilities, define_motivations, calculate_MOTA, best_MOTA, annual_loan_payment, change_crops
-from Functions3 import calculate_migration_ww, household_experience_machines
+from Functions3 import calculate_migration_ww, household_experience_machines, transfer_land
 
 # Class for all working household members
 class Working_hh_member(Agent):
@@ -492,7 +492,7 @@ class Land_household(Agent):
         self.yearly_loan_payment = 0
         self.wage_worker_payment = 0
 
-        self.savings = 10000000  # ASSUMPTION!!
+        self.savings = 1000000 # ASSUMPTION!!
         self.total_cost_farming_ = {}
         self.wage_costs_ = {}
         self.total_income_ = {}
@@ -519,6 +519,7 @@ class Land_household(Agent):
                            "Physical": 0, "Natural": 0, "Average": 0}
 
         self.use_antibiotics = 0
+        self.farming_time_left = 5
         self.crop_history = {"Rice": 0, "Shrimp": 0, "Coconut": 0, "Maize": 0}
 
         # Identify if the household has experience and machines
@@ -619,6 +620,7 @@ class Land_household(Agent):
                     self.percentage_yield_["Shrimp"] = 0.26
                 else:
                     self.use_antibiotics = 1
+                    self.farming_time_left -= 1
             else:
                 self.use_antibiotics = 0
                 self.percentage_yield_["Shrimp"] = 1
@@ -707,7 +709,12 @@ class Land_household(Agent):
             self.salinity_suitability)
 
         # If there are no savings left, you will start migrating
-        if self.savings < 0:  
+        if self.savings < 0 or self.farming_time_left == 0: 
+            # Decide who will get your land
+            # If you have shrimps, no one will want your land, since there are antibiotics in it and it is useless
+            if "Shrimp" not in self.crops_and_land.keys():
+                transfer_land(self.land_area, self.node_id, self.model, self.crops_and_land)
+
             # We are migrating
             migrated_hh = Migrated_household(
                 self.model,
@@ -792,7 +799,7 @@ class Land_household(Agent):
                     self.new_crop = best_MOTA(
                         self.MOTA_scores, current_largest_crop)
                     # Implement possible change
-                    if self.new_crop not in list(self.crops_and_land.keys()):
+                    if self.new_crop not in list(self.crops_and_land.keys()) and self.new_crop is not None:
                         self.savings, self.debt, self.maximum_debt, self.crops_and_land, self.waiting_time_, self.crop_type = change_crops(
                             self.new_crop, self.savings, self.debt, self.maximum_debt, self.land_area, current_largest_crop, current_crops, self.waiting_time_)
 
@@ -826,8 +833,6 @@ class Land_household(Agent):
                         print("het aanmaken van de migrated member ging mis")
                     if agent in self.household_members:
                         self.household_members.remove(agent)
-                    else:
-                        print("agent niet gevonden")
                     self.household_size -= 1
 
                     # Remove agent from the model
@@ -959,7 +964,7 @@ class Small_land_households(Land_household):
             'Annual crops': 'Maize',
             "Aquaculture": "Shrimp",
             "Perennial crops": "Coconut",
-            "Other agriculture": "Rice"}
+            "Rice": "Rice"}
         self.crops = []
         self.crops.append(sector_crop_dict[self.crop_type])
         self.crops_and_land = {}
@@ -1004,7 +1009,7 @@ class Middle_land_households(Land_household):
             'Annual crops': 'Maize',
             "Aquaculture": "Shrimp",
             "Perennial crops": "Coconut",
-            "Other agriculture": "Rice"}
+            "Rice": "Rice"}
         self.crops = []
         self.crops.append(sector_crop_dict[self.crop_type])
         self.crops_and_land = {}
@@ -1049,7 +1054,7 @@ class Large_land_households(Land_household):
             'Annual crops': 'Maize',
             "Aquaculture": "Shrimp",
             "Perennial crops": "Coconut",
-            "Other agriculture": "Rice"}
+            "Rice": "Rice"}
         self.crops = []
         self.crops.append(sector_crop_dict[self.crop_type])
         self.crops_and_land = {}
@@ -1080,7 +1085,7 @@ class Landless_households(Agent):
         self.maximum_debt = self.value_of_assets
 
         self.debt = 0
-        self.savings = 10000000  # ASSUMPTION!!
+        self.savings = 1000000  # ASSUMPTION!!
 
         self.expenditure = 0
         for agent in household_members:

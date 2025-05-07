@@ -25,14 +25,14 @@ from Agents3 import Land_household, Working_hh_member, Migrated_household, Migra
 path = os.getcwd()
 
 # Import data
-correct_path = path + "\\Data\\model_input_data_823.xlsx"
+correct_path = path + "\\Data\\model_input_data_824.xlsx"
 
 
 class RiverDeltaModel(Model):
     def __init__(
         self,
         seed=20,
-        district='Gò Công Tây',
+        district='Gò Công Đông',
         num_agents=1000,
         excel_path=correct_path,
         salinity_shock_step=[
@@ -89,6 +89,9 @@ class RiverDeltaModel(Model):
         # Maize costs
         self.maize_fixed_costs = 3400000  # Based on paper by Ba et al., (2017)
 
+        # Land price if someone buys your land
+        self.land_price_per_ha = 78000000
+
         # possibility for migration
         self.chances_migration = [0.03, 0.01, 0.01,
                                   0.005, 0.01, 0.005]  # THESE ARE RANDOM
@@ -111,6 +114,7 @@ class RiverDeltaModel(Model):
         self.deceased_households = 0
         self.child_births = 0
         self.death_household_members = 0
+        self.percentage_left = 0.2
 
         # Number_of_households
         self.number_of_households = 0
@@ -402,6 +406,8 @@ class RiverDeltaModel(Model):
         unassigned_agents = [a for a in self.agents if hasattr(
             a, 'agent_type') and a.agent_type == "Household_member" and not a.assigned]
         print("There are", len(unassigned_agents), "agents unassigned!!")
+
+        # Determine the number of agents who will always be there, and never leave
 
     def step(self):
         self.agents.shuffle_do('step')
