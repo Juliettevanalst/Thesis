@@ -25,14 +25,14 @@ from Agents3 import Land_household, Working_hh_member, Migrated_household, Migra
 path = os.getcwd()
 
 # Import data
-correct_path = path + "\\Data\\model_input_data_824.xlsx"
+correct_path = path + "\\Data\\model_input_data_894.xlsx"
 
 
 class RiverDeltaModel(Model):
     def __init__(
         self,
         seed=20,
-        district='Gò Công Đông',
+        district='Thoai Son',
         num_agents=1000,
         excel_path=correct_path,
         salinity_shock_step=[
@@ -43,13 +43,19 @@ class RiverDeltaModel(Model):
         random.seed(20)
         np.random.seed(20)
 
+        # All agents attributes are created using excel data
+        self.excel_data = self.get_excel_data(excel_path)
+
         # Generate agents
         self.num_agents = num_agents
-        self.excel_data = self.get_excel_data(excel_path)
         self.generate_agents()
-        self.death_agents = 0
 
-        # Define area
+        # Define area. This is done by:
+        #   - Determining the district
+        #   - Load shapefile data for the districts, and load salinity data
+        #   - Determine which households (=land households) need a node
+        #   - Create a network
+        #   - Create self.grid, using the network
         self.district = district
         self.data_salinity, self.polygon_districts = self.gather_shapefiles(
             self.district)
@@ -74,7 +80,9 @@ class RiverDeltaModel(Model):
             agent.node_id = node_id
             self.grid.place_agent(agent, agent.node_id)
 
-        # Possibility for a shock
+    # Below are all the parameters, which are used in the model
+
+        # Possibility for a salinity shock
         self.salinity_shock_step = salinity_shock_step
         self.salinity_shock = False
         self.time_since_shock = 0
@@ -90,7 +98,7 @@ class RiverDeltaModel(Model):
         self.maize_fixed_costs = 3400000  # Based on paper by Ba et al., (2017)
 
         # Land price if someone buys your land
-        self.land_price_per_ha = 78000000
+        self.land_price_per_ha = 78000000  # Assumption
 
         # possibility for migration
         self.chances_migration = [0.03, 0.01, 0.01,
@@ -106,17 +114,18 @@ class RiverDeltaModel(Model):
         self.man_days_prep = 1 / 3
         # ASSUMPTION, average / day is 200000 based on Pedroso et al., 2017
         self.payment_low_skilled = 190000
-        # ASSUMPTION, average / day is 200000 based on Pedroso et al., 2017
         self.payment_high_skilled = 210000
-        self.distribution_high_low_skilled = 0  # Need to define later
+        self.distribution_high_low_skilled = 0
 
         # Number of deceased households (all household members have died)
         self.deceased_households = 0
-        self.child_births = 0
         self.death_household_members = 0
-        self.percentage_left = 0.2
+        # Keep track of the death agents
+        self.death_agents = 0
+        # Number of child births
+        self.child_births = 0
 
-        # Number_of_households
+        # Check the total number_of_households
         self.number_of_households = 0
         for agent in self.agents:
             if agent.agent_type == "Household":
@@ -124,18 +133,11 @@ class RiverDeltaModel(Model):
 
         self.start_households = self.number_of_households
         self.current_hh_left = self.number_of_households
-        self.agents_to_remove = []
-        self.agents_become_manual = []
-        self.agents_become_low_skilled_farm = []
-        self.agents_become_migrated_members = []
-        self.agents_to_append = []
-        self.remove_hh_member = []
-        self.remove_hh = []
 
-        # number of workers
+        # number of workers and characteristics
         self.start_total_low_nonagri = len([agent for agent in self.agents if hasattr(
             agent, 'agent_occupation') and agent.agent_type == "Household_member" and agent.agent_occupation == "low_skilled_nonAgri"])
-        self.work_days_per_week = 20
+
         self.start_manual_other_workers = len(
             [
                 agent for agent in self.agents if agent.agent_type == "Household_member" and hasattr(
@@ -147,6 +149,9 @@ class RiverDeltaModel(Model):
                     agent,
                     'agent_occupation') and agent.agent_occupation == "skilled_service_worker"])
         self.current_service_workers = self.start_service_workers
+
+        # Number of work days per month
+        self.work_days_per_month = 20
 
         # Set up datacollector
         model_metrics = {
@@ -210,6 +215,22 @@ class RiverDeltaModel(Model):
             agent_reporters=agent_metrics)
 
     def generate_agents(self):
+        """
+        This is the function to generate individual household member agents, and create households of them.
+        The number of household members is equal to "num_agents"
+
+        At first, the agents will get an age, and it is checked if they are working or not
+        Working agents get a sector, occupation, employment type. They will be put in a class based on their occupation
+        Non working agents will be in the class "Non_labourer"
+
+        Based on sector and employment type, land households are created.
+        This happens when sector != non agri, and employment type == self employed
+        The land households is then filled with other household members
+
+        If there are no individual agents left which can create a farm, landless households are created.
+        Each landless household should have minimal 1 adult, and is then filled random
+
+        """
         # Create individual agents
         agent_classes = {
             "low_skilled_agri_worker": Low_skilled_agri_worker,
@@ -271,7 +292,7 @@ class RiverDeltaModel(Model):
 
         # Time to create the farms:
         farm_owner_agents = [agent for agent in self.agents if not agent.assigned and agent.agent_employment_type ==
-                             'self_employed' and agent.agent_sector != 'Non_agri']  # This is the main farm owners, they start the farm!!
+                             'self_employed' and agent.agent_sector != 'Non_agri']  # These are the main farm owners, they start the farm!!
 
         for agent in farm_owner_agents:
             if agent.assigned:
@@ -407,9 +428,21 @@ class RiverDeltaModel(Model):
             a, 'agent_type') and a.agent_type == "Household_member" and not a.assigned]
         print("There are", len(unassigned_agents), "agents unassigned!!")
 
-        # Determine the number of agents who will always be there, and never leave
-
     def step(self):
+        """
+        The step function of the model class determines what happens in the model. 
+        Each step, it is checked if a shock is happening or not.
+
+        When self.steps % 12 == 0, it is time for the yearly activities of all agents
+
+        Dependend on the crop, it can be time to harvest. 
+        Three times a year, the non agri workers get paid
+
+        After payment, the households will check whether their income is sufficient or not
+        Then there is a possibility to change crops or e.g. migrate
+
+        Once a year, the data is collected
+        """
         self.agents.shuffle_do('step')
 
         self.number_of_households = 0
@@ -444,53 +477,58 @@ class RiverDeltaModel(Model):
                     agent, Land_household) else None)
             self.pay_wage_workers()
             self.pay_other_agents()
-            self.check_class_switches()
+            self.farmers_check_situation()
 
         month = self.steps % 12
 
+        # In february we harvest rice and coconut
         if month == 2:
             self.need_to_yield(["Rice", "Coconut"])
             self.pay_wage_workers()
             self.farmers_check_situation()
-            self.check_class_switches()
 
+        # In April we harvest coconut, Maize and shrimp
         elif month == 4:
             self.need_to_yield(["Coconut", "Maize", "Shrimp"])
             self.pay_wage_workers()
-            self.farmers_check_situation()
             self.pay_other_agents()
-            self.check_class_switches()
+            self.farmers_check_situation()
 
+        # In June we harvest coconut
         elif month == 6:
             self.need_to_yield(['Coconut'])
             self.pay_wage_workers()
             self.farmers_check_situation()
-            self.check_class_switches()
 
+        # In August we harvest Rice, Maize and coconut
         elif month == 8:
             self.need_to_yield(["Rice", "Maize", 'Coconut'])
             self.pay_wage_workers()
-            self.farmers_check_situation()
             self.pay_other_agents()
-            self.check_class_switches()
+            self.farmers_check_situation()
 
+        # In October we harvest shrimp and coconut
         elif month == 10:
             self.need_to_yield(["Shrimp", 'Coconut'])
             self.pay_wage_workers()
             self.farmers_check_situation()
-            self.check_class_switches()
 
+        # In November we harvest rice
         elif month == 11:
             self.need_to_yield(["Rice"])
             self.pay_wage_workers()
             self.farmers_check_situation()
-            self.check_class_switches()
 
+        # Once a year, the data is collected
         if self.steps % 12 == 0:
             # Collect data
             self.datacollector.collect(self)
 
     def need_to_yield(self, crop_type):
+        """
+        Function which determines which farmers need to harvest a certain crop.
+        When they have done that, they need to pay the wage workers
+        """
         for crop in crop_type:
             for agent in list(self.agents):
                 if isinstance(agent, Land_household):
@@ -502,30 +540,39 @@ class RiverDeltaModel(Model):
                         agent.wage_worker_payment = 0
 
     def pay_wage_workers(self):
-        # Pay farm wage workers:
+        """
+        All farmers who harvest, need to pay their wage workers. 
+        This functions select those workers, calculates their income and increases the income of the individual workers
+        """
+        # select all wage workers
         selected_agents = [
             agent for agent in self.agents if agent.agent_type == "Household_member" and getattr(
                 agent, 'agent_employment_type', None) == "employee" and hasattr(
                 agent, 'agent_sector') and agent.agent_sector != "Non_agri"]
+        # Calculate number of low skilled wage workers
         sum_low_skilled = sum(1 for agent in selected_agents if getattr(
             agent, 'agent_occupation', None) == "low_skilled_agri_worker")
+        # Calculate number of high skilled wage workers
         sum_high_skilled = sum(1 for agent in selected_agents if getattr(
             agent, 'agent_occupation', None) == "skilled_agri_worker")
         if sum_low_skilled == 0 and sum_high_skilled == 0:
             print("niemand wil op de farm werken")
             self.distribution_high_low_skilled = 0
         else:
+            # Calculate distribution of high and low skilled wage workers
             self.distribution_high_low_skilled = sum_low_skilled / \
                 (sum_low_skilled + sum_high_skilled)
 
-        # Check total days wage workers were needed to define number of work
+        # Check total days wage workers were needed, to define number of work
         # days for the wage workers
         total_days_ww_used = sum(
             agent.household_size for agent in self.agents if isinstance(
                 agent, Land_household) and agent.wage_worker_payment == 1)
         total_ww = sum_low_skilled + sum_high_skilled
 
+        # Determine the work days per wage worker
         work_days_per_ww = total_days_ww_used / total_ww
+        # Pay the wage workers
         for agent in selected_agents:
             if agent.agent_occupation == "low_skilled_agri_worker":
                 agent.income += self.payment_low_skilled * work_days_per_ww
@@ -533,15 +580,26 @@ class RiverDeltaModel(Model):
                 agent.income += self.payment_high_skilled * work_days_per_ww
 
     def farmers_check_situation(self):
+        """
+        Function for all farmers who have just harvested. 
+        The land households update their savings 
+        """
         # alle farm household agents die nu yield hebben gehad checken hun
         # savings en kijken of iets moet veranderen!!
         for agent in list(self.agents):
             if isinstance(agent, Land_household):
                 if agent.wage_worker_payment == 1:
                     agent.check_savings()
-                    agent.check_changes()
 
     def pay_other_agents(self):
+        """Three times per year, it is time to pay the non agri household members
+
+        For each occupation, the ratio of workers left in the occupation is calculated. 
+            As a result, when a lot of workers are leaving, you will receive more income
+
+        Except for service workers, their income can also decrease
+            This happens when a lot of people are migrating
+        """
         # Pay Low skilled non agri workers and other workers
         selected_agents = [
             agent for agent in self.agents if hasattr(
@@ -551,7 +609,7 @@ class RiverDeltaModel(Model):
         for agent in selected_agents:
             income_increase = self.start_total_low_nonagri / total_low_skilled_nonagri
             agent.income += income_increase * 4 * self.payment_low_skilled * \
-                self.work_days_per_week  # BIG ASSUMPTION, THAT PEOPLE WORK 20 DAYS/MONTH
+                self.work_days_per_month
 
         # Pay manual workers and "other" occupation
         selected_agents = [
@@ -563,7 +621,7 @@ class RiverDeltaModel(Model):
             income_increase = self.start_manual_other_workers / total_manual_other_workers
             # They get paid between the high and low skilled income
             income = (self.payment_low_skilled + self.payment_high_skilled) / 2
-            agent.income += income_increase * 4 * income * self.work_days_per_week
+            agent.income += income_increase * 4 * income * self.work_days_per_month
 
         # Pay for service workers
         selected_agents = [
@@ -578,17 +636,19 @@ class RiverDeltaModel(Model):
         decrease_in_income = self.current_hh_left
         for agent in selected_agents:
             agent.income += increase_in_income * decrease_in_income * \
-                4 * self.payment_high_skilled * self.work_days_per_week
+                4 * self.payment_high_skilled * self.work_days_per_month
 
         # Agents need to update their income and see if it is sufficient
         for agent in list(self.agents):
             if hasattr(agent, 'check_income'):
                 agent.check_income(4)
 
-    def check_class_switches(self):
-        pass
-
     def check_shock(self):
+        """
+        Function to check each step if a salinity shock has happened
+        In addition, the salinity experience increases of the agents
+        If a shock did happen last step, the salinity should be decreased again
+        """
         if self.steps in self.salinity_shock_step:
             self.salinity_shock = True
             for agent in self.agents:
@@ -616,12 +676,23 @@ class RiverDeltaModel(Model):
                             random.uniform(1.5, 2)
 
     def sample_from_distribution(self, land_sizes):
+        """
+        Function to give the land households a land category
+        This is based on the probabilities of the excel file
+        Land categories can be small, medium and large
+        """
         chance_land_size = self.random.random()
         for key, (low, high) in land_sizes.items():
             if low <= chance_land_size <= high:
                 return key
 
     def get_land_area(self, land_category):
+        """
+        Based on the land area, the land households have a land size
+        Small land size will be between 0 and 0.5 ha
+        Medium land size between 0.5 - 2 ha
+        Large land size is bigger than 2 ha 
+        """
         if land_category == "small":
             return self.random.uniform(0, 0.5)
         elif land_category == "medium":
@@ -631,6 +702,10 @@ class RiverDeltaModel(Model):
         return 0
 
     def get_unassigned_by_age_group(self, unassigned_agents):
+        """
+        When landless households are created, minimal 1 adult household member is required.
+        This function checks how many children, adults, and elderly are unassigned
+        """
         number_people = {"children": [], "adults": [], "elderly": []}
         for agent in unassigned_agents:
             if agent.age <= 15:
@@ -642,11 +717,23 @@ class RiverDeltaModel(Model):
         return number_people
 
     def get_house_quality(self):
+        """
+        All household agents have a housing quality. 
+        This is based on excel data, using a mean and std dev
+        """
         mean = self.excel_data['housing_quality']['mean']
         std = self.excel_data['housing_quality']['std_dev']
         return min(1.0, max(0.0, self.random.normalvariate(mean, std)))
 
     def number_of_members_per_type(self, number):
+        """
+        When creating land households, the household needs to be filled with 
+            self agri workers, self wage workers and self non agri workers
+
+        This function takes the average number of household members in this category per land size,
+            and makes this an int.
+        (it is not possible to have 1.9 farm workers on your farm, it should be 1 or 2) 
+        """
         int_number = int(number)
         if self.random.random() < (number - int_number):
             return int_number + 1
@@ -659,6 +746,10 @@ class RiverDeltaModel(Model):
             count,
             sector=None,
             employment_type=None):
+        """
+        When the number of self agri, self non agri and wage workers in the household is determined,
+            These are added to the household using this function
+        """
         possible_agents = [
             a for a in self.agents if a.agent_type == "Household_member" and not a.assigned and (
                 getattr(
@@ -669,12 +760,17 @@ class RiverDeltaModel(Model):
                     a,
                     'agent_employment_type',
                     None) == employment_type)]
+
+        # The agents are shuffled, and a random agent is chosen
         self.random.shuffle(possible_agents)
         for a in possible_agents[:count]:
             a.assigned = True
             household.append(a)
 
     def get_age(self, age_distribution):
+        """
+        Function to check the age of household member during the creation of the agent
+        """
         chance_age = self.random.random()
         cumulative = 0
         for (low, high), probability in age_distribution.items():
@@ -684,12 +780,18 @@ class RiverDeltaModel(Model):
                 return age
 
     def is_working(self, age, work_per_agegroup):
+        """
+        Function to check if a household member is working or not during the creation of the agent
+        """
         for (low, high), chance in work_per_agegroup.items():
             if low <= age <= high:
                 return self.random.random() < chance
         return False
 
     def define_sector(self, sector_distribution):
+        """
+        Function to check the sector of a working household member, during the creation of the agent
+        """
         chance_sector = self.random.random()
         for sector, (low, high) in sector_distribution.items():
             if low <= chance_sector <= high:
@@ -697,6 +799,9 @@ class RiverDeltaModel(Model):
                 return agent_sector
 
     def define_occupation(self, agent_sector, occupation_distribution):
+        """
+        Function to check the occupation of a working household member, during the creation of the agent
+        """
         occupations = occupation_distribution[agent_sector]
         chance_occupation = self.random.random()
         cumulative = 0
@@ -712,6 +817,10 @@ class RiverDeltaModel(Model):
             agent_sector,
             agent_occupation,
             employment_distribution):
+        """
+        Function to check the employment type of a working household member, during the creation of the agent
+        This is based on the agent sector and agent occupation, using the excel file. 
+        """
         employment_types = employment_distribution[agent_sector][agent_occupation]['employment_distribution']
         chance_employment = self.random.random()
         cumulative = 0
@@ -722,6 +831,16 @@ class RiverDeltaModel(Model):
                 return agent_employment
 
     def get_excel_data(self, excel_path):
+        """
+        This function is used to read all the excel sheets, and add all the data in a dictionary.
+
+        What happens is that for each factor, e.g. age distribution,
+            the data is read using the function "self.process_age_distribution". 
+
+            Those functions process the data, and put it in the items of the dictionary.
+            When using this get_excel_data function with the correct key,
+            access to the correct data is provided. 
+        """
         sheets = pd.read_excel(excel_path, sheet_name=None)
 
         return {
@@ -741,6 +860,10 @@ class RiverDeltaModel(Model):
             'association': self.process_association(sheets['Member_association'])}
 
     def process_age_distribution(self, df):
+        """
+        Function to read the excel data for age distributions,
+        and create a dictionary for in the get_excel_function
+        """
         age_dist = {}
         for i, row in df.iterrows():
             low, high = map(int, row['age_group'].split('-'))
@@ -748,6 +871,11 @@ class RiverDeltaModel(Model):
         return age_dist
 
     def process_work_per_agegroup(self, df):
+        """
+        Function to read the excel data if an individual is working or not,
+        this is based on their age group, and put in a dictionary. 
+        This dictionary can be accessed using the get_excel data function
+        """
         work_dict = {}
         for i, row in df.iterrows():
             low, high = map(int, row['age_group'].split('-'))
@@ -755,6 +883,10 @@ class RiverDeltaModel(Model):
         return work_dict
 
     def process_sector_distribution(self, df):
+        """
+        Function to read the excel data for different sector types and probabilities,
+        and create a dictionary for in the get_excel_function
+        """
         sector_dict = {}
         cumulative = 0
         for i, row in df.iterrows():
@@ -765,6 +897,13 @@ class RiverDeltaModel(Model):
         return sector_dict
 
     def process_occupation_employment_distribution(self, df):
+        """
+        Function to read the excel data for occupations and employment.
+        This excel sheet shows the sector, occupations with percentages, 
+            and employment types with percentages.
+
+        The sectors, occupations and employment types are put together in a nested dictionary
+        """
         occupation_dict = defaultdict(lambda: defaultdict(dict))
 
         for i, row in df.iterrows():
@@ -778,11 +917,19 @@ class RiverDeltaModel(Model):
         return occupation_dict
 
     def process_household_size(self, df):
+        """
+        Function to read the excel data to see the mean and std dev of household sizes,
+        and create a dictionary for in the get_excel_function with the mean and std dev
+        """
         mean = float(df[df.iloc[:, 0] == 'mean'].iloc[0, 1])
         std_dev = float(df[df.iloc[:, 0] == 'std_dev'].iloc[0, 1])
         return {'mean': mean, 'std_dev': std_dev}
 
     def process_land_sizes(self, df):
+        """
+        Function to read the excel data for the distribution of land sizes,
+        and create a dictionary with land categories and probabilities for in the get_excel_function
+        """
         size_probabilities = {}
         cumulative = 0
         for i, row in df.iterrows():
@@ -793,6 +940,14 @@ class RiverDeltaModel(Model):
         return size_probabilities
 
     def process_work_type_per_land_size(self, df):
+        """
+        Function to read the excel data for work types per land size
+
+        In the excel sheet, there is per dominant income source and land size,
+            a probiability someone works in self agri, self non agri and wage
+            in the family. 
+        These probabilities are placed in a nested dictionary for in the get_excel_function
+        """
         land_dict = defaultdict(dict)
         for i, row in df.iterrows():
             sector = row['Dominant_income_source']
@@ -804,15 +959,28 @@ class RiverDeltaModel(Model):
         return land_dict
 
     def process_housing_quality(self, df):
+        """
+        Function to read the excel data for house quality,
+        and create a dictionary with the mean and std dev for in the get_excel_function
+        """
         df = df.set_index('hh_quality')
         return {'mean': df.loc['mean', 'value'],
                 'std_dev': df.loc['std_dev', 'value']}
 
     def process_population_statistics(self, df):
+        """
+        Function to read the excel data for statistics such as birth rate,
+            mean death age and std dev death age.
+        These statistics are put in a dictionary for in the get_excel_function
+        """
         statistics_population = dict(zip(df["Statistic"], df["Value"]))
         return statistics_population
 
     def process_education_levels(self, df):
+        """
+        Function to read the excel data for education level per age group,
+        and create a nested dictionary for in the get_excel_function
+        """
         education_dict = defaultdict(dict)
         df.reset_index()
         for i, row in df.iterrows():
@@ -831,6 +999,11 @@ class RiverDeltaModel(Model):
         return education_dict
 
     def process_experience(self, df):
+        """
+        Function to read the excel data for experience and machines,
+            the probabilities are per occupation
+        A nested dictionary is created for in the get_excel_function.
+        """
         experience_dict = defaultdict(dict)
         df.reset_index()
 
@@ -844,6 +1017,16 @@ class RiverDeltaModel(Model):
         return experience_dict
 
     def process_dissabilities(self, df):
+        """
+        Function to read the excel data for dissabilities per age group
+
+        There is a nested dictionary, per age and functioning with how much,
+            difficulty someone could have in percentages.
+
+        Example: {{59-85:{"Hearing":{"No_difficulty":0.87, "Unable": 0.05,... }}}} 
+
+        This dictionary can be loaded using the get_excel_function
+        """
         dissabilities_dict = defaultdict(dict)
         df.reset_index(drop=True, inplace=True)
 
@@ -864,12 +1047,23 @@ class RiverDeltaModel(Model):
         return dissabilities_dict
 
     def process_association(self, df):
+        """
+        Function to read the excel data to check if households are member of an association
+        and return a percentage for in the get_excel_function
+        """
         for i, row in df.iterrows():
             if row['Association'] == "yes":
                 percentage_association = row['Percentage']
         return percentage_association
 
     def gather_shapefiles(self, district):
+        """
+        This function is used to open the district-salinity gpkg file,
+            and the district boundaries gpkg file. 
+
+        These two datasets are then stored in self.data_salinity, self.polygon_districts,
+        to have easy and fast acces to them.
+        """
         path = os.getcwd()
 
         # Import salinity data and select the correct district, and set meters
@@ -885,6 +1079,7 @@ class RiverDeltaModel(Model):
         path_district = path + "\\Data\\district_boundaries.gpkg"
         gdf_district_boundaries = gpd.read_file(path_district)
 
+        # Select the correct district
         gdf_district_boundaries = gdf_district_boundaries[
             gdf_district_boundaries['Ten_Huyen'] == self.district]
         gdf_district_boundaries = gdf_district_boundaries.to_crs(epsg=32648)
@@ -901,7 +1096,9 @@ class RiverDeltaModel(Model):
             districts_polygon,
             land_agents,
             seed):
-
+        """
+        Function to create a network for the land household agents
+        """
         # Define number of points
         points = districts_polygon.sample_points(size=land_agents, seed=seed)
 
@@ -919,7 +1116,7 @@ class RiverDeltaModel(Model):
         # Add nodes
         for i, (x, y) in enumerate(coords):
             point = Point(x, y)
-
+            # Add salinity to the point, this is the salinity for the household
             get_salinity = salinity_data[salinity_data.contains(point)]
             if not get_salinity.empty:
                 salinities = get_salinity.iloc[0]['Salinity']

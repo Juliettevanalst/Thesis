@@ -5,12 +5,36 @@ import random
 import statistics
 
 from Functions3 import get_education_levels, get_experience, get_dissabilities, get_association, calculate_livelihood, calculate_yield_agri
-from Functions3 import calculate_farming_costs, calculate_yield_shrimp, calculate_cost_shrimp, calculate_wages_farm_workers, calculate_total_income, advice_neighbours, advice_agrocensus
+from Functions3 import calculate_farming_costs, calculate_yield_shrimp, calculate_cost_shrimp, calculate_wages_farm_workers, calculate_total_income
 from Functions3 import define_abilities, define_motivations, calculate_MOTA, best_MOTA, annual_loan_payment, change_crops
-from Functions3 import calculate_migration_ww, household_experience_machines, transfer_land
+from Functions3 import calculate_migration_ww, household_experience_machines, transfer_land, advice_neighbours, advice_agrocensus
 
 # Class for all working household members
+
+
 class Working_hh_member(Agent):
+    """Class that represents all the working household members. 
+
+    This class is composed of the classes 'Low-skilled agri worker', 'Low-skilled non-agri worker', 'Manual worker', 
+    'Skilled agri worker', 'Skilled service worker', and 'Other'.
+
+    Attributes:
+    - agent_type = Agent type of the household member, in this case Household_member
+    - age = Age of the household member
+    - agent_sector = Sector the agent is working in, for example annual crops, rice, or non agri
+    - agent_occupation = the same as the occupation_class, for example Low-skilled agri worker
+    - agent_employment_type = family worker, self employed or employee
+    - assigned = True, this means if the agent is assigned to a household or not
+    - works = True, since the agent is in the working hh member class
+    - education = Education level of the household member
+    - death age = Age the agent will die
+    - experience = If the agent has experience in its profession
+    - machines = Is this agent working with machines?
+    - dissabilities = what level of dissabilities does the agent has on a scale of 0-1. e.g. difficulty with hearing or walking
+    - time since last income = how long ago did I receive my salary? 
+
+  """
+
     def __init__(
             self,
             model,
@@ -30,18 +54,23 @@ class Working_hh_member(Agent):
         self.assigned = assigned
         self.works = works
 
+        # Determine education level, using the function in Functions3.py
         self.education = get_education_levels(self.age, self.model)
-        # self.household = household
 
-        # Determine the age the agent will die. To prevent the death age is
-        # lower than the current age, the max value of death age and currenct
-        # age + 1 is taken
+        # Determine the age the agent will die.
         self.death_age = np.random.normal(
             loc=self.model.excel_data["population_statistics"]['Mean_death_age'],
             scale=(
                 self.model.excel_data["population_statistics"]['Std_dev_death_age']) /
-            3)  
-        self.death_age = max(self.death_age, self.age + 1)
+            3)
+        # If they are older than their death age, they will die somewhere in
+        # the next five  years
+        self.death_age = max(
+            self.death_age,
+            self.age +
+            self.random.uniform(
+                1,
+                5))
 
         self.income = 0
         # Determine if the agent has experience in its occupation, and uses machines
@@ -56,6 +85,13 @@ class Working_hh_member(Agent):
         pass
 
     def yearly_activities(self):
+        """ These are the activities that all working household members do every year:
+        - Become older
+        - Check if they died
+        - Check if they are still working
+
+        """
+
         # Become older
         self.age += 1
 
@@ -79,6 +115,8 @@ class Working_hh_member(Agent):
 
 # Individual agents
 class Low_skilled_agri_worker(Working_hh_member):
+    """ Agent class for the household members with occupation low skilled agri worker. """
+
     def __init__(
             self,
             model,
@@ -114,6 +152,8 @@ class Low_skilled_agri_worker(Working_hh_member):
 
 
 class Low_skilled_nonAgri(Working_hh_member):
+    """ Agent class for the household members with occupation low skilled non agri worker. """
+
     def __init__(
             self,
             model,
@@ -145,6 +185,8 @@ class Low_skilled_nonAgri(Working_hh_member):
 
 
 class Manual_worker(Working_hh_member):
+    """ Agent class for the household members with occupation manual worker. """
+
     def __init__(
             self,
             model,
@@ -176,6 +218,8 @@ class Manual_worker(Working_hh_member):
 
 
 class Skilled_agri_worker(Working_hh_member):
+    """ Agent class for the household members with occupation skilled agri worker. """
+
     def __init__(
             self,
             model,
@@ -207,6 +251,8 @@ class Skilled_agri_worker(Working_hh_member):
 
 
 class Skilled_service_worker(Working_hh_member):
+    """ Agent class for the household members with occupation skilled service worker. """
+
     def __init__(
             self,
             model,
@@ -238,6 +284,8 @@ class Skilled_service_worker(Working_hh_member):
 
 
 class Other(Working_hh_member):
+    """ Agent class for the household members with "Other" occupations. """
+
     def __init__(
             self,
             model,
@@ -269,7 +317,24 @@ class Other(Working_hh_member):
 
 
 class Non_labourer(Agent):
-    # These are the agents who do not work, for example because they are a child or elderly. 
+    """ Agent class for the household members who are not working.
+    These are for example children, elderly, or parents caring for children.
+
+    Attributes:
+    - agent_type = Agent type of the household member, in this case Household_member
+    - age = Age of the household member
+    - agent_employment_type = None
+    - assigned = True, this means if the agent is assigned to a household or not
+    - works = False, since the agent is a non labourer
+    - education = Education level of the household member. Education of the children will be based on their age. 
+    - death age = Age the agent will die
+    - experience = 0, since the agents are not working and therefore do not have experience
+    - machines = 0, they are not working and are therefore not using machines
+    - dissabilities = what level of dissabilities does the agent has on a scale of 0-1. e.g. difficulty with hearing or walking 
+
+     """
+    # These are the agents who do not work, for example because they are a child or elderly.
+
     def __init__(
             self,
             model,
@@ -302,12 +367,12 @@ class Non_labourer(Agent):
         elif self.age == 17:
             self.education == "Higher_secondary"
 
-        # Determine the age the agent will die. 
+        # Determine the age the agent will die.
         self.death_age = np.random.normal(
             loc=self.model.excel_data["population_statistics"]['Mean_death_age'],
             scale=(
                 self.model.excel_data["population_statistics"]['Std_dev_death_age']) /
-            3)  
+            3)
         # If they are older than their death age, they will die somewhere in
         # the next five  years
         self.death_age = max(
@@ -317,13 +382,19 @@ class Non_labourer(Agent):
                 1,
                 5))
 
-        
         self.experience = 0
         self.machines = 0
         # Even when they are not working, they can have difficulties
         self.dissabilities = get_dissabilities(self.age, self.model)
 
     def yearly_activities(self):
+        """ Yearly activities of the non labourers. Each year they:
+        - become older
+        - check if they died
+        For the children:
+        - update the education level 
+        - check if it is time to start working (this happens at 15 and 17 years old) 
+        """
         # Each year, the agent becomes 1 year older
         self.age += 1
 
@@ -365,6 +436,14 @@ class Non_labourer(Agent):
                 self.start_working()
 
     def start_working(self):
+        """Function for non labourers to start working.
+        This proces has four steps:
+        1. check the sector the agent will work in 
+        2. check their occupation, based on the sector and if their household has land or not
+        3. create a new agent in the occupation class, and add agent to the model
+        4. delete old agent from the model
+        """
+
         # Check in which sector the agent will start working
         if self.random.random(
         ) > self.model.excel_data['sector_distribution']['Non_agri'][1]:
@@ -393,7 +472,6 @@ class Non_labourer(Agent):
                 self.model.agents.discard(self)
                 if self in self.model.agents:
                     print("het verwijderen van de non labourer ging mis")
-                
 
             else:  # Agent  becomes a wage worker
                 working_agent = Skilled_agri_worker(
@@ -429,7 +507,7 @@ class Non_labourer(Agent):
             agent_classes = {"manual_worker": Manual_worker,
                              'skilled_service_worker': Skilled_service_worker}
             agent_class = agent_classes[new_occupation]
-            
+
             # Check if they are self employed or employee
             chance_self_employed = self.model.excel_data['occupation_employment_distribution'][
                 'Non_agri'][new_occupation]['employment_distribution']["self_employed"]
@@ -462,6 +540,49 @@ class Non_labourer(Agent):
 
 
 class Land_household(Agent):
+    """ 
+    This class represents all the land households (small, medium and large).
+
+    Attributes:
+    - agent_type = Household
+    - household_size = Household size
+    - household_members = The individual agents who are part of the household 
+    - land_category = small, medium, large
+    - land_area = land size (small farms: < 0.5 ha, for medium farms between 0.5-2 ha, for large farms bigger than 2 ha) 
+    - house_quality = on a scale of 0-1, how stable is the house?
+    - salinity_during_shock = when a shock happened, how high did the salinity increase?
+    - possible_next_crops = list to which crops the household can switch, based on the inormation meeting and their neighbours
+    - new_crop = the crop the household will cultivate next year, based on the highest MOTA score
+    - house_price = Price of the house the agent is living in 
+    - value_of_assets = Total value of assets of the household, consists of the land and house
+    - maximum_debt = Maximum debt the household can get, based on their total value of assets and current debt
+    - debt = Current debt the household has
+    - yearly_loan_payment = The amount of money the household has to pay to become debt free
+    - wage_worker_payment = If they paid the wage workers or not
+    - savings = Savings of the household
+    - total_cost_farming = Total costs that season specific for each type of crop, there is e.g. a total_cost_farming_rice, and this is based on their land size
+    - wage_costs = How much the household pays wage workers each period of time
+    - total_income = Total income that season specific for each type of crop, e.g. there is a total_income_rice of 20000000 vnd
+    - yearly_income = What you would earn if you earn the income of the last period of time during the whole year
+    - percentage_yield_ = For each crop, the percentage yield the household can cultivate. E.g. due to salinity, percentage_yield_rice = 0.8
+    - expenditure = Total household expenditure
+    - required_income = Equal to expenditure, to make sure they are earning enough
+    - information_meeting = 0 or 1, did they attent the information meeting or not
+    - association = Does the household have a household member who is member of the farmers' association
+    - MOTA_scores = Dictionary of MOTA scores for each possible next crop
+    - waiting_time = Dictionary with possible waiting time before the household can harvest the new crop. e.g. coconuts need to grow for five years
+    - livelihood = Dictionary with 5 factors: human, social, financial, physical and natural, and shows how well the household is doing
+    - use_antibiotics = 0 if they do  not use antibiotics in shrimp farming, otherwise 1
+    - farming_time_left = The time they can farm shrimps, until their farm is too polluted due to antibiotics
+    - crop_history = dictionary with all crops, and how much experience in years a farmer has in this crop
+    - machines = 1 if one of the household members know how to use machines, otherwise 0
+    - average_hh_experience = Mean of average household member experience and if the household uses machines or not
+    - saw_advertisement = 1 if the household saw an advertisement about city life, which motivates them to migrate
+    - contacts_in_city = 1 if the household has contacts in the city, otherwise 0
+    - facilities_in_neighbourhood = 1, but decreases when service workers leave
+
+    """
+
     def __init__(
             self,
             model,
@@ -492,7 +613,7 @@ class Land_household(Agent):
         self.yearly_loan_payment = 0
         self.wage_worker_payment = 0
 
-        self.savings = 1000000 # ASSUMPTION!!
+        self.savings = 1000000  # ASSUMPTION!!
         self.total_cost_farming_ = {}
         self.wage_costs_ = {}
         self.total_income_ = {}
@@ -509,11 +630,9 @@ class Land_household(Agent):
         self.required_income = self.expenditure
         self.information_meeting = 0
 
-        # Is the household part of an association?
         self.association = get_association(self.model)
 
         self.MOTA_scores = None
-        self.new_crop = None
         self.waiting_time_ = {"Coconut": 0, "Rice": 0, "Shrimp": 0, "Maize": 0}
         self.livelihood = {"Human": 0, "Social": 0, "Financial": 0,
                            "Physical": 0, "Natural": 0, "Average": 0}
@@ -537,6 +656,21 @@ class Land_household(Agent):
         pass
 
     def yearly_activities(self):
+        """ Yearly activities of the land households.
+        Each year, it is checked if :
+        - All the household members are still alive
+        - If a child is born
+        - Did the household went to the information meeting?
+        - Did the household go to the information meeting?
+        - Does the household have contacts in the city?
+        - What level  of facilities is left in the neighborhood?
+
+        Furthermore, the household:
+        - Needs to pay their debt off
+        - Receives interest rate on their seavings
+        - Increases their debt by the interest rate 
+
+        """
         # If the whole household is death, the household will be removed from
         # the model
         if not self.household_members:
@@ -596,10 +730,28 @@ class Land_household(Agent):
             self.model.start_service_workers
 
     def harvest(self, crop):
+        """
+        Function for land households to harvest crops,
+
+        The following steps are taken in this function:
+        1. Check if a shock happened during the growth time
+        2. Is your crop shrimp?
+            2a. Check if a disease happened?
+            2b. If a disease happened, did you use antibiotics?
+            2c. Calculate yield 
+            2d. Calculate total costs of farming
+        3. For all the other crops:
+            3a. Calculate yield
+            3b. Calculate cost of farming
+        4. Calculate wage worker costs, and determine the number of wage workers
+        5. Calculate total income based on yield and costs 
+
+        """
         land_area = self.crops_and_land[crop]
         growth_times = {"Rice": 3, "Maize": 4, "Coconut": 0, "Shrimp": 6}
         # if a shock happened during growth time, we need to take that salinity
         # into account, otherwise, current salinity
+        # The growth time of coconut is zero, since coconut is salt tolerant
         if self.model.time_since_shock > growth_times[crop]:
             self.salinity_during_shock = self.salinity
 
@@ -644,7 +796,7 @@ class Land_household(Agent):
             crop, land_area, self.household_members, self.model, self.machines, self.percentage_yield_[crop])
 
         if crop == "Maize":  # There is a lack of maize data
-            # therefore somethings wage costs are higher than total costs in my model for maize. I decided to solve this by taking Maize, 
+            # therefore somethings wage costs are higher than total costs in my model for maize. I decided to solve this by taking Maize,
             # and adding "vaste kosten" of 6.8 million
             self.total_cost_farming_[crop] = self.wage_costs_[
                 crop] + self.model.maize_fixed_costs * land_area
@@ -660,6 +812,16 @@ class Land_household(Agent):
             self.yearly_income = self.total_income_[crop] * 6
 
     def check_savings(self):
+        """
+        Function of land households after they have harvested, to update their savings
+
+        This function has the following steps:
+        1. Calculate total crop income
+        2. Calculate total household income, invluding the income of wage workers
+        3. Calculate the total expenditure of the past timeframe
+        4. Update savings
+
+        """
         # Calculate total crop income
         total_income_all_crops = sum(self.total_income_.values())
         total_wage_income = 0
@@ -687,14 +849,29 @@ class Land_household(Agent):
             agent.income = 0
 
     def check_changes(self):
+        """Function for land households after their savings are updated, to see if their income is sufficient or they might want to change crops
+
+        The following steps are taken in this function:
+        - Check if a farm has coconut and waiting time is below 0 --> farmers needs to stop maize cultivation
+        - Calculate livelihood
+        - If there are no savings left or shrimp farming is too polluted, the household will migrate
+        - If the monthly income is lower than the expenditure:
+            - Determine possible next crops based on neighors and information meeting (if the household went to that meeting)
+            - Check abilities, motivations, and MOTA scores
+            - Determine the best crop
+            - If next crop is not current crop --> implement changes
+        - There is a possibility the youth of the household (members between 15 and 35 years old) want to migrate
+
+        """
         # If your coconuts are fully grown, you cannot grow maize
-                # anymore
+        # anymore
         if "Coconut" in self.crops_and_land.keys(
-        ) and "Maize" in self.crops_and_land.keys():
+        ) and "Maize" in self.crops_and_land.keys() and self.waiting_time_['Coconut'] <= 0:
             self.crops_and_land_["Maize"] = 0
 
-        # Calculate livelihood
+        # Calculate livelihood function is created to make the livelihood function easier to understand
         self.prepare_livelihood()
+        # Calculate livelihood
         self.livelihood = calculate_livelihood(
             self.information_meeting,
             self.average_hh_education,
@@ -709,11 +886,12 @@ class Land_household(Agent):
             self.salinity_suitability)
 
         # If there are no savings left, you will start migrating
-        if self.savings < 0 or self.farming_time_left == 0: 
+        if self.savings < 0 or self.farming_time_left == 0:
             # Decide who will get your land
             # If you have shrimps, no one will want your land, since there are antibiotics in it and it is useless
             if "Shrimp" not in self.crops_and_land.keys():
-                transfer_land(self.land_area, self.node_id, self.model, self.crops_and_land)
+                transfer_land(self.land_area, self.node_id,
+                              self.model, self.crops_and_land)
 
             # We are migrating
             migrated_hh = Migrated_household(
@@ -816,8 +994,8 @@ class Land_household(Agent):
             # If they saw an advertisement and have contacts in the city, the migration chance is higher
             if self.saw_advertisement == 1 and self.contacts_in_city == 1:
                 chance_migrating += self.model.increased_chance_migration_familiarity  # ASSUMPTION
-            
-            if self.random.random() < chance_migrating:  
+
+            if self.random.random() < chance_migrating:
                 # They want to leave
                 for agent in possible_migrated_members:
                     migrated_member = Migrated_hh_member(
@@ -842,11 +1020,23 @@ class Land_household(Agent):
                             "het verwijderen van de young adult member ging mis")
 
     def update_experience(self):
+        """ Function to keep track of the farming experience of land households """
         # Each year, experience of a crop should increase
         for crop in self.crops_and_land.keys():
             self.crop_history[crop] += 1
 
     def prepare_livelihood(self):
+        """Function to prepare the variables for the livelihood calculation. 
+        To prevent that the livelihood function is a mess. 
+
+        - For all agents above 15 years old, education level is checked and the average education is calculated
+        - Determine whether the household has experience and uses machines
+        - Check the dissabilities of all household members, to get an average dissability score
+        - Check debt ratio
+        - Check the land size, compared to their land category
+        - Check salinity level, compared to their current largest crop
+
+        """
         # average_education
         education_levels = []
         for agent in self.household_members:
@@ -886,9 +1076,9 @@ class Land_household(Agent):
             dissability = agent.dissabilities
             dissability_list.append(dissability)
         # one person with dissability = 0.5, more than 1 your dissabilities = 0
-        if sum(dissability_list) < 1:
+        if sum(dissability_list) < 0.75:
             self.dissability = 0
-        elif sum(dissability_list) == 1:
+        elif sum(dissability_list) < 1:
             self.dissability = 0.5
         else:
             self.dissability = 1
@@ -929,6 +1119,8 @@ class Land_household(Agent):
 
 
 class Small_land_households(Land_household):
+    """Class for all land households with a land below 0.5 ha """
+
     def __init__(
             self,
             model,
@@ -975,6 +1167,8 @@ class Small_land_households(Land_household):
 
 
 class Middle_land_households(Land_household):
+    """Class for all land households with a land between 0.5-2 ha """
+
     def __init__(
             self,
             model,
@@ -1020,6 +1214,8 @@ class Middle_land_households(Land_household):
 
 
 class Large_land_households(Land_household):
+    """Class for all land households with a land larger than 2 ha """
+
     def __init__(
             self,
             model,
@@ -1065,6 +1261,26 @@ class Large_land_households(Land_household):
 
 
 class Landless_households(Agent):
+    """Class for all land households without a land 
+
+     Attributes:
+        - agent_type = Household
+        - household_size = Household size
+        - household_members = The individual agents who are part of the household 
+        - land_area = zero, since these are the landless households
+        - house_quality = on a scale of 0-1, how stable is the house?
+        - house_price = Price of the house the agent is living in 
+        - value_of_assets = Total value of assets of the household, consists of the  house value
+        - maximum_debt = Maximum debt the household can get, based on their total value of assets and current debt
+        - debt = Current debt the household has
+        - savings = Savings of the household
+        - expenditure = Total household expenditure
+        - saw_advertisement = 1 if the household saw an advertisement about city life, which motivates them to migrate
+        - contacts_in_city = 1 if the household has contacts in the city, otherwise 0
+        - facilities_in_neighbourhood = 1, but decreases when service workers leave
+        - migrating = False, but becomes True when they are leaving
+        """
+
     def __init__(
             self,
             model,
@@ -1100,6 +1316,17 @@ class Landless_households(Agent):
         self.saw_advertisement = 0
 
     def yearly_activities(self):
+        """
+        Yearly activities of the landless households. 
+        Each year, it is checked if all household members died, then the household should be removed from the model
+        There is also a possibility for birth 
+
+        Furthermore, the agents:
+        - Receive interest rate on their savings
+        - Check if they have contacts in t he city
+        - Check number of facilities in the neighbourhood, based on the number of service workers left
+
+        """
         # If all household members died, the agent should be removed from the model
         if not self.household_members:
             self.model.deceased_households += 1
@@ -1149,6 +1376,17 @@ class Landless_households(Agent):
             self.model.start_service_workers
 
     def check_income(self, time_since_income):
+        """
+        Function for all landless households, after all household members received their loan:
+        - The total household income is calculated
+        - Total expenditure is checked
+        - Is the income too low or not?
+
+        The chance the household as a whole is migrating is calculated
+        If this is not the case, but income is too low, they try too switch their profession
+        Lastly, there is a possibility for the youth (15-35 years old) to migrate
+
+        """
         total_wage_income = 0
         for agent in self.household_members:
             total_wage_income += agent.income
@@ -1228,13 +1466,14 @@ class Landless_households(Agent):
                             agent_employment_type="employee",
                             assigned=True,
                             works=True)
-                        
+
                         # Add manual worker to the household and model
                         self.model.agents.add(manual_worker)
                         if manual_worker not in self.model.agents:
                             print("het aanmaken van de manual worker ging mis")
                         manual_worker.household = current_household
-                        current_household.household_members.append(manual_worker)
+                        current_household.household_members.append(
+                            manual_worker)
 
                         # Remove old agent from household and model:
                         current_household.household_members.remove(agent)
@@ -1262,7 +1501,8 @@ class Landless_households(Agent):
                         if low_skilled_farm not in self.model.agents:
                             print("het aanmaken van de low skilled worker ging mis")
                         low_skilled_farm.household = current_household
-                        current_household.household_members.append(low_skilled_farm)
+                        current_household.household_members.append(
+                            low_skilled_farm)
 
                         # Remove old agent from model and household
                         self.model.agents.discard(agent)
@@ -1318,7 +1558,8 @@ class Landless_households(Agent):
                     if low_skilled_farm not in self.model.agents:
                         print("het aanmaken van de low skilled worker ging mis")
                     low_skilled_farm.household = current_household
-                    current_household.household_members.append(low_skilled_farm)
+                    current_household.household_members.append(
+                        low_skilled_farm)
 
                     # Remove old agent from household and model
                     self.model.agents.discard(agent)
@@ -1351,7 +1592,8 @@ class Landless_households(Agent):
                                 print(
                                     "het aanmaken van de low skilled farm ging mis")
                             low_skilled_farm.household = current_household
-                            current_household.household_members.append(low_skilled_farm)
+                            current_household.household_members.append(
+                                low_skilled_farm)
 
                             # Remove old agent from model and household
                             self.model.agents.discard(agent)
@@ -1392,6 +1634,14 @@ class Landless_households(Agent):
 
 
 class Migrated_household(Agent):
+    """Class for when a household decides to migrate
+
+    Attributes:
+    - agent_type = Migrated_household
+    - household_members = The individual members of the household
+
+    """
+
     def __init__(self, model, agent_type, household_members):
         super().__init__(model)
         self.agent_type = agent_type
@@ -1399,6 +1649,14 @@ class Migrated_household(Agent):
 
 
 class Migrated_hh_member(Agent):
+    """Class for when a household decides to migrate
+
+    Attributes:
+    - agent_type = Migrated_hh_member or Migrated_member_young_adult
+    - household = the household where the migrated members are part of
+
+    """
+
     def __init__(self, model, agent_type, household):
         super().__init__(model)
         self.agent_type = agent_type
