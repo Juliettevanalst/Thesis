@@ -25,14 +25,14 @@ from Agents3 import Land_household, Working_hh_member, Migrated_household, Migra
 path = os.getcwd()
 
 # Import data
-correct_path = path + "\\Data\\model_input_data_894.xlsx"
+correct_path = path + "\\Data\\model_input_data_824.xlsx"
 
 
 class RiverDeltaModel(Model):
     def __init__(
         self,
         seed=20,
-        district='Thoai Son',
+        district='Gò Công Đông',
         num_agents=1000,
         excel_path=correct_path,
         salinity_shock_step=[

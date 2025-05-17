@@ -623,10 +623,10 @@ class Land_household(Agent):
         for agent in household_members:
             if agent.age < 16:
                 # A child costs between the 25th and 50th percentile
-                self.expenditure += self.random.randint(1755600, 2599000)
+                self.expenditure += 7313000
             else:
                 # An adult costs between the 50th and 75th percentile
-                self.expenditure += self.random.randint(2599000, 4019000)
+                self.expenditure += 10030000
         self.required_income = self.expenditure
         self.information_meeting = 0
 
@@ -847,6 +847,9 @@ class Land_household(Agent):
         # Reset income of the agents for the next round of income
         for agent in self.household_members:
             agent.income = 0
+
+
+        self.check_changes()
 
     def check_changes(self):
         """Function for land households after their savings are updated, to see if their income is sufficient or they might want to change crops
@@ -1306,9 +1309,9 @@ class Landless_households(Agent):
         self.expenditure = 0
         for agent in household_members:
             if agent.age < 16:
-                self.expenditure += 1755000
+                self.expenditure += 7313000
             else:
-                self.expenditure += 2599000
+                self.expenditure += 10030000
 
         self.contacts_in_city = 0
         self.facilities_in_neighbourhood = 1
