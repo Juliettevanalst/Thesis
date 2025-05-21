@@ -843,6 +843,7 @@ class Land_household(Agent):
         expenditure = self.expenditure / 12 * time_frame
         self.monthly_hh_income = self.total_hh_income / time_frame
         self.savings += self.total_hh_income - expenditure
+      
 
         # Reset income of the agents for the next round of income
         for agent in self.household_members:
@@ -1398,7 +1399,10 @@ class Landless_households(Agent):
 
         expenditure = self.expenditure / 12 * time_frame
         self.monthly_hh_income = self.total_hh_income / time_frame
+        # print("expenditure is ", expenditure, " total household income is ", self.total_hh_income)
+        # print("savings voor het inkomen is: ", self.savings)
         self.savings += self.total_hh_income - expenditure
+        # print("savings na het inkomen zijn: ", self.savings)
 
         if self.total_hh_income < expenditure:
             self.income_too_low = 1

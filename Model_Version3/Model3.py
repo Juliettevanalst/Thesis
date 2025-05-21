@@ -27,11 +27,14 @@ path = os.getcwd()
 # Import data
 correct_path = path + "\\Data\\model_input_data_824.xlsx"
 
+# SEnsitivity analysis
 
 class RiverDeltaModel(Model):
     def __init__(
         self,
         seed=20,
+        salinity_low = False,
+        salinity_high = False,
         district='Gò Công Đông',
         num_agents=1000,
         excel_path=correct_path,
@@ -42,6 +45,11 @@ class RiverDeltaModel(Model):
         self.seed = seed
         random.seed(20)
         np.random.seed(20)
+
+        # ATTRIBUTES FOR SENSITIVITY ANALYSIS
+        self.salinity_low = salinity_low
+        self.salinity_high = salinity_high
+
 
         # All agents attributes are created using excel data
         self.excel_data = self.get_excel_data(excel_path)
@@ -63,22 +71,30 @@ class RiverDeltaModel(Model):
         for agent in self.agents:
             if agent.agent_type == "Household" and agent.land_area > 0.0:
                 households_which_need_a_node.append(agent)
+                
         self.G = self.initialize_network(
             self.data_salinity,
             self.polygon_districts,
-            len(households_which_need_a_node),
+            households_which_need_a_node, # HIER WAS EERST LEN(households_which_need_a_node)
             self.seed)
         self.grid = NetworkGrid(self.G)
 
         # Connect farmer households to the grid
         available_nodes = list(self.G.nodes())
         random.shuffle(available_nodes)
+        
         for agent in households_which_need_a_node:
             node_id = available_nodes.pop(0)
-            salinity_level = self.G.nodes[node_id]["salinities"]
+            salinity_level = self.G.nodes[node_id]["salinities"]  # DIT WAS EERDER SALINITIES
             agent.salinity = salinity_level
+            if self.salinity_low:
+                agent.salinity = 0
+            elif self.salinity_high:
+                agent.salinity = salinity_level * 4
             agent.node_id = node_id
             self.grid.place_agent(agent, agent.node_id)
+           
+        
 
     # Below are all the parameters, which are used in the model
 
@@ -127,9 +143,11 @@ class RiverDeltaModel(Model):
 
         # Check the total number_of_households
         self.number_of_households = 0
+       
         for agent in self.agents:
             if agent.agent_type == "Household":
                 self.number_of_households += 1
+                
 
         self.start_households = self.number_of_households
         self.current_hh_left = self.number_of_households
@@ -462,7 +480,10 @@ class RiverDeltaModel(Model):
                 for key in agent.waiting_time_:
                     if agent.waiting_time_[key] > 0:
                         agent.waiting_time_[key] -= 1
-
+        if self.steps == 1:
+            self.datacollector.collect(self)
+        elif self.steps in range(1,50):
+            self.datacollector.collect(self)
         if self.steps % 12 == 0:
             self.agents.do(
                 lambda agent: agent.yearly_activities() if isinstance(
@@ -1099,35 +1120,107 @@ class RiverDeltaModel(Model):
         """
         Function to create a network for the land household agents
         """
-        # Define number of points
-        points = districts_polygon.sample_points(size=land_agents, seed=seed)
+        
+        districts_polygon.set_crs(salinity_data.crs, inplace = True)
+        # Stap 1: genereer voldoende punten
+        candidate_points = districts_polygon.sample_points(size=len(land_agents)*50, seed=seed)
+        point_geoms = list(candidate_points.geometry[0].geoms)
 
-        points_list = list(points.geometry[0].geoms)
-        coords = np.array([(pt.x, pt.y) for pt in points_list])
+        # Stap 2: bepaal salinity per punt
+        point_data = []
+        for pt in point_geoms:
+            salinity_match = salinity_data[salinity_data.contains(pt)]
+            if not salinity_match.empty:
+                salinity = salinity_match.iloc[0]['Salinity']
+                point_data.append((pt, salinity))
+            else:
+                print("geen data gevonden!")
 
-        # Create a network, three nearest nodes are supposed to be your
-        # neighbours
+        # Stap 3: sorteer punten in lage (<4) en hoge (>=4) salinity
+        low_salinity_points = [(pt, sal) for pt, sal in point_data if sal < 4]
+        high_salinity_points = [(pt, sal) for pt, sal in point_data if sal >= 4]
+
+        # Stap 4: wijs punten toe aan agents obv crop-type
+        coords = []
+        salinities = []
+
+        crop_type_to_salinity = {
+            "Rice": "low",
+            "Annual crops": "low",
+            "Perennial crops": "high",
+            "Aquaculture": "high"
+        }
+
+        np.random.seed(seed)
+        
+        for agent in land_agents:
+            crop_type = agent.crop_type
+            sal_pref = crop_type_to_salinity.get(crop_type, "low")
+
+            if sal_pref == "low" and low_salinity_points:
+                pt, sal = low_salinity_points.pop(np.random.randint(len(low_salinity_points)))
+            elif sal_pref == "high" and high_salinity_points:
+                pt, sal = high_salinity_points.pop(np.random.randint(len(high_salinity_points)))
+            else:
+                # fallback als er geen geschikte punten meer zijn
+                pt, sal = point_data.pop(np.random.randint(len(point_data)))
+                print(f"Waarschuwing: fallback gebruikt voor {crop_type}")
+
+            coords.append((pt.x, pt.y))
+            salinities.append(sal)
+
+        coords = np.array(coords)
+
+        # Stap 5: maak het netwerk
         tree = cKDTree(coords)
         k = 4
         distances, indices = tree.query(coords, k=k)
 
         G = nx.Graph()
-
-        # Add nodes
         for i, (x, y) in enumerate(coords):
-            point = Point(x, y)
-            # Add salinity to the point, this is the salinity for the household
-            get_salinity = salinity_data[salinity_data.contains(point)]
-            if not get_salinity.empty:
-                salinities = get_salinity.iloc[0]['Salinity']
-            else:
-                salinities = None
-                print("Something went wrong")
-            G.add_node(i, pos=(x, y), salinities=salinities)
+            G.add_node(i, pos=(x, y), salinities=salinities[i], crop_type=land_agents[i].crop_type)
 
-        # Add edges
         for i, neighbors in enumerate(indices):
-            for j in neighbors[1:]:  # skip the first one, that is the point itself
+            for j in neighbors[1:]:
                 G.add_edge(i, j)
-
+        
         return G
+        
+
+
+
+
+
+
+        # # Define number of points
+        # points = districts_polygon.sample_points(size=land_agents, seed=seed)
+
+        # points_list = list(points.geometry[0].geoms)
+        # coords = np.array([(pt.x, pt.y) for pt in points_list])
+
+        # # Create a network, three nearest nodes are supposed to be your
+        # # neighbours
+        # tree = cKDTree(coords)
+        # k = 4
+        # distances, indices = tree.query(coords, k=k)
+
+        # G = nx.Graph()
+
+        # # Add nodes
+        # for i, (x, y) in enumerate(coords):
+        #     point = Point(x, y)
+        #     # Add salinity to the point, this is the salinity for the household
+        #     get_salinity = salinity_data[salinity_data.contains(point)]
+        #     if not get_salinity.empty:
+        #         salinities = get_salinity.iloc[0]['Salinity']
+        #     else:
+        #         salinities = None
+        #         print("Something went wrong")
+        #     G.add_node(i, pos=(x, y), salinities=salinities)
+
+        # # Add edges
+        # for i, neighbors in enumerate(indices):
+        #     for j in neighbors[1:]:  # skip the first one, that is the point itself
+        #         G.add_edge(i, j)
+
+        # return G

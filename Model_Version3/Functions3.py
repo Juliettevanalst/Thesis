@@ -18,7 +18,7 @@ def get_education_levels(age, model):
         group = (16, 45)
     elif 46 <= age <= 59:
         group = (46, 59)
-    elif 60 <= age <= 100:
+    elif 60 <= age <= 500:
         group = (59, 85)
 
     education_probability = model.excel_data['education_levels'][group]
@@ -85,7 +85,7 @@ def get_dissabilities(age, model):
         group = (16, 45)
     elif 46 <= age < 59:
         group = (46, 59)
-    elif 59 <= age <= 100:
+    elif 59 <= age <= 500:
         group = (59, 85)
 
     dissability_dict = model.excel_data['dissabilities'][group]
@@ -170,7 +170,7 @@ def calculate_farming_costs(crop, land_area):
     The costs are based on fixed costs per ha, and the land size for the crop on the farm
     """
     cost_per_ha = {
-        "Rice": np.random.normal(16511894),
+        "Rice": np.random.normal(15900000),
         "Maize": 6800000,
         "Coconut": 20000000}  # All costs are per ha,  DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD ERG LUXE.
     costs = cost_per_ha[crop]
