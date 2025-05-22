@@ -39,7 +39,7 @@ class RiverDeltaModel(Model):
         num_agents=1000,
         excel_path=correct_path,
         salinity_shock_step=[
-            25,33,42,49,89,92,97,8103,125,133,145,156,187,188,193,203,221,229,241,250,289]):
+            25,49,145,193,241,289]):
         super().__init__(seed=seed)
         self.seed = seed
         random.seed(20)
@@ -83,7 +83,7 @@ class RiverDeltaModel(Model):
         
         for agent in households_which_need_a_node:
             node_id = available_nodes.pop(0)
-            salinity_level = self.G.nodes[node_id]["salinities"]  
+            salinity_level = self.G.nodes[node_id]["salinities"]  # DIT WAS EERDER SALINITIES
             agent.salinity = salinity_level
             if self.salinity_low:
                 agent.salinity = 0

@@ -79,7 +79,7 @@ class Working_hh_member(Agent):
 
         # Determine the dissabilities the agent has
         self.dissabilities = get_dissabilities(self.age, self.model)
-        self.time_since_last_income = 0
+        self.time_since_last_savings_check = 0
 
     def step(self):
         pass
@@ -145,7 +145,7 @@ class Low_skilled_agri_worker(Working_hh_member):
         self.works = works
 
         self.income = 0
-        self.time_since_last_income = 0
+        self.time_since_last_savings_check = 0
 
     def step(self):
         pass
@@ -652,6 +652,8 @@ class Land_household(Agent):
         self.contacts_in_city = 0
         self.facilities_in_neighbourhood = 1
 
+        self.time_since_last_savings_check = 0
+
     def step(self):
         pass
 
@@ -804,12 +806,16 @@ class Land_household(Agent):
         # calculate total income based on yield and costs
         self.total_income_[crop] = calculate_total_income(
             crop, self.yield_[crop], self.total_cost_farming_[crop])
-        if crop == "Rice":
-            self.yearly_income = self.total_income_[crop] * 3
-        elif crop == "Shrimp" or crop == "Maize":
-            self.yearly_income = self.total_income_[crop] * 2
-        else:
-            self.yearly_income = self.total_income_[crop] * 6
+        # if crop == "Rice":
+        #     self.yearly_income = self.total_income_[crop] * 3
+        # elif crop == "Shrimp" or crop == "Maize":
+        #     self.yearly_income = self.total_income_[crop] * 2
+        # else:
+        #     self.yearly_income = self.total_income_[crop] * 6
+
+        # Add this income to yearly income:
+        
+        self.yearly_income += self.total_income_[crop]
 
     def check_savings(self):
         """
@@ -831,24 +837,29 @@ class Land_household(Agent):
             total_wage_income += agent.income
         self.total_hh_income = total_income_all_crops + total_wage_income
 
-        # See in which time frame this is earned
-        if "Rice" in self.crops_and_land.keys():
-            time_frame = 3
-        elif "Maize" in self.crops_and_land.keys() or "Shrimp" in self.crops_and_land.keys():
-            time_frame = 6
-        else:
-            time_frame = 2  # you do coconut
+        # # See in which time frame this is earned
+        # if "Rice" in self.crops_and_land.keys():
+        #     time_frame = 3
+        # elif "Maize" in self.crops_and_land.keys() or "Shrimp" in self.crops_and_land.keys():
+        #     time_frame = 6
+        # else:
+        #     time_frame = 2  # you do coconut
 
         # Calculate expenditure of the past timeframe
-        expenditure = self.expenditure / 12 * time_frame
-        self.monthly_hh_income = self.total_hh_income / time_frame
+        # expenditure = self.expenditure / 12 * time_frame
+        # self.monthly_hh_income = self.total_hh_income / time_frame
+        # self.savings += self.total_hh_income - expenditure
+        # print(self.model.steps)
+        expenditure = self.expenditure / 12 * self.time_since_last_savings_check
+        self.monthly_hh_income = self.total_hh_income / self.time_since_last_savings_check
         self.savings += self.total_hh_income - expenditure
-        print(self.model.steps)
       
 
         # Reset income of the agents for the next round of income
         for agent in self.household_members:
             agent.income = 0
+
+        self.time_since_last_savings_check = 0
 
 
         self.check_changes()
@@ -868,11 +879,15 @@ class Land_household(Agent):
         - There is a possibility the youth of the household (members between 15 and 35 years old) want to migrate
 
         """
+
+        if not self.model.possible_to_change:
+            return
+
         # If your coconuts are fully grown, you cannot grow maize
         # anymore
         if "Coconut" in self.crops_and_land.keys(
         ) and "Maize" in self.crops_and_land.keys() and self.waiting_time_['Coconut'] <= 0:
-            self.crops_and_land_["Maize"] = 0
+            self.crops_and_land["Maize"] = 0
 
         # Calculate livelihood function is created to make the livelihood function easier to understand
         self.prepare_livelihood()
@@ -892,6 +907,7 @@ class Land_household(Agent):
 
         # If there are no savings left, you will start migrating
         if self.savings < 0 or self.farming_time_left == 0:
+            
             # Decide who will get your land
             # If you have shrimps, no one will want your land, since there are antibiotics in it and it is useless
             if "Shrimp" not in self.crops_and_land.keys():
@@ -926,7 +942,8 @@ class Land_household(Agent):
             if self in self.model.agents:
                 print("het verwijderen van het huishouden zelf ging mis")
 
-        if self.monthly_hh_income < self.expenditure:
+        if  self.monthly_hh_income * 12 < self.expenditure:
+            
             # We need to change!!
 
             if self.waiting_time_[
@@ -1089,9 +1106,7 @@ class Land_household(Agent):
             self.dissability = 1
 
         # Check debt ratio
-        if self.debt / self.value_of_assets > 1:
-            print("dit gaat mis")
-        self.debt_ratio = min(self.debt / self.maximum_debt, 1)
+        self.debt_ratio = min(self.debt / self.value_of_assets, 1)
 
         # check land size
         if self.land_category == 'small':
@@ -1405,10 +1420,13 @@ class Landless_households(Agent):
         self.savings += self.total_hh_income - expenditure
         # print("savings na het inkomen zijn: ", self.savings)
 
-        if self.total_hh_income < expenditure:
+        if self.monthly_hh_income < expenditure:
             self.income_too_low = 1
         else:
             self.income_too_low = 0
+
+        if not self.model.possible_to_change:
+            return
 
         # Are we migrating? Calculate chance migration
         self.chance_migration = calculate_migration_ww(

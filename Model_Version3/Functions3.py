@@ -462,7 +462,7 @@ def define_abilities(
                         land_size - savings
                     # ASSUMPTION, PROFIT OVER FIVE YEAR SHOULD BE TWICE AS YOUR
                     # LOAN (since you also have other costs)
-                    if profit_over_five_years / 2 > required_loan:
+                    if profit_over_five_years / 2 > required_loan and required_loan < possible_debt_left:
                         financial_ability = 0.5
                     else:
                         financial_ability = 0
@@ -652,7 +652,7 @@ def change_crops(
     else:
         if "Rice" in current_crop:
             crops_and_land = {'Coconut': land_size, 'Rice': (land_size / 2)}
-        elif "Maize" in current_crops:
+        elif "Maize" in current_crop:
             crops_and_land = {'Coconut': land_size, 'Maize': (land_size / 2)}
         # You need to wait 5 years untill you can start with your coconut
         waiting_time_[change] = 60
