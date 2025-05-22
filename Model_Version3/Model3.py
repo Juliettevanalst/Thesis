@@ -200,20 +200,34 @@ class RiverDeltaModel(Model):
         #             None) == "Migrated_member_young_adult"),
         #     "Died agents": lambda model: self.death_agents,
         #     "Child births": lambda model: self.child_births}
-        model_metrics = {
+        model_metrics = model_metrics = {
             "Average_Livelihood": lambda model: mean(
-                [agent.livelihood['Average'] for agent in model.agents if hasattr(agent, 'livelihood')]) if model.agents else 0,
+                [
+                    agent.livelihood['Average'] for agent in self.agents if hasattr(
+                        agent,
+                        'livelihood')]) if self.agents else 0,
             "Num_household_members": lambda model: sum(
-                1 for agent in model.agents if getattr(agent, "agent_type", None) == "Household_member"),
+                1 for agent in model.agents if getattr(
+                    agent,
+                    "agent_type",
+                    None) == "Household_member"),
             "Migrated_households": lambda model: sum(
-                1 for agent in model.agents if getattr(agent, "agent_type", None) == "Migrated"),
+                1 for agent in model.agents if getattr(
+                    agent,
+                    "agent_type",
+                    None) == "Migrated"),
             "Migrated_members": lambda model: sum(
-                1 for agent in model.agents if getattr(agent, "agent_type", None) == "Migrated_member"),
+                1 for agent in model.agents if getattr(
+                    agent,
+                    "agent_type",
+                    None) == "Migrated_member"),
             "Migrated_individuals": lambda model: sum(
-                1 for agent in model.agents if getattr(agent, "agent_type", None) == "Migrated_member_young_adult"),
-            "Died agents": lambda model: model.death_agents,
-            "Child births": lambda model: model.child_births
-        }
+                1 for agent in model.agents if getattr(
+                    agent,
+                    "agent_type",
+                    None) == "Migrated_member_young_adult"),
+            "Died agents": lambda model: self.death_agents,
+            "Child births": lambda model: self.child_births}
 
         agent_metrics = {
             "Crop_type": lambda a: getattr(
@@ -495,10 +509,10 @@ class RiverDeltaModel(Model):
                 for key in agent.waiting_time_:
                     if agent.waiting_time_[key] > 0:
                         agent.waiting_time_[key] -= 1
-        if self.steps == 1:
-            self.datacollector.collect(self)
-        elif self.steps in range(1,50):
-            self.datacollector.collect(self)
+
+        if 1 <= self.steps <= 50: # zet dit voor nu even erin!!!!!!!!!!!!!!
+             self.datacollector.collect(self)
+
         if self.steps % 12 == 0:
             self.agents.do(
                 lambda agent: agent.yearly_activities() if isinstance(
@@ -514,6 +528,7 @@ class RiverDeltaModel(Model):
             self.pay_wage_workers()
             self.pay_other_agents()
             self.farmers_check_situation()
+            self.reset_wage_worker_payment()
 
         month = self.steps % 12
 
@@ -522,6 +537,7 @@ class RiverDeltaModel(Model):
             self.need_to_yield(["Rice", "Coconut"])
             self.pay_wage_workers()
             self.farmers_check_situation()
+            self.reset_wage_worker_payment()
 
         # In April we harvest coconut, Maize and shrimp
         elif month == 4:
@@ -529,12 +545,14 @@ class RiverDeltaModel(Model):
             self.pay_wage_workers()
             self.pay_other_agents()
             self.farmers_check_situation()
+            self.reset_wage_worker_payment()
 
         # In June we harvest coconut
         elif month == 6:
             self.need_to_yield(['Coconut'])
             self.pay_wage_workers()
             self.farmers_check_situation()
+            self.reset_wage_worker_payment()
 
         # In August we harvest Rice, Maize and coconut
         elif month == 8:
@@ -542,18 +560,21 @@ class RiverDeltaModel(Model):
             self.pay_wage_workers()
             self.pay_other_agents()
             self.farmers_check_situation()
+            self.reset_wage_worker_payment()
 
         # In October we harvest shrimp and coconut
         elif month == 10:
             self.need_to_yield(["Shrimp", 'Coconut'])
             self.pay_wage_workers()
             self.farmers_check_situation()
+            self.reset_wage_worker_payment()
 
         # In November we harvest rice
         elif month == 11:
             self.need_to_yield(["Rice"])
             self.pay_wage_workers()
             self.farmers_check_situation()
+            self.reset_wage_worker_payment()
 
         # Once a year, the data is collected
         if self.steps % 12 == 0:
@@ -565,6 +586,7 @@ class RiverDeltaModel(Model):
         Function which determines which farmers need to harvest a certain crop.
         When they have done that, they need to pay the wage workers
         """
+
         for crop in crop_type:
             for agent in list(self.agents):
                 if isinstance(agent, Land_household):
@@ -572,8 +594,8 @@ class RiverDeltaModel(Model):
                             crop] == 0:
                         agent.harvest(crop)
                         agent.wage_worker_payment = 1
-                    else:
-                        agent.wage_worker_payment = 0
+                    
+                        
 
     def pay_wage_workers(self):
         """
@@ -626,6 +648,11 @@ class RiverDeltaModel(Model):
             if isinstance(agent, Land_household):
                 if agent.wage_worker_payment == 1:
                     agent.check_savings()
+
+    def reset_wage_worker_payment(self):
+        for agent in list(self.agents):
+            if isinstance(agent, Land_household):
+                agent.wage_worker_payment = 0
 
     def pay_other_agents(self):
         """Three times per year, it is time to pay the non agri household members

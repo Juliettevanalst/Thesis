@@ -613,7 +613,7 @@ class Land_household(Agent):
         self.yearly_loan_payment = 0
         self.wage_worker_payment = 0
 
-        self.savings = 1000000  # ASSUMPTION!!
+        self.savings = 20000000  # ASSUMPTION!!
         self.total_cost_farming_ = {}
         self.wage_costs_ = {}
         self.total_income_ = {}
@@ -843,6 +843,7 @@ class Land_household(Agent):
         expenditure = self.expenditure / 12 * time_frame
         self.monthly_hh_income = self.total_hh_income / time_frame
         self.savings += self.total_hh_income - expenditure
+        print(self.model.steps)
       
 
         # Reset income of the agents for the next round of income
