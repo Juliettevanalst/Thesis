@@ -172,34 +172,49 @@ class RiverDeltaModel(Model):
         self.work_days_per_month = 20
 
         # Set up datacollector
+        # model_metrics = {
+        #     "Average_Livelihood": lambda model: mean(
+        #         [
+        #             agent.livelihood['Average'] for agent in self.agents if hasattr(
+        #                 agent,
+        #                 'livelihood')]) if self.agents else 0,
+        #     "Num_household_members": lambda model: sum(
+        #         1 for agent in model.agents if getattr(
+        #             agent,
+        #             "agent_type",
+        #             None) == "Household_member"),
+        #     "Migrated_households": lambda model: sum(
+        #         1 for agent in model.agents if getattr(
+        #             agent,
+        #             "agent_type",
+        #             None) == "Migrated"),
+        #     "Migrated_members": lambda model: sum(
+        #         1 for agent in model.agents if getattr(
+        #             agent,
+        #             "agent_type",
+        #             None) == "Migrated_member"),
+        #     "Migrated_individuals": lambda model: sum(
+        #         1 for agent in model.agents if getattr(
+        #             agent,
+        #             "agent_type",
+        #             None) == "Migrated_member_young_adult"),
+        #     "Died agents": lambda model: self.death_agents,
+        #     "Child births": lambda model: self.child_births}
         model_metrics = {
             "Average_Livelihood": lambda model: mean(
-                [
-                    agent.livelihood['Average'] for agent in self.agents if hasattr(
-                        agent,
-                        'livelihood')]) if self.agents else 0,
+                [agent.livelihood['Average'] for agent in model.agents if hasattr(agent, 'livelihood')]) if model.agents else 0,
             "Num_household_members": lambda model: sum(
-                1 for agent in model.agents if getattr(
-                    agent,
-                    "agent_type",
-                    None) == "Household_member"),
+                1 for agent in model.agents if getattr(agent, "agent_type", None) == "Household_member"),
             "Migrated_households": lambda model: sum(
-                1 for agent in model.agents if getattr(
-                    agent,
-                    "agent_type",
-                    None) == "Migrated"),
+                1 for agent in model.agents if getattr(agent, "agent_type", None) == "Migrated"),
             "Migrated_members": lambda model: sum(
-                1 for agent in model.agents if getattr(
-                    agent,
-                    "agent_type",
-                    None) == "Migrated_member"),
+                1 for agent in model.agents if getattr(agent, "agent_type", None) == "Migrated_member"),
             "Migrated_individuals": lambda model: sum(
-                1 for agent in model.agents if getattr(
-                    agent,
-                    "agent_type",
-                    None) == "Migrated_member_young_adult"),
-            "Died agents": lambda model: self.death_agents,
-            "Child births": lambda model: self.child_births}
+                1 for agent in model.agents if getattr(agent, "agent_type", None) == "Migrated_member_young_adult"),
+            "Died agents": lambda model: model.death_agents,
+            "Child births": lambda model: model.child_births
+        }
+
         agent_metrics = {
             "Crop_type": lambda a: getattr(
                 a,
