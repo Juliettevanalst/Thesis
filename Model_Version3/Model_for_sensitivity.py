@@ -17,9 +17,9 @@ from collections import defaultdict
 from shapely.geometry import MultiPoint
 from statistics import mean
 
-from Agents3 import Low_skilled_agri_worker, Low_skilled_nonAgri, Manual_worker, Skilled_agri_worker, Skilled_service_worker
-from Agents3 import Other, Non_labourer, Small_land_households, Middle_land_households, Large_land_households, Landless_households
-from Agents3 import Land_household, Working_hh_member, Migrated_household, Migrated_hh_member
+from Agents_for_sensitivity import Low_skilled_agri_worker, Low_skilled_nonAgri, Manual_worker, Skilled_agri_worker, Skilled_service_worker
+from Agents_for_sensitivity import Other, Non_labourer, Small_land_households, Middle_land_households, Large_land_households, Landless_households
+from Agents_for_sensitivity import Land_household, Working_hh_member, Migrated_household, Migrated_hh_member
 
 # Define path
 path = os.getcwd()
@@ -35,11 +35,17 @@ class RiverDeltaModel(Model):
         seed=20,
         salinity_low = False,
         salinity_high = False,
+        production_costs_scenario = "Medium",
+        wage_of_ww = 1,
+        wage_workers_required = 1,
         district='Gò Công Đông',
         num_agents=1000,
         excel_path=correct_path,
+        scenario_contacts = "Normal",
+        chance_info_meeting = 0.1,
         salinity_shock_step=[
-            25,49,145,193,241,289]):
+            25,49,145,193,241,289]
+        ):
         super().__init__(seed=seed)
         self.seed = seed
         random.seed(20)
@@ -48,6 +54,10 @@ class RiverDeltaModel(Model):
         # ATTRIBUTES FOR SENSITIVITY ANALYSIS
         self.salinity_low = salinity_low
         self.salinity_high = salinity_high
+        self.production_costs_scenario = production_costs_scenario
+        self.wage_of_ww = wage_of_ww
+        self.wage_workers_required = wage_workers_required
+        self.scenario_contacts = scenario_contacts
 
         # All agents attributes are created using excel data
         self.excel_data = self.get_excel_data(excel_path)
@@ -102,7 +112,7 @@ class RiverDeltaModel(Model):
         self.time_since_shock = 0
 
         # Does the agent meet agrocensus?
-        self.chance_info_meeting = 0.1  # Based on paper by Tran et al, (2020)
+        self.chance_info_meeting = chance_info_meeting  # Based on paper by Tran et al, (2020)
 
         # Possibility for disease
         # Based on paper by Joffre et al., 2015 on extensive shrimp farming
@@ -129,8 +139,8 @@ class RiverDeltaModel(Model):
         # Distribution man_days during preparation time and yield time
         self.man_days_prep = 1 / 3
         # ASSUMPTION, average / day is 200000 based on Pedroso et al., 2017
-        self.payment_low_skilled = 190000
-        self.payment_high_skilled = 210000
+        self.payment_low_skilled = 190000 * self.wage_of_ww
+        self.payment_high_skilled = 210000 * self.wage_of_ww
         self.distribution_high_low_skilled = 0
 
         # Number of deceased households (all household members have died)

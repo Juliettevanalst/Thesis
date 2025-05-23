@@ -164,12 +164,19 @@ def calculate_yield_agri(
     return yield_, percentage_yield_[crop]
 
 
-def calculate_farming_costs(crop, land_area):
+def calculate_farming_costs(crop, land_area, model):
     """
     Function to calculate the farming costs of a certain crop
     The costs are based on fixed costs per ha, and the land size for the crop on the farm
     """
+
     
+    if model.production_costs_scenario == "Low":
+        multiplier = 0.5
+    elif model.production_costs_scenario == "Medium":
+        multiplier = 1
+    elif model.production_costs_scenario == "High":
+        multiplier = 2
 
     cost_per_ha = {
         "Rice": np.random.normal(15900000)*multiplier,
@@ -229,13 +236,13 @@ def calculate_wages_farm_workers(
     6. Determine the costs of the wage workers, based on the distribution of high and low skilled workers
     """
     # Based on different papers, see documentation
-    man_days_per_ha = {"Rice": 48, "Coconut": 8, "Maize": 106, "Shrimp": 33}
+    man_days_per_ha = {"Rice": 48 * model.wage_workers_required, "Coconut": 8 * model.wage_workers_required, "Maize": 106*model.wage_workers_required, "Shrimp": 33*model.wage_workers_required}
     # THIS IS AN ASSUMPTION, IN TWO WEEKS YOU WANT TO HAVE YOUR SEEDS PLANTED.
     # for coconut the trees are already there, so prep time is long
     preparation_time = {"Rice": 14, "Coconut": 45, "Maize": 14, "Shrimp": 14}
     cultivation_time = {"Rice": 7, "Coconut": 2,
                         "Maize": 14, "Shrimp": 14}  # THESE ARE ASSUMPTIONS
-    loan_per_day = 200000  # Based on paper by Pedroso et al., (2017)
+    loan_per_day = 200000*model.wage_of_ww  # Based on paper by Pedroso et al., (2017)
     required_man_days = man_days_per_ha[crop] * land_area
 
     # If you have machines and experience as a farm, you will only need 1/3 of
