@@ -606,8 +606,8 @@ class Land_household(Agent):
         self.new_crop = None
 
         self.house_price = np.random.normal(52000000)  # ASSUMPTION!!
-        self.value_of_assets = self.land_area * \
-            78000000 + self.house_price  # ASSUMPTION
+        self.value_of_assets = (self.land_area * \
+            78000000 + self.house_price)  # ASSUMPTION
         self.maximum_debt = self.value_of_assets
         self.debt = 0
         self.yearly_loan_payment = 0
@@ -653,6 +653,8 @@ class Land_household(Agent):
         self.facilities_in_neighbourhood = 1
 
         self.time_since_last_savings_check = 0
+
+        # self.conservative_level = self.random.random()
 
     def step(self):
         pass
@@ -719,9 +721,15 @@ class Land_household(Agent):
             self.information_meeting = 0
 
         # Update savings and debt
-        self.savings -= self.yearly_loan_payment
+        if self.debt > 0:
+            self.savings -= self.yearly_loan_payment
+            self.debt = self.debt * (self.model.interest_rate_loans + 1)
+            self.debt = max(0, self.debt - self.yearly_loan_payment)
         self.savings = self.savings * (self.model.interest_rate_savings + 1)
-        self.debt = self.debt * (self.model.interest_rate_loans + 1)
+
+        if self.debt < 0:
+            print("wtf is dit ", self.debt)
+        
 
         # Check if you have contacts in the city
         if self.random.random() < self.model.current_hh_left and self.contacts_in_city == 0:
@@ -762,13 +770,22 @@ class Land_household(Agent):
             # Did you get a disease this season?
             self.disease = 1 if np.random.rand() <= self.model.chance_disease else 0
 
-            # Do you want to use antibiotics? D
+            # Do you want to use antibiotics? 
             if self.disease == 1:
                 # THIS IS AN ASSUMPTION, IF YOU ARE SMART YOU WILL NOT USE
                 # ANTIBIOTICS
-                if (self.livelihood['Human'] +
-                        self.livelihood['Financial']) / 2 >= 0.5:
-                    # Use no antibiotics
+                # if (self.livelihood['Human'] +
+                #         self.livelihood['Financial']) / 2 >= 0.5:
+                #     # Use no antibiotics
+                #     self.use_antibiotics = 0
+                #     # 37/140 = 0.26, only 26% of your fish survives
+                #     self.percentage_yield_["Shrimp"] = 0.26
+                # else:
+                #     self.use_antibiotics = 1
+                #     self.farming_time_left -= 1
+
+                if self.savings > self.expenditure / 2:
+                    # You have enough  money and do not need the yield. You will not use antibiotics
                     self.use_antibiotics = 0
                     # 37/140 = 0.26, only 26% of your fish survives
                     self.percentage_yield_["Shrimp"] = 0.26
@@ -815,7 +832,7 @@ class Land_household(Agent):
 
         # Add this income to yearly income:
         
-        self.yearly_income += self.total_income_[crop]
+        
 
     def check_savings(self):
         """
@@ -850,9 +867,12 @@ class Land_household(Agent):
         # self.monthly_hh_income = self.total_hh_income / time_frame
         # self.savings += self.total_hh_income - expenditure
         # print(self.model.steps)
+        # 
         expenditure = self.expenditure / 12 * self.time_since_last_savings_check
+        # expenditure = self.total_hh_income
         self.monthly_hh_income = self.total_hh_income / self.time_since_last_savings_check
         self.savings += self.total_hh_income - expenditure
+        self.yearly_income += self.total_hh_income
       
 
         # Reset income of the agents for the next round of income
@@ -907,42 +927,53 @@ class Land_household(Agent):
 
         # If there are no savings left, you will start migrating
         if self.savings < 0 or self.farming_time_left == 0:
-            
-            # Decide who will get your land
-            # If you have shrimps, no one will want your land, since there are antibiotics in it and it is useless
-            if "Shrimp" not in self.crops_and_land.keys():
-                transfer_land(self.land_area, self.node_id,
-                              self.model, self.crops_and_land)
+            if self.farming_time_left ==0:
+                print("ik ben gestopt omdat ik ziekte had")
+            elif self.savings < 0:
+                print("ik ben gestopt omdat ik geen geld had")
+            if self.savings < 0 and self.maximum_debt > self.expenditure: # IF YOU CAN GET A LOAN FOR A YEAR, YOU WILL NOT MIGRATE
+                self.debt += self.expenditure
+                self.maximum_debt -= self.expenditure
+                self.yearly_loan_payment = annual_loan_payment(
+                            self.debt, self.model.interest_rate_loans)
+                
+            else:
+                # Decide who will get your land
+                # If you have shrimps, no one will want your land, since there are antibiotics in it and it is useless
+                if "Shrimp" not in self.crops_and_land.keys():
+                    transfer_land(self.land_area, self.node_id,
+                                self.model, self.crops_and_land)
 
-            # We are migrating
-            migrated_hh = Migrated_household(
-                self.model,
-                agent_type="Migrated",
-                household_members=self.household_members)
+                # We are migrating
+                migrated_hh = Migrated_household(
+                    self.model,
+                    agent_type="Migrated",
+                    household_members=self.household_members)
 
-            # Add migrated household to the model
-            self.model.agents.add(migrated_hh)
-            if migrated_hh not in self.model.agents:
-                print("het aanmaken van de migrated household ging mis")
+                # Add migrated household to the model
+                self.model.agents.add(migrated_hh)
+                if migrated_hh not in self.model.agents:
+                    print("het aanmaken van de migrated household ging mis")
 
-            # Create household members
-            for household_members in self.household_members:
-                migrated_member = Migrated_hh_member(
-                    self.model, agent_type="Migrated_member", household=migrated_hh)
-                # Add migrated household members to the model
-                self.model.agents.add(migrated_member)
-                if migrated_member not in self.model.agents:
-                    print("het aanmaken van de migrated member ging mis")
-                # Delete household members from the model
-                self.model.agents.discard(household_members)
-                if household_members in self.model.agents:
-                    print("het verwijderen van de huishoud member ging mis")
-            # Delete the migrated household from the model
-            self.model.agents.discard(self)
-            if self in self.model.agents:
-                print("het verwijderen van het huishouden zelf ging mis")
+                # Create household members
+                for household_members in self.household_members:
+                    migrated_member = Migrated_hh_member(
+                        self.model, agent_type="Migrated_member", household=migrated_hh)
+                    # Add migrated household members to the model
+                    self.model.agents.add(migrated_member)
+                    if migrated_member not in self.model.agents:
+                        print("het aanmaken van de migrated member ging mis")
+                    # Delete household members from the model
+                    self.model.agents.discard(household_members)
+                    if household_members in self.model.agents:
+                        print("het verwijderen van de huishoud member ging mis")
+                # Delete the migrated household from the model
+                self.model.agents.discard(self)
+                if self in self.model.agents:
+                    print("het verwijderen van het huishouden zelf ging mis")
 
-        if  self.monthly_hh_income * 12 < self.expenditure:
+        #If your income is lower than your expenditure, something needs to change. however, some households are conservative, and therefore there is a conservative level. And, it is checked if there are enough savings
+        if self.monthly_hh_income * 12 < self.expenditure: # and self.random.random() > self.conservative_level:
             
             # We need to change!!
 
@@ -1106,6 +1137,9 @@ class Land_household(Agent):
             self.dissability = 1
 
         # Check debt ratio
+        if self.debt > self.value_of_assets:
+            print("mijn debt is: ", self.debt, " mijn debt left is: ", self.maximum_debt, " en ik kan max hebben: ", self.value_of_assets, ". Daarom betaal ik jaarlijjks: ", self.yearly_loan_payment)
+        
         self.debt_ratio = min(self.debt / self.value_of_assets, 1)
 
         # check land size
@@ -1317,7 +1351,7 @@ class Landless_households(Agent):
         self.house_quality = house_quality
 
         self.house_price = np.random.normal(52000000, 7800000)  # ASSUMPTION!!
-        self.value_of_assets = self.house_price
+        self.value_of_assets = self.house_price 
         self.maximum_debt = self.value_of_assets
 
         self.debt = 0

@@ -41,8 +41,11 @@ class RiverDeltaModel(Model):
         district='Gò Công Đông',
         num_agents=1000,
         excel_path=correct_path,
+        debt_scenario = 1,
         scenario_contacts = "Normal",
         chance_info_meeting = 0.1,
+        scenario_facilities = "Normal",
+        scenario_migration = 1,
         salinity_shock_step=[
             25,49,145,193,241,289]
         ):
@@ -58,6 +61,9 @@ class RiverDeltaModel(Model):
         self.wage_of_ww = wage_of_ww
         self.wage_workers_required = wage_workers_required
         self.scenario_contacts = scenario_contacts
+        self.debt_scenario = debt_scenario
+        self.scenario_migration =scenario_migration
+        self.scenario_facilities = scenario_facilities
 
         # All agents attributes are created using excel data
         self.excel_data = self.get_excel_data(excel_path)
@@ -127,7 +133,8 @@ class RiverDeltaModel(Model):
         # possibility for migration
         self.chances_migration = [0.03, 0.01, 0.01,
                                   0.005, 0.01, 0.005]  # THESE ARE RANDOM
-        self.chance_leaving_household = 0.005  # ASSUMPTION
+        self.chances_migration = [probability * self.scenario_migration for probability in self.chances_migration]
+        self.chance_leaving_household = 0.005 * self.scenario_migration # ASSUMPTION
         self.increased_chance_migration_familiarity = 0.01
 
         self.possible_to_change = False
@@ -601,10 +608,10 @@ class RiverDeltaModel(Model):
             self.reset_wage_worker_payment()
 
         # Once a year, the data is collected
-        # if self.steps % 12 == 0:
-        #     # Collect data
-        #     self.datacollector.collect(self)
-        self.datacollector.collect(self)
+        if self.steps % 12 == 0:
+            # Collect data
+            self.datacollector.collect(self)
+        # self.datacollector.collect(self)
 
     def need_to_yield(self, crop_type):
         """

@@ -172,9 +172,9 @@ def calculate_farming_costs(crop, land_area):
     
 
     cost_per_ha = {
-        "Rice": np.random.normal(15900000)*multiplier,
-        "Maize": 6800000*multiplier,
-        "Coconut": 20000000*multiplier}  # All costs are per ha,  DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD ERG LUXE.
+        "Rice": np.random.normal(15900000),
+        "Maize": 6800000,
+        "Coconut": 20000000}  # All costs are per ha,  DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD ERG LUXE.
     costs = cost_per_ha[crop]
 
     total_cost = costs * land_area
@@ -291,7 +291,7 @@ def calculate_total_income(crop, yield_, total_cost_farming):
     """Calculate total income per crop, based on income in vnd per kg and crop yield, minus total costs of farming"""
     # Based on different papers, see documentation
     income_per_kg = {"Rice": 6049, "Coconut": 17500,
-                     "Maize": 6900, "Shrimp": 42838}
+                     "Maize": 6900, "Shrimp": 42838*9}
     total_income = income_per_kg[crop] * yield_ - total_cost_farming
     return total_income
 
@@ -351,8 +351,10 @@ def advice_agrocensus(salinity, education_level, current_crops):
         adviced_crop = "Rice"
     elif salinity <= 3 and "Maize" in current_crops:
         adviced_crop = "Maize"
+    elif education_level > 0.5:
+        adviced_crop = "Shrimp"
     else:
-        adviced_crop = random.choice(["Coconut", "Shrimp"])
+        adviced_crop = "Coconut"
     possible_next_crop = [adviced_crop]
     return possible_next_crop
 
@@ -450,7 +452,7 @@ def define_abilities(
                         item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Rice") * 0.5 * land_size
 
             # Financial Ability
-            possible_debt_left = maximum_loans - loan
+            possible_debt_left = maximum_loans 
             if current_crop == crop['name']:
                 # You already have the crop! Therefore, there won't be a
                 # switching price

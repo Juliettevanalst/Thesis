@@ -35,17 +35,17 @@ class RiverDeltaModel(Model):
         seed=20,
         salinity_low = False,
         salinity_high = False,
-        district='Gò Công Đông',
+        district='Gò Công Đông', 
         num_agents=1000,
         excel_path=correct_path,
         salinity_shock_step=[
-            25,33,42,49,89,92,97,8103,125,133,145,156,187,188,193,203,221,229,241,250,289]):
+            25,27,49,52,145,181,217,253,289]):
         super().__init__(seed=seed)
         self.seed = seed
         random.seed(20)
         np.random.seed(20)
 
-        # ATTRIBUTES FOR SENSITIVITY ANALYSIS
+        # ATTRIBUTES FOR SENSITIVITY ANALYSIS #Gò Công Đông is 824, An Biên = 894
         self.salinity_low = salinity_low
         self.salinity_high = salinity_high
 
@@ -83,7 +83,7 @@ class RiverDeltaModel(Model):
         
         for agent in households_which_need_a_node:
             node_id = available_nodes.pop(0)
-            salinity_level = self.G.nodes[node_id]["salinities"]  
+            salinity_level = self.G.nodes[node_id]["salinities"]  # DIT WAS EERDER SALINITIES
             agent.salinity = salinity_level
             if self.salinity_low:
                 agent.salinity = 0
@@ -227,7 +227,13 @@ class RiverDeltaModel(Model):
                     "agent_type",
                     None) == "Migrated_member_young_adult"),
             "Died agents": lambda model: self.death_agents,
-            "Child births": lambda model: self.child_births}
+            "Child births": lambda model: self.child_births,
+            "Rice agents": lambda model: sum(
+                1 for agent in model.agents if getattr(
+                    agent, 
+                    "crop_type", 
+                    None)=="Rice"),
+            "Annual crops agents": lambda model: sum(1 for agent in model.agents if getattr(agent, "crop_type", None)=="Annual crops")}
 
         agent_metrics = {
             "Crop_type": lambda a: getattr(
@@ -262,7 +268,12 @@ class RiverDeltaModel(Model):
                 "wage_workers", 
                 None) if hasattr(
                     a,
-                    "wage_workers") else None}
+                    "wage_workers") else None,
+            "Debt ratio": lambda a: getattr(
+                a,
+                "debt_ratio",
+                None) if hasattr(a, "debt_ratio") else None
+            }
                 
             
         self.datacollector = DataCollector(
@@ -515,7 +526,7 @@ class RiverDeltaModel(Model):
         self.check_shock()
 
         # It is only possible to change when 12 steps are done
-        if self.steps > 13:
+        if self.steps > 6:
             self.possible_to_change = True
         for agent in self.agents:
             if hasattr(agent, "waiting_time_"):
@@ -524,6 +535,11 @@ class RiverDeltaModel(Model):
                         agent.waiting_time_[key] -= 1
 
         self.pay_other_agents()
+
+        # OR CHANGE IT TO EVERY MONTH
+        if self.steps %12 == 0:
+            # Collect data
+            self.datacollector.collect(self)
 
         if self.steps % 12 == 0:
             self.agents.do(
@@ -595,6 +611,12 @@ class RiverDeltaModel(Model):
         #     # Collect data
         #     self.datacollector.collect(self)
         self.datacollector.collect(self)
+
+        # Reset income
+        if self.steps % 12 == 0:
+            for agent in list(self.agents):
+                if isinstance(agent, Land_household):
+                    agent.yearly_income = 0
 
     def need_to_yield(self, crop_type):
         """

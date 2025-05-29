@@ -457,7 +457,7 @@ def define_abilities(
                         item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Rice") * 0.5 * land_size
 
             # Financial Ability
-            possible_debt_left = maximum_loans - loan
+            possible_debt_left = maximum_loans 
             if current_crop == crop['name']:
                 # You already have the crop! Therefore, there won't be a
                 # switching price

@@ -606,8 +606,8 @@ class Land_household(Agent):
         self.new_crop = None
 
         self.house_price = np.random.normal(52000000)  # ASSUMPTION!!
-        self.value_of_assets = self.land_area * \
-            78000000 + self.house_price  # ASSUMPTION
+        self.value_of_assets = (self.land_area * \
+            78000000 + self.house_price ) * self.model.debt_scenario # ASSUMPTION
         self.maximum_debt = self.value_of_assets
         self.debt = 0
         self.yearly_loan_payment = 0
@@ -647,10 +647,13 @@ class Land_household(Agent):
         self.average_hh_experiences = (self.experience + self.machines) / 2
 
         # For migration, did the household see an advertisement about the city?
-        self.saw_advertisement = 0
+        self.saw_advertisement = 1 if self.random.random() > 0.5 else 0 # ASSUMPTION
         # Does the household have contacts in the city
         self.contacts_in_city = 0
-        self.facilities_in_neighbourhood = 1
+        if self.model.scenario_facilities == "Low":
+            self.facilities_in_neighbourhood = 0
+        else:
+            self.facilities_in_neighbourhood = 1
 
         self.time_since_last_savings_check = 0
 
@@ -733,7 +736,12 @@ class Land_household(Agent):
             self.contacts_in_city = 1
 
         # Check facilities in neighborhood
-        self.facilities_in_neighbourhood = self.model.current_service_workers / \
+        if self.model.scenario_facilities == "Low":
+            self.facilities_in_neighbourhood = 0
+        elif self.model.scenario_facilities == "High":
+            self.facilities_in_neighbourhood = 1
+        else:
+            self.facilities_in_neighbourhood = self.model.current_service_workers / \
             self.model.start_service_workers
 
     def harvest(self, crop):
@@ -912,40 +920,46 @@ class Land_household(Agent):
 
         # If there are no savings left, you will start migrating
         if self.savings < 0 or self.farming_time_left == 0:
-            
-            # Decide who will get your land
-            # If you have shrimps, no one will want your land, since there are antibiotics in it and it is useless
-            if "Shrimp" not in self.crops_and_land.keys():
-                transfer_land(self.land_area, self.node_id,
-                              self.model, self.crops_and_land)
+            if self.savings < 0 and self.maximum_debt > self.expenditure: # IF YOU CAN GET A LOAN FOR A YEAR, YOU WILL NOT MIGRATE
+                self.debt += self.expenditure
+                self.maximum_debt -= self.expenditure
+                self.yearly_loan_payment = annual_loan_payment(
+                            self.debt, self.model.interest_rate_loans)
+            else:
 
-            # We are migrating
-            migrated_hh = Migrated_household(
-                self.model,
-                agent_type="Migrated",
-                household_members=self.household_members)
+                # Decide who will get your land
+                # If you have shrimps, no one will want your land, since there are antibiotics in it and it is useless
+                if "Shrimp" not in self.crops_and_land.keys():
+                    transfer_land(self.land_area, self.node_id,
+                                self.model, self.crops_and_land)
 
-            # Add migrated household to the model
-            self.model.agents.add(migrated_hh)
-            if migrated_hh not in self.model.agents:
-                print("het aanmaken van de migrated household ging mis")
+                # We are migrating
+                migrated_hh = Migrated_household(
+                    self.model,
+                    agent_type="Migrated",
+                    household_members=self.household_members)
 
-            # Create household members
-            for household_members in self.household_members:
-                migrated_member = Migrated_hh_member(
-                    self.model, agent_type="Migrated_member", household=migrated_hh)
-                # Add migrated household members to the model
-                self.model.agents.add(migrated_member)
-                if migrated_member not in self.model.agents:
-                    print("het aanmaken van de migrated member ging mis")
-                # Delete household members from the model
-                self.model.agents.discard(household_members)
-                if household_members in self.model.agents:
-                    print("het verwijderen van de huishoud member ging mis")
-            # Delete the migrated household from the model
-            self.model.agents.discard(self)
-            if self in self.model.agents:
-                print("het verwijderen van het huishouden zelf ging mis")
+                # Add migrated household to the model
+                self.model.agents.add(migrated_hh)
+                if migrated_hh not in self.model.agents:
+                    print("het aanmaken van de migrated household ging mis")
+
+                # Create household members
+                for household_members in self.household_members:
+                    migrated_member = Migrated_hh_member(
+                        self.model, agent_type="Migrated_member", household=migrated_hh)
+                    # Add migrated household members to the model
+                    self.model.agents.add(migrated_member)
+                    if migrated_member not in self.model.agents:
+                        print("het aanmaken van de migrated member ging mis")
+                    # Delete household members from the model
+                    self.model.agents.discard(household_members)
+                    if household_members in self.model.agents:
+                        print("het verwijderen van de huishoud member ging mis")
+                # Delete the migrated household from the model
+                self.model.agents.discard(self)
+                if self in self.model.agents:
+                    print("het verwijderen van het huishouden zelf ging mis")
 
         if  self.monthly_hh_income * 12 < self.expenditure:
             
@@ -1322,7 +1336,7 @@ class Landless_households(Agent):
         self.house_quality = house_quality
 
         self.house_price = np.random.normal(52000000, 7800000)  # ASSUMPTION!!
-        self.value_of_assets = self.house_price
+        self.value_of_assets = self.house_price * self.model.debt_scenario
         self.maximum_debt = self.value_of_assets
 
         self.debt = 0
@@ -1336,9 +1350,14 @@ class Landless_households(Agent):
                 self.expenditure += 10030000
 
         self.contacts_in_city = 0
-        self.facilities_in_neighbourhood = 1
+        if self.model.scenario_facilities == "Low":
+            self.facilities_in_neighbourhood = 0
+        else:
+            self.facilities_in_neighbourhood = 1
+        
+        
         self.migrating = False
-        self.saw_advertisement = 0
+        self.saw_advertisement = 1 if self.random.random() > 0.5 else 0
 
     def yearly_activities(self):
         """
@@ -1398,11 +1417,18 @@ class Landless_households(Agent):
 
         if self.model.scenario_contacts == "Low":
             self.contacts_in_city = 0
+            self.saw_advertisement = 0
         if self.model.scenario_contacts == "High":
-            self.contacts_in_city = 0
+            self.contacts_in_city = 1
+            self.saw_advertisement = 1
 
         # Check facilities in neighborhood
-        self.facilities_in_neighbourhood = self.model.current_service_workers / \
+        if self.model.scenario_facilities == "Low":
+            self.facilities_in_neighbourhood = 0
+        elif self.model.scenario_facilities == "High":
+            self.facilities_in_neighbourhood = 1
+        else:
+            self.facilities_in_neighbourhood = self.model.current_service_workers / \
             self.model.start_service_workers
 
     def check_income(self, time_since_income):
