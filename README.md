@@ -6,7 +6,7 @@ To run the model you need to run model_run3.ipynb.
 
 The sensitivity analysis can be found in the model_versio3 map as well, in the "Sensitivity Analysis" map. 
 
-In the Vensim map, the Vensiim model can be found. 
+The Vensim model can be found in the main map. 
 
 Link to overleaf: https://www.overleaf.com/read/zfmsnvvgmpdt#0144d9
 
