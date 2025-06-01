@@ -850,19 +850,6 @@ class Land_household(Agent):
             total_wage_income += agent.income
         self.total_hh_income = total_income_all_crops + total_wage_income
 
-        # # See in which time frame this is earned
-        # if "Rice" in self.crops_and_land.keys():
-        #     time_frame = 3
-        # elif "Maize" in self.crops_and_land.keys() or "Shrimp" in self.crops_and_land.keys():
-        #     time_frame = 6
-        # else:
-        #     time_frame = 2  # you do coconut
-
-        # Calculate expenditure of the past timeframe
-        # expenditure = self.expenditure / 12 * time_frame
-        # self.monthly_hh_income = self.total_hh_income / time_frame
-        # self.savings += self.total_hh_income - expenditure
-        # print(self.model.steps)
         expenditure = self.expenditure / 12 * self.time_since_last_savings_check
         self.monthly_hh_income = self.total_hh_income / self.time_since_last_savings_check
         self.savings += self.total_hh_income - expenditure

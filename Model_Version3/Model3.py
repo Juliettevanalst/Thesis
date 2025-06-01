@@ -27,7 +27,6 @@ path = os.getcwd()
 # Import data
 correct_path = path + "\\Data\\model_input_data_824.xlsx"
 
-# SEnsitivity analysis
 
 class RiverDeltaModel(Model):
     def __init__(
@@ -45,7 +44,7 @@ class RiverDeltaModel(Model):
         random.seed(20)
         np.random.seed(20)
 
-        # ATTRIBUTES FOR SENSITIVITY ANALYSIS #Gò Công Đông is 824, An Biên = 894
+        # attributes for sensitivity analysis (the rest of the analysis is shown in the sensitivity map)
         self.salinity_low = salinity_low
         self.salinity_high = salinity_high
 
@@ -83,7 +82,7 @@ class RiverDeltaModel(Model):
         
         for agent in households_which_need_a_node:
             node_id = available_nodes.pop(0)
-            salinity_level = self.G.nodes[node_id]["salinities"]  # DIT WAS EERDER SALINITIES
+            salinity_level = self.G.nodes[node_id]["salinities"]  
             agent.salinity = salinity_level
             if self.salinity_low:
                 agent.salinity = 0
@@ -116,8 +115,8 @@ class RiverDeltaModel(Model):
 
         # possibility for migration
         self.chances_migration = [0.03, 0.01, 0.01,
-                                  0.005, 0.01, 0.005]  # THESE ARE RANDOM
-        self.chance_leaving_household = 0.005  # ASSUMPTION
+                                  0.005, 0.01, 0.005]  
+        self.chance_leaving_household = 0.005  # Assumption
         self.increased_chance_migration_familiarity = 0.01
 
         self.possible_to_change = False
@@ -128,7 +127,7 @@ class RiverDeltaModel(Model):
 
         # Distribution man_days during preparation time and yield time
         self.man_days_prep = 1 / 3
-        # ASSUMPTION, average / day is 200000 based on Pedroso et al., 2017
+        # Assumption, average / day is 200000 based on Pedroso et al., 2017
         self.payment_low_skilled = 190000
         self.payment_high_skilled = 210000
         self.distribution_high_low_skilled = 0
@@ -171,35 +170,7 @@ class RiverDeltaModel(Model):
         # Number of work days per month
         self.work_days_per_month = 20
 
-        # Set up datacollector
-        # model_metrics = {
-        #     "Average_Livelihood": lambda model: mean(
-        #         [
-        #             agent.livelihood['Average'] for agent in self.agents if hasattr(
-        #                 agent,
-        #                 'livelihood')]) if self.agents else 0,
-        #     "Num_household_members": lambda model: sum(
-        #         1 for agent in model.agents if getattr(
-        #             agent,
-        #             "agent_type",
-        #             None) == "Household_member"),
-        #     "Migrated_households": lambda model: sum(
-        #         1 for agent in model.agents if getattr(
-        #             agent,
-        #             "agent_type",
-        #             None) == "Migrated"),
-        #     "Migrated_members": lambda model: sum(
-        #         1 for agent in model.agents if getattr(
-        #             agent,
-        #             "agent_type",
-        #             None) == "Migrated_member"),
-        #     "Migrated_individuals": lambda model: sum(
-        #         1 for agent in model.agents if getattr(
-        #             agent,
-        #             "agent_type",
-        #             None) == "Migrated_member_young_adult"),
-        #     "Died agents": lambda model: self.death_agents,
-        #     "Child births": lambda model: self.child_births}
+       
         model_metrics = model_metrics = {
             "Average_Livelihood": lambda model: mean(
                 [
@@ -679,8 +650,7 @@ class RiverDeltaModel(Model):
         Function for all farmers who have just harvested. 
         The land households update their savings 
         """
-        # alle farm household agents die nu yield hebben gehad checken hun
-        # savings en kijken of iets moet veranderen!!
+        # all farm household agents that harvested check their savings to look if they need to change something.
         for agent in list(self.agents):
             if isinstance(agent, Land_household):
                 if agent.wage_worker_payment == 1:
@@ -778,7 +748,6 @@ class RiverDeltaModel(Model):
             if self.time_since_shock == 1:
                 for agent in self.agents:
                     if hasattr(agent, "salinity"):
-                        # ASSUMPTION, NEED TO DETERMINE HOW INTENSE A SHOCK IS
                         agent.salinity = agent.salinity / \
                             random.uniform(1.5, 2)
 
@@ -1208,11 +1177,11 @@ class RiverDeltaModel(Model):
         """
         
         districts_polygon.set_crs(salinity_data.crs, inplace = True)
-        # Stap 1: genereer voldoende punten
+        # generate random points
         candidate_points = districts_polygon.sample_points(size=len(land_agents)*50, seed=seed)
         point_geoms = list(candidate_points.geometry[0].geoms)
 
-        # Stap 2: bepaal salinity per punt
+        # Get salinity per point
         point_data = []
         for pt in point_geoms:
             salinity_match = salinity_data[salinity_data.contains(pt)]
@@ -1222,11 +1191,11 @@ class RiverDeltaModel(Model):
             else:
                 print("geen data gevonden!")
 
-        # Stap 3: sorteer punten in lage (<4) en hoge (>=4) salinity
+        # distinguish between low and high salinity points
         low_salinity_points = [(pt, sal) for pt, sal in point_data if sal < 4]
         high_salinity_points = [(pt, sal) for pt, sal in point_data if sal >= 4]
 
-        # Stap 4: wijs punten toe aan agents obv crop-type
+        # Determine high/low salinity is prefered based on crop type
         coords = []
         salinities = []
 
@@ -1248,16 +1217,15 @@ class RiverDeltaModel(Model):
             elif sal_pref == "high" and high_salinity_points:
                 pt, sal = high_salinity_points.pop(np.random.randint(len(high_salinity_points)))
             else:
-                # fallback als er geen geschikte punten meer zijn
+                # Fallback if there are no points available
                 pt, sal = point_data.pop(np.random.randint(len(point_data)))
-                print(f"Waarschuwing: fallback gebruikt voor {crop_type}")
 
             coords.append((pt.x, pt.y))
             salinities.append(sal)
 
         coords = np.array(coords)
 
-        # Stap 5: maak het netwerk
+        # Create network
         tree = cKDTree(coords)
         k = 4
         distances, indices = tree.query(coords, k=k)
@@ -1275,8 +1243,7 @@ class RiverDeltaModel(Model):
 
 
 
-
-
+        # If you not want to place the agents on the map based on salinity, use the lines below
 
         # # Define number of points
         # points = districts_polygon.sample_points(size=land_agents, seed=seed)

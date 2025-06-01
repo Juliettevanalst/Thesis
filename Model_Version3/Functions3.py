@@ -602,7 +602,7 @@ def best_MOTA(MOTA_scores, current_crop):
         most_suitable_crop.remove(current_crop)
     most_suitable_crop = np.random.choice(most_suitable_crop)
     # If the highest MOTA score is below 0.2 (ASSUMPTION), the agent will
-    # change nothing (realistic value for 0.4 should be determined later!!)
+    # change nothing 
     change = most_suitable_crop if highest_score > 0.2 else None
     return change
 
@@ -693,7 +693,6 @@ def transfer_land(land_size, node_id, model, crops_and_land):
         if best_neighbor.savings > land_costs:
             best_neighbor.land_area += land_size
             best_neighbor.savings -= land_costs
-            print("neighbor is rijk en neemt land over")
 
             # Check in which category the agent now falls
             if 0 <= land_size <= 0.5:
@@ -744,5 +743,5 @@ def calculate_migration_ww(
     elif facilities_in_neighbourhood < 0.5:
         chance = chances[4]
     else:
-        chance = chances[5]  # THESE ARE ALL RANDOM!!! SENSITIVITY IS REQUIRED
+        chance = chances[5]  
     return chance

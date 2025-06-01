@@ -654,7 +654,7 @@ class Land_household(Agent):
 
         self.time_since_last_savings_check = 0
 
-        # self.conservative_level = self.random.random()
+        
 
     def step(self):
         pass
@@ -772,17 +772,6 @@ class Land_household(Agent):
 
             # Do you want to use antibiotics? 
             if self.disease == 1:
-                # THIS IS AN ASSUMPTION, IF YOU ARE SMART YOU WILL NOT USE
-                # ANTIBIOTICS
-                # if (self.livelihood['Human'] +
-                #         self.livelihood['Financial']) / 2 >= 0.5:
-                #     # Use no antibiotics
-                #     self.use_antibiotics = 0
-                #     # 37/140 = 0.26, only 26% of your fish survives
-                #     self.percentage_yield_["Shrimp"] = 0.26
-                # else:
-                #     self.use_antibiotics = 1
-                #     self.farming_time_left -= 1
 
                 if self.savings > self.expenditure / 2:
                     # You have enough  money and do not need the yield. You will not use antibiotics
@@ -823,14 +812,7 @@ class Land_household(Agent):
         # calculate total income based on yield and costs
         self.total_income_[crop] = calculate_total_income(
             crop, self.yield_[crop], self.total_cost_farming_[crop])
-        # if crop == "Rice":
-        #     self.yearly_income = self.total_income_[crop] * 3
-        # elif crop == "Shrimp" or crop == "Maize":
-        #     self.yearly_income = self.total_income_[crop] * 2
-        # else:
-        #     self.yearly_income = self.total_income_[crop] * 6
-
-        # Add this income to yearly income:
+      
         
         
 
@@ -854,20 +836,6 @@ class Land_household(Agent):
             total_wage_income += agent.income
         self.total_hh_income = total_income_all_crops + total_wage_income
 
-        # # See in which time frame this is earned
-        # if "Rice" in self.crops_and_land.keys():
-        #     time_frame = 3
-        # elif "Maize" in self.crops_and_land.keys() or "Shrimp" in self.crops_and_land.keys():
-        #     time_frame = 6
-        # else:
-        #     time_frame = 2  # you do coconut
-
-        # Calculate expenditure of the past timeframe
-        # expenditure = self.expenditure / 12 * time_frame
-        # self.monthly_hh_income = self.total_hh_income / time_frame
-        # self.savings += self.total_hh_income - expenditure
-        # print(self.model.steps)
-        # 
         expenditure = self.expenditure / 12 * self.time_since_last_savings_check
         # expenditure = self.total_hh_income
         self.monthly_hh_income = self.total_hh_income / self.time_since_last_savings_check
@@ -927,10 +895,6 @@ class Land_household(Agent):
 
         # If there are no savings left, you will start migrating
         if self.savings < 0 or self.farming_time_left == 0:
-            if self.farming_time_left ==0:
-                print("ik ben gestopt omdat ik ziekte had")
-            elif self.savings < 0:
-                print("ik ben gestopt omdat ik geen geld had")
             if self.savings < 0 and self.maximum_debt > self.expenditure: # IF YOU CAN GET A LOAN FOR A YEAR, YOU WILL NOT MIGRATE
                 self.debt += self.expenditure
                 self.maximum_debt -= self.expenditure
@@ -972,8 +936,8 @@ class Land_household(Agent):
                 if self in self.model.agents:
                     print("het verwijderen van het huishouden zelf ging mis")
 
-        #If your income is lower than your expenditure, something needs to change. however, some households are conservative, and therefore there is a conservative level. And, it is checked if there are enough savings
-        if self.monthly_hh_income * 12 < self.expenditure: # and self.random.random() > self.conservative_level:
+        #If your income is lower than your expenditure, something needs to change. 
+        if self.monthly_hh_income * 12 < self.expenditure: 
             
             # We need to change!!
 
@@ -1100,10 +1064,9 @@ class Land_household(Agent):
                 elif education == "primary_education":
                     education_levels.append(0.5)
                 else:
-                    # SENSITIVITY ANALYSIS IS REQUIRED FOR THE 0, 0.5 AND 1
                     education_levels.append(1)
         if len(education_levels) == 0:
-            education_levels = [0]  # DE DEATH RATE STAAT TE HOOG
+            education_levels = [0]  
 
         self.average_hh_education = statistics.mean(education_levels)
 
@@ -1350,12 +1313,12 @@ class Landless_households(Agent):
         self.land_area = land_area
         self.house_quality = house_quality
 
-        self.house_price = np.random.normal(52000000, 7800000)  # ASSUMPTION!!
+        self.house_price = np.random.normal(52000000, 7800000)  # ASSUMPTION
         self.value_of_assets = self.house_price 
         self.maximum_debt = self.value_of_assets
 
         self.debt = 0
-        self.savings = 1000000  # ASSUMPTION!!
+        self.savings = 1000000  # ASSUMPTION
 
         self.expenditure = 0
         for agent in household_members:
@@ -1449,10 +1412,7 @@ class Landless_households(Agent):
 
         expenditure = self.expenditure / 12 * time_frame
         self.monthly_hh_income = self.total_hh_income / time_frame
-        # print("expenditure is ", expenditure, " total household income is ", self.total_hh_income)
-        # print("savings voor het inkomen is: ", self.savings)
         self.savings += self.total_hh_income - expenditure
-        # print("savings na het inkomen zijn: ", self.savings)
 
         if self.monthly_hh_income < expenditure:
             self.income_too_low = 1
