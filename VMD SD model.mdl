@@ -1,0 +1,1749 @@
+{UTF-8}
+Shrimp farmer fails=
+	DELAY FIXED(MAX(Expected small shrimp farmers to fail, 0.0001), 5, 0.0001)
+	~	people
+	~	DELAY3(MAX((1-Success probability)/5*Small shrimp farmers, 1e-05), 5)
+		
+		delay fixed
+	|
+
+Expected small shrimp farmers to fail=
+	Small shrimp farmers*(1-Success probability)/5
+	~	
+	~		|
+
+Commercial yield cost changes= DELAY FIXED (
+	Rice yield loss ratio commercial, 1 , 0)
+	~	dml
+	~		|
+
+Savings commercial extensive shrimp farm without disease= INTEG (
+	Income commercial extensive without disease-Commercial without disease invests-Costs commercial extensive without disease\
+		,
+		2e+07)
+	~	vnd
+	~		|
+
+Equipment increase small rice farmer=
+	Lookup for equipment level(Small farmers investments)
+	~	dml
+	~		|
+
+Equipment level= INTEG (
+	MIN(Shrimp farmers invest in equipment, 1),
+		0)
+	~	dml
+	~		|
+
+Equipment level commercial rice farmer= INTEG (
+	MIN(Equipment increase commercial rice,1),
+		0)
+	~	dml
+	~		|
+
+Equipment level commercial shrimp farms= INTEG (
+	MIN(Shrimp farms investing in equipment, 1),
+		0)
+	~	
+	~		|
+
+Commercial intensive without disease invests=
+	IF THEN ELSE(Savings commerical intensive shrimp farm without disease>=1.5e+08, 1.2e+08\
+		 , 0)
+	~	
+	~	Assumption: Those need to pay twice as much as the extensive shrimp farms.
+	|
+
+Equipment level small rice farmer= INTEG (
+	MIN(Equipment increase small rice farmer, 1),
+		0)
+	~	dml
+	~		|
+
+Savings small shrimp farm without disease= INTEG (
+	Income small shrimp farm without disease-Costs small shrimp farm without disease-Invest in equipment\
+		-Pay off debt shrimp farms,
+		1e+07)
+	~	vnd
+	~		|
+
+extensive yield with disease=
+	37/140 * (1+Equipment level commercial shrimp farms)
+	~	
+	~		|
+
+Shrimp farmers invest in equipment=
+	Lookup investment shrimp farmers in equipment(Invest in equipment)
+	~	dml
+	~		|
+
+Shrimp farms investing in equipment=
+	(Lookup investment shrimp farmers in equipment(Commercial without disease invests) +\
+		 Lookup investment shrimp farmers in equipment(Commercial intensive without disease invests\
+		)) / 2
+	~	
+	~		|
+
+Disease reduction factor intensive shrimp farming=
+	1046/3600* (1+Equipment level commercial shrimp farms)
+	~	kg
+	~	Based on Joffre et al., 2015
+	|
+
+Skill level small rice farmers=
+	MIN((((1-Training level small rice farmers)+(1-Equipment level small rice farmer))/2\
+		), 1)
+	~	dml
+	~		|
+
+Lookup water quality(
+	[(0,0)-(10,10)],(0,0.8),(1,1),(2,1),(10,1))
+	~	dml
+	~		|
+
+Water quality commercial=
+	Lookup water quality(Equipment level commercial shrimp farms)
+	~	dml
+	~		|
+
+Water quality intensive shrimp farm=
+	Water quality intensive shrimp farm lookup(Equipment level commercial shrimp farms)
+	~	dml
+	~		|
+
+"Commercial with disease extensive farm yield / hh"=
+	extensive yield with disease*"Diseaseless commercial extensive shrimp yield / hh"
+	~	kg
+	~		|
+
+"Rice yield/commercial rice farm"=
+	Land size commercial rice farms*(1-Rice yield loss ratio commercial)*Rice yield per ha
+	~	kg/people
+	~		|
+
+Commercial without disease invests=
+	IF THEN ELSE(Savings commercial extensive shrimp farm without disease>=7.5e+07, 6e+07\
+		 , 0)
+	~	vnd
+	~		|
+
+yield cost changes= DELAY FIXED (
+	Rice yield loss ratio small, 1 , 0)
+	~	dml
+	~		|
+
+Disease reduction factor=
+	37/140 * (1+Equipment level)
+	~	dml
+	~	Based on Joffre et al., 2015
+	|
+
+Success probability=
+	(Education level + Water quality) / 2
+	~	dml
+	~		|
+
+Invest in equipment=
+	IF THEN ELSE(Savings small shrimp farm without disease>=3e+07, 2e+07 , 0 )
+	~	vnd
+	~		|
+
+Success probability intensive=
+	(Water quality intensive shrimp farm+Education level commercial farmers)/2
+	~	dml
+	~		|
+
+Costs commercial rice farmer=
+	(Rice costs per ha+Wage worker costs)*Land size commercial rice farms*(1+Commercial yield cost changes\
+		)
+	~	vnd
+	~		|
+
+Costs small rice farmers=
+	Rice costs per ha*Land size small rice farmers* (1+yield cost changes)
+	~	vnd/people
+	~		|
+
+Rice yield per ha=
+	7000
+	~	kg/ha
+	~	Based on FAO data of 2014 --> https://www.fao.org/faostat/en/#data/QCL
+	|
+
+Savings small rice farmers= INTEG (
+	Income small rice farmers-Costs small rice farmers-Small farmers investments,
+		1e+07)
+	~	vnd/people
+	~		|
+
+"Rice yield/small rice household"=
+	Land size small rice farmers*Rice yield per ha*(1-Rice yield loss ratio small)
+	~	kg/people
+	~		|
+
+Disease intensive shrimp farmers=
+	Commercial shrimp farm*probability intensive farm*(1-Success probability intensive)
+	~	dml
+	~		|
+
+Lookup investment shrimp farmers in equipment(
+	[(0,0)-(10,10)],(0,0),(3e+07,0.2),(5e+07,0.4),(1e+08,0.5),(1e+09,0.7))
+	~	dml
+	~	normal = [(0,0)-(10,10)],(0,0),(3e+07,0.2),(5e+07,0.4),(1e+08,0.5),(1e+09,0.7)
+		low = \
+		[(0,0)-(10,10)],(0,0),(1.5e+07,0.2),(2.5e+07,0.4),(5e+07,0.5),(5e+08,0.7)
+	|
+
+Success probability commercial=
+	(Education level commercial farmers + Water quality commercial)/2
+	~	dml
+	~		|
+
+Training level small rice farmers=
+	0.3
+	~	dml
+	~		|
+
+Savings commerical intensive shrimp farm without disease= INTEG (
+	Income commercial intensive without disease-Commercial intensive without disease invests\
+		-Cost commercial intensive without disease,
+		2e+07)
+	~	vnd
+	~		|
+
+Water quality=
+	Lookup water quality(Equipment level)
+	~	dml
+	~		|
+
+Income commercial rice farmers=
+	World market rice price*"Rice yield/commercial rice farm"
+	~	vnd/people
+	~		|
+
+Small farmers investments=
+	IF THEN ELSE(Savings small rice farmers>=5e+07, 4e+07 , 0 )
+	~	vnd/people
+	~		|
+
+Income small rice farmers=
+	World market rice price*"Rice yield/small rice household"
+	~	vnd/people
+	~		|
+
+Water quality intensive shrimp farm lookup(
+	[(0,0)-(10,10)],(0,0.5),(1,1),(4,1))
+	~	dml
+	~		|
+
+"Agri wage (landless)"= INTEG (
+	Commercial rice becomes landlessagri wage+Commercial shrimp farm becomes agri wage+Failed shrimp becomes agri wage\
+		+Rice becomes agri wage,
+		0)
+	~	people
+	~		|
+
+Average commercial extensive shrimp farm savings= INTEG (
+	((Profits commercial extensive with disease*Disease extensive shrimp farmers)+(Diseaseless extensive shrimp farmers\
+		*Profits commercial extensive without disease))/(Disease extensive shrimp farmers+Diseaseless extensive shrimp farmers\
+		),
+		1e+07)
+	~	
+	~		|
+
+Average savings intensive commercial shrimp farm= INTEG (
+	((profits commercial intensive with disease*Disease intensive shrimp farmers)+(Diseaseless intensive shrimp farmers\
+		*profits commercial intensive without disease))/(Disease intensive shrimp farmers+Diseaseless intensive shrimp farmers\
+		),
+		1e+07)
+	~	vnd/people
+	~		|
+
+Average small shrimp farm savings= INTEG (
+	((Profits small shrimp with disease*Disease shrimp farm)+(Diseaseless shrimp farm*profits small shrimp without disease\
+		))/Small shrimp farmers,
+		1e+07)
+	~	vnd/people
+	~		|
+
+Chance commercial rice stops farming=
+	Lookup chance commercial rice stops farming(Rice yield loss ratio commercial)
+	~	dml
+	~		|
+
+Chance small rice stops farming=
+	Lookup chance small rice stops farming(Rice yield loss ratio small)
+	~	dml
+	~		|
+
+"Commercial with disease intensive farm yield / hh"=
+	Disease reduction factor intensive shrimp farming*"Diseaseless commercial intensive shrimp yield / hh"
+	~	kg
+	~		|
+
+Commercial rice becomes high skilled non farm=
+	Chance commercial rice stops farming*Probability commercial rice become high skilled non farm\
+		*Commercial rice farm
+	~	people
+	~		|
+
+Commercial rice becomes landlessagri wage=
+	Commercial rice farm*Chance commercial rice stops farming*Probability commercial rise become landless agri wage
+	~	people
+	~		|
+
+Commercial rice farm= INTEG (
+	Commercial shrimp goes back to rice+Small rice grows to commercial rice-Commercial rice becomes high skilled non farm\
+		-Commercial rice becomes landlessagri wage-Rice becomes commercial shrimp farm,
+		41850)
+	~	people
+	~	Based on district 824, with 45% medium/large farms, and 93% in rice
+	|
+
+Commercial shrimp farm= INTEG (
+	Rice becomes commercial shrimp farm-Commercial shrimp farm fails,
+		3150)
+	~	people
+	~	Based on district 824, with 45% medium/large farms, and 7% in shrimp
+	|
+
+Commercial shrimp farm becomes agri wage=
+	Probability commercial shrimp starts agri wage*Commercial shrimp farm failed
+	~	people
+	~		|
+
+Commercial shrimp farm failed= INTEG (
+	Commercial shrimp farm fails-Commercial shrimp farm becomes agri wage-Commercial shrimp goes back to rice\
+		-Commercial shrimp starts high skilled non farm,
+		0)
+	~	people
+	~		|
+
+Commercial shrimp farm fails=
+	DELAY FIXED(MAX(Expected commercial shrimp farm failures, 0.0001), 5, 0.0001 )
+	~	people
+	~	MIN(DELAY3(MAX(Expected commercial shrimp farm failures, 0.0001), 5), \
+		Commercial shrimp farm)
+	|
+
+Commercial shrimp farm land size=
+	2
+	~	ha
+	~		|
+
+Commercial shrimp goes back to rice=
+	Probability commercial shrimp back to rice*Commercial shrimp farm failed
+	~	people
+	~		|
+
+Commercial shrimp starts high skilled non farm=
+	Probability commercial shrimp starts high skilled non farm* Commercial shrimp farm failed
+	~	people
+	~		|
+
+Cost commercial intensive with disease=
+	Commercial shrimp farm land size*Intensive shrimp costs per ha
+	~	vnd
+	~		|
+
+Cost commercial intensive without disease=
+	Intensive shrimp costs per ha*Commercial shrimp farm land size
+	~	vnd
+	~		|
+
+Costs commercial extensive with disease=
+	Extensive costs per ha*Commercial shrimp farm land size
+	~	vnd
+	~		|
+
+Costs commercial extensive without disease=
+	Commercial shrimp farm land size*Extensive costs per ha
+	~	vnd
+	~		|
+
+Costs small shrimp farm with disease=
+	Extensive costs per ha*Small shrimp farm land size
+	~	vnd
+	~		|
+
+Costs small shrimp farm without disease=
+	Extensive costs per ha*Small shrimp farm land size
+	~	vnd
+	~		|
+
+Disease extensive shrimp farmers=
+	(1-Success probability commercial)*Commercial shrimp farm*(1-probability intensive farm\
+		)
+	~	dml
+	~		|
+
+Disease shrimp farm=
+	Small shrimp farmers*(1-Success probability)
+	~	dml
+	~		|
+
+"Diseaseless commercial extensive shrimp yield / hh"=
+	"PERFECT extensive shrimp farm yield / hh"*Commercial shrimp farm land size
+	~	kg
+	~		|
+
+"Diseaseless commercial intensive shrimp yield / hh"=
+	Commercial shrimp farm land size*"PERFECT intensive shrimp yield / ha"
+	~	kg
+	~		|
+
+Diseaseless extensive shrimp farmers=
+	Commercial shrimp farm*Success probability commercial*(1-probability intensive farm)
+	~	dml
+	~		|
+
+Diseaseless intensive shrimp farmers=
+	Commercial shrimp farm*probability intensive farm*Success probability intensive
+	~	dml
+	~		|
+
+Diseaseless shrimp farm=
+	Small shrimp farmers*Success probability
+	~	dml
+	~		|
+
+"Diseaseless small shrimp yield / hh"=
+	"PERFECT extensive shrimp farm yield / hh"*Small shrimp farm land size
+	~	kg
+	~		|
+
+Education level=
+	0.3
+	~	dml
+	~		|
+
+Education level commercial farmers=
+	0.3
+	~	dml
+	~		|
+
+Equipment increase commercial rice=
+	Lookup for equipment level(Investment in machines)
+	~	dml
+	~		|
+
+Expected commercial shrimp farm failures=
+	(Commercial shrimp farm*probability intensive farm*(1-Success probability intensive)\
+		/5 + Commercial shrimp farm*(1-probability intensive farm)*(1-Success probability commercial\
+		)/5)
+	~	people
+	~		|
+
+Extensive costs per ha=
+	3.9e+06
+	~	vnd/ha
+	~		|
+
+Failed shrimp becomes agri wage=
+	Failed small shrimp farmers*(1-Probability small shrimp farmers become low skilled non agri\
+		-Probability small shrimp starting rice farm)
+	~	people
+	~		|
+
+Failed shrimp becomes low skilled on agri=
+	Probability small shrimp farmers become low skilled non agri*Failed small shrimp farmers
+	~	people
+	~		|
+
+Failed small shrimp farmers= INTEG (
+	Shrimp farmer fails-Failed shrimp becomes agri wage-Failed shrimp becomes low skilled on agri\
+		-Small shrimp farm goes back to rice,
+		0)
+	~	people
+	~		|
+
+High skilled non farm= INTEG (
+	Commercial rice becomes high skilled non farm+Commercial shrimp starts high skilled non farm\
+		+Rice becomes high skilled non farm,
+		0)
+	~	people
+	~		|
+
+Income commercial extensive with disease=
+	"Commercial with disease extensive farm yield / hh"*World market price shrimp
+	~	vnd
+	~		|
+
+Income commercial extensive without disease=
+	World market price shrimp*"Diseaseless commercial extensive shrimp yield / hh"
+	~	vnd
+	~		|
+
+Income commercial intensive without disease=
+	"Diseaseless commercial intensive shrimp yield / hh"*World market price shrimp
+	~	vnd
+	~		|
+
+Income commerical intensive with disease=
+	World market price shrimp*"Commercial with disease intensive farm yield / hh"
+	~	vnd
+	~		|
+
+Income small shrimp farm with disease=
+	"Small disease shrimp farm yield / hh"*World market price shrimp
+	~	vnd
+	~		|
+
+Income small shrimp farm without disease=
+	"Diseaseless small shrimp yield / hh"*World market price shrimp
+	~	vnd
+	~		|
+
+Intensive shrimp costs per ha=
+	1.5e+08
+	~	vnd/ha
+	~	Based on Joffre et al., 2015
+	|
+
+Investment in machines=
+	IF THEN ELSE(Savings commercial rice farmers>=7e+07, 5e+07 , 0 )
+	~	vnd/people
+	~		|
+
+Land size commercial rice farms=
+	2
+	~	ha
+	~		|
+
+Land size small rice farmers=
+	0.5
+	~	ha
+	~		|
+
+Lookup chance commercial rice stops farming(
+	[(0,0)-(10,10)],(0,0),(0.05,0),(0.17,0.4),(0.55,1),(1,1))
+	~	dml
+	~	normal = [(0,0)-(10,10)],(0,0),(0.05,0),(0.17,0.4),(0.55,1),(1,1)
+		low = [(0,0)-(10,10)],(0,0),(0.05,0),(0.17,0.3),(0.55,0.5),(1,1)
+		low =
+	|
+
+Lookup chance small rice stops farming(
+	[(0,0)-(10,10)],(0,0),(0.11,0),(0.25,0.3),(0.75,0.8),(1,1),(2,1))
+	~	dml
+	~	normal = [(0,0)-(10,10)],(0,0),(0.11,0),(0.25,0.3),(0.75,0.8),(1,1),(2,1)
+		
+		high = [(0,0)-(10,10)],(0,0),(0.11,0.05),(0.25,0.6),(0.75,1),(1,1),(2,1)
+		low = [(0,0)-(10,10)],(0,0),(0.11,0),(0.25,0.15),(0.75,0.4),(1,0.5),(2,1)
+	|
+
+Lookup for equipment level(
+	[(0,0)-(10,10)],(0,0),(2e+07,0.3),(3e+07,0.4),(5e+07,0.45),(1e+08,0.5))
+	~	
+	~	[(0,0)-(10,10)],(0,0),(2e+07,0.3),(3e+07,0.4),(5e+07,0.45),(1e+08,0.5) = normal
+		low = \
+		[(0,0)-(10,10)],(0,0),(1e+07,0.3),(1.5e+07,0.4),(2.5e+07,0.45),(5e+07,0.5)
+	|
+
+Lookup salinity(
+	[(2014,0)-(2051,10)],(2014,3),(2015,3),(2016,5),(2017,3),(2019,3),(2020,5),(2021,3),\
+		(2023,3),(2025,3),(2026,5),(2027,3),(2029,3),(2030,5),(2031,3),(2033,3),(2034,5),(2035\
+		,3),(2037,3),(2038,5),(2039,3),(2051,3))
+	~	dml/time
+	~	Normal salinity = \
+		[(2014,0)-(2051,10)],(2014,3),(2015,3),(2016,5),(2017,3),(2019,3),(2020,5),\
+		(2021,3),(2023,3),(2025,3),(2026,5),(2027,3),(2029,3),(2030,5),(2031,3),(20\
+		33,3),(2034,5),(2035,3),(2037,3),(2038,5),(2039,3),(2051,3)
+		
+		high = \
+		[(2014,0)-(2051,10)],(2014,6),(2015,6),(2016,9),(2017,6),(2019,6),(2020,9),\
+		(2021,6),(2023,6),(2025,6),(2026,9),(2027,6),(2029,6),(2030,9),(2031,6),(20\
+		33,6),(2034,9),(2035,6),(2037,6),(2038,9),(2039,6),(2051,6)
+		
+		
+		
+		double shocks = [(2014, 0)-(2051, 10)],
+		  (2014, 3),
+		  (2015, 3),
+		  (2016, 5),
+		  (2017, 3),
+		  (2019, 3),
+		  (2020, 5),
+		  (2021, 3),
+		  (2023, 3),
+		  (2025, 3),
+		  (2026, 5),
+		  (2027, 3),
+		  (2029, 3),
+		  (2030, 5),
+		  (2031, 3),
+		  (2033, 3),
+		  (2034, 5),
+		  (2035, 3),
+		  (2037, 3),
+		  (2038, 5),
+		  (2039, 3),
+		  (2051, 3)
+		
+		no shocks = \
+		[(2014,0)-(2051,10)],(2014,3),(2015,3),(2016,3),(2017,3),(2019,3),(2020,3),\
+		(2021,3),(2023,3),(2025,3),(2026,3),(2027,3),(2029,3),(2030,3),(2031,3),(20\
+		33,3),(2034,3),(2035,3),(2037,3),(2038,3),(2039,3),(2051,3)
+	|
+
+Lookup training commercial rice(
+	[(0,0)-(10,10)],(0,0.47),(1,0),(2,0),(8,0))
+	~	dml
+	~		|
+
+Loss in commercial farm rice yield=
+	Lookup training commercial rice(Skill level commercial rice farmers)
+	~	dml
+	~		|
+
+Loss reduction in small farm rice yield=
+	(1-Skill level small rice farmers)
+	~	dml
+	~		|
+
+Low skilled non farm= INTEG (
+	Failed shrimp becomes low skilled on agri+Rice becomes low skilled non farm,
+		0)
+	~	people
+	~		|
+
+Pay off debt=
+	0
+	~	vnd
+	~	Based on switching costs of VHLSS data from rice to aquaculture. Did this \
+		value / 10, to pay it off in 10 years
+	|
+
+Pay off debt shrimp farms=
+	0
+	~	vnd
+	~	Based on VHLSS, did the total switching costs from rice to aqua / 10
+	|
+
+"PERFECT extensive shrimp farm yield / hh"=
+	140
+	~	kg/ha
+	~		|
+
+"PERFECT intensive shrimp yield / ha"=
+	3600
+	~	kg/ha
+	~	Based on Joffre et al., 2015
+	|
+
+Prfit commercial extensive without disease=
+	Income commercial extensive without disease-Costs commercial extensive without disease
+	~	vnd
+	~		|
+
+Probability commercial rice become high skilled non farm=
+	0.5
+	~	dml
+	~	Assumption
+	|
+
+Probability commercial rice starting shrimp=
+	0.05
+	~	dml
+	~	assumption
+	|
+
+Probability commercial rise become landless agri wage=
+	0.45
+	~	dml
+	~	Assumption
+	|
+
+Probability commercial shrimp back to rice=
+	0.05
+	~	dml
+	~	Assumption
+	|
+
+Probability commercial shrimp starts agri wage=
+	0.45
+	~	dml
+	~	Assumption
+	|
+
+Probability commercial shrimp starts high skilled non farm=
+	0.5
+	~	dml
+	~	Assumption
+	|
+
+Probability high skilled small rice farmer=
+	Skill level small rice farmers
+	~	dml
+	~		|
+
+probability intensive farm=
+	0.025
+	~	dml
+	~	Based on Joffre et al., 2015
+	|
+
+Probability small rice becoming non farm=
+	0.5
+	~	dml
+	~	Assumption
+	|
+
+Probability small rice becoming wage agri=
+	0.45
+	~	dml
+	~		|
+
+Probability small rice grows to commercial rice=
+	0.25
+	~	dml
+	~	assumption
+	|
+
+Probability small rice starting shrimp farm=
+	0.05
+	~	dml
+	~	Assumption
+	|
+
+Probability small shrimp farmers become low skilled non agri=
+	0.4
+	~	dml
+	~	Assumption
+	|
+
+Probability small shrimp starting rice farm=
+	0.1
+	~	dml
+	~	Assumption
+	|
+
+Profit commercial extensive with disease=
+	Income commercial extensive with disease-Costs commercial extensive with disease
+	~	vnd
+	~		|
+
+Profit commercial intensive with disease=
+	Income commerical intensive with disease-Cost commercial intensive with disease
+	~	vnd
+	~		|
+
+Profit commercial intensive without disease=
+	Income commercial intensive without disease-Cost commercial intensive without disease
+	~	vnd
+	~		|
+
+Profit commerical rice farms=
+	Income commercial rice farmers-Costs commercial rice farmer
+	~	vnd/people
+	~		|
+
+Profit small rice farmers=
+	Income small rice farmers-Costs small rice farmers
+	~	vnd/people
+	~		|
+
+Profit small shrimp farm with disease=
+	Income small shrimp farm with disease-Costs small shrimp farm with disease
+	~	vnd
+	~		|
+
+Profit small shrimp farm without disease=
+	Income small shrimp farm without disease-Costs small shrimp farm without disease
+	~	vnd
+	~		|
+
+Profits commercial extensive with disease=
+	Profit commercial extensive with disease
+	~	vnd/people
+	~		|
+
+Profits commercial extensive without disease=
+	Prfit commercial extensive without disease
+	~	vnd/people
+	~		|
+
+profits commercial intensive with disease=
+	Profit commercial intensive with disease
+	~	vnd/people
+	~		|
+
+profits commercial intensive without disease=
+	Profit commercial intensive without disease
+	~	vnd/people
+	~		|
+
+Profits small shrimp with disease=
+	Profit small shrimp farm with disease
+	~	vnd/people
+	~		|
+
+profits small shrimp without disease=
+	Profit small shrimp farm without disease
+	~	vnd/people
+	~		|
+
+Rice becomes agri wage=
+	Small family rice farms*Probability small rice becoming wage agri*Chance small rice stops farming
+	~	dml
+	~		|
+
+Rice becomes commercial shrimp farm=
+	Commercial rice farm*Chance commercial rice stops farming*Probability commercial rice starting shrimp
+	~	people
+	~		|
+
+Rice becomes high skilled non farm=
+	Small family rice farms*Probability small rice becoming non farm*Probability high skilled small rice farmer\
+		*Chance small rice stops farming
+	~	dml
+	~		|
+
+Rice becomes low skilled non farm=
+	Small family rice farms*Probability small rice becoming non farm*Chance small rice stops farming\
+		*(1-Probability high skilled small rice farmer)
+	~	people
+	~		|
+
+Rice becomes shrimp farmer=
+	Small family rice farms*Chance small rice stops farming*Probability small rice starting shrimp farm
+	~	people
+	~		|
+
+Rice costs per ha=
+	1.59e+07*2
+	~	vnd/ha
+	~		|
+
+Rice yield loss ratio commercial=
+	0.05 + Loss in commercial farm rice yield*Salt exposure loss
+	~	dml
+	~		|
+
+Rice yield loss ratio small=
+	0.11 + (1-Loss reduction in small farm rice yield)*Salt exposure loss
+	~	dml
+	~	Based on formula y = 0.11+0.57*salt exposure loss, but "loss in smaal farm \
+		rice yield" decreases now when there is training
+	|
+
+Salinity levels=
+	Lookup salinity(Time)
+	~	dml
+	~		|
+
+Salt exposure loss=
+	MAX((Slope rice*(Salinity levels-Threshold salinity rice))/100, 0)
+	~	dml
+	~		|
+
+Savings commercial intensive shrimp farm with= INTEG (
+	Income commerical intensive with disease-Cost commercial intensive with disease,
+		2e+07)
+	~	vnd
+	~		|
+
+Savings commercial rice farmers= INTEG (
+	Income commercial rice farmers-Costs commercial rice farmer-Investment in machines,
+		2e+07)
+	~	vnd/people
+	~	assumption
+	|
+
+Savings commerical extensive shrimp farm with disease= INTEG (
+	Income commercial extensive with disease-Costs commercial extensive with disease,
+		2e+07)
+	~	vnd
+	~	Assumption they do not have to pay off debt, they are richer
+	|
+
+Savings small shrimp farm with disease= INTEG (
+	Income small shrimp farm with disease-Costs small shrimp farm with disease-Pay off debt\
+		,
+		1e+07)
+	~	vnd
+	~		|
+
+Skill level commercial rice farmers=
+	(Equipment level commercial rice farmer+Training level commercial rice farmers)/2
+	~	dml
+	~		|
+
+Slope rice=
+	12
+	~	dml
+	~		|
+
+"Small disease shrimp farm yield / hh"=
+	Disease reduction factor*"Diseaseless small shrimp yield / hh"
+	~	kg
+	~		|
+
+Small family rice farms= INTEG (
+	Small shrimp farm goes back to rice-Rice becomes agri wage-Rice becomes high skilled non farm\
+		-Rice becomes low skilled non farm-Rice becomes shrimp farmer-Small rice grows to commercial rice\
+		,
+		51150)
+	~	people
+	~	Based on district 824, with 55% small farms, and 93% in rice
+	|
+
+Small rice grows to commercial rice=
+	Chance small rice stops farming*Probability small rice grows to commercial rice*Small family rice farms
+	~	people
+	~		|
+
+Small shrimp farm goes back to rice=
+	Failed small shrimp farmers*Probability small shrimp starting rice farm
+	~	people
+	~		|
+
+Small shrimp farm land size=
+	0.5
+	~	ha
+	~		|
+
+Small shrimp farmers= INTEG (
+	Rice becomes shrimp farmer-Shrimp farmer fails,
+		3850)
+	~	people
+	~	Based on district 824, with 55% small farms, and 7% in rice
+	|
+
+Threshold salinity rice=
+	3
+	~	dml
+	~		|
+
+Total commercial extensive shrimp yield=
+	"Diseaseless commercial extensive shrimp yield / hh"*Diseaseless extensive shrimp farmers\
+		+"Commercial with disease extensive farm yield / hh"*Disease extensive shrimp farmers
+	~	dml
+	~		|
+
+Total commercial intensive shrimp yield=
+	Disease intensive shrimp farmers*"Commercial with disease intensive farm yield / hh"\
+		+"Diseaseless commercial intensive shrimp yield / hh"*Diseaseless intensive shrimp farmers
+	~	kg
+	~		|
+
+Total commercial rice yield=
+	Commercial rice farm*"Rice yield/commercial rice farm"
+	~	kg
+	~		|
+
+Total rice yield=
+	"Rice yield/small rice household"*Small family rice farms
+	~	kg
+	~		|
+
+Total small shrimp yield=
+	Disease shrimp farm*"Small disease shrimp farm yield / hh" + Diseaseless shrimp farm\
+		*"Diseaseless small shrimp yield / hh"
+	~	kg
+	~		|
+
+Training level commercial rice farmers=
+	0.3
+	~	dml
+	~		|
+
+Wage worker costs=
+	4e+06
+	~	vnd
+	~	Assumption
+	|
+
+World market price shrimp=
+	42838
+	~	vnd/kg
+	~		|
+
+World market rice price=
+	6049
+	~	vnd/kg
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 2050
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 2014
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.5
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*All stocks
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,25,2
+10,1,Small family rice farms,3059,1397,59,36,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,"Agri wage (landless)",3650,1389,55,28,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3,Low skilled non farm,2404,1429,62,23,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,4,High skilled non farm,2404,1368,62,23,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,5,Small shrimp farmers,3046,1697,75,32,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,6,Failed small shrimp farmers,3648,1657,67,35,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,7,9,1,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3229,1381)|
+1,8,9,2,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3474,1381)|
+11,9,0,3347,1381,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,10,Rice becomes agri wage,3347,1427,55,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,11,13,1,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2862,1424)|
+1,12,13,3,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2587,1424)|
+11,13,0,2717,1424,8,6,33,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,14,Rice becomes low skilled non farm,2717,1471,71,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,15,17,1,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2859,1372)|
+1,16,17,4,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2586,1372)|
+11,17,0,2712,1372,6,8,34,3,0,0,3,0,0,0,0,0,0,0,0,0
+10,18,Rice becomes high skilled non farm,2712,1341,73,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,19,21,1,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3028,1493)|
+1,20,21,5,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3028,1615)|
+11,21,0,3028,1559,8,6,33,3,0,0,2,0,0,0,0,0,0,0,0,0
+10,22,Rice becomes shrimp farmer,2965,1559,55,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,23,25,5,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3235,1674)|
+1,24,25,6,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3471,1674)|
+11,25,0,3355,1674,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,26,Shrimp farmer fails,3355,1705,56,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,27,29,6,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3654,1578)|
+1,28,29,2,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3654,1470)|
+11,29,0,3654,1529,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,30,Failed shrimp becomes agri wage,3735,1529,73,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,31,33,6,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3655,1748)|
+1,32,33,3,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2404,1810)|
+11,33,0,3655,1810,8,6,33,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,34,Failed shrimp becomes low skilled on agri,3655,1873,54,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+11,35,0,3832,1720,6,8,2,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,36,Commercial rice farm,3074,755,75,50,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,37,39,1,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3058,1212)|
+1,38,39,36,4,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(3058,928)|
+11,39,0,3058,1058,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,40,Small rice grows to commercial rice,3140,1058,74,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,41,Commercial shrimp farm,3062,450,57,27,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,42,Commercial shrimp farm failed,2411,441,70,23,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,43,45,36,100,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(3082,653)|
+1,44,45,41,4,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(3082,533)|
+11,45,0,3082,596,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,46,Rice becomes commercial shrimp farm,3163,596,73,34,40,3,0,0,-1,1,0,0,0,0,0,0,0,0
+1,47,49,41,100,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(2882,439)|
+1,48,49,42,4,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(2614,439)|
+11,49,0,2753,439,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,50,Commercial shrimp farm fails,2753,470,65,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,51,53,36,100,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(3392,734)|
+1,52,53,2,4,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(3644,1050)|
+11,53,0,3644,734,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,54,Commercial rice becomes landlessagri wage,3719,734,67,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,55,57,36,100,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(2908,787)|
+1,56,57,4,4,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(2404,787)|
+11,57,0,2810,787,8,6,33,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,58,Commercial rice becomes high skilled non farm,2810,829,63,34,40,3,0,0,-1,1,0,0,0,0,0,0,0,0
+1,59,61,42,100,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(2173,450)|
+1,60,61,4,4,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(1998,1368)|
+11,61,0,1998,450,8,6,33,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,62,Commercial shrimp starts high skilled non farm,1998,492,68,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,63,Rice yield loss ratio small,2796,1560,63,34,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+11,64,0,2426,645,8,6,1,3,0,0,4,0,0,0,0,0,0,0,0,0
+11,65,0,3044,596,8,6,1,3,0,0,2,0,0,0,0,0,0,0,0,0
+11,66,0,3031,1562,8,6,1,3,0,0,2,0,0,0,0,0,0,0,0,0
+1,67,69,42,100,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(2418,574)|
+1,68,69,36,4,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(2418,755)|
+11,69,0,2418,690,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,70,Commercial shrimp goes back to rice,2494,690,68,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,71,73,6,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3473,1638)|
+1,72,73,1,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3059,1638)|
+11,73,0,3357,1638,8,6,33,3,0,0,3,0,0,0,0,0,0,0,0,0
+10,74,Small shrimp farm goes back to rice,3357,1607,70,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,75,Probability small shrimp starting rice farm,3965,1618,73,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,76,Probability small shrimp farmers become low skilled non agri,3931,1795,74,44,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,77,75,30,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3849,1544)|
+1,78,75,74,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3579,1581)|
+1,79,6,74,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3515,1619)|
+1,80,6,30,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3711,1599)|
+1,81,76,30,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3839,1652)|
+1,82,76,34,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,83,6,34,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3716,1763)|
+1,84,1,22,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3005,1469)|
+1,85,1,14,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2921,1440)|
+10,86,Probability small rice becoming non farm,2505,1517,71,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,87,Probability small rice starting shrimp farm,2798,1685,73,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,88,86,14,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,89,87,22,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2930,1639)|
+10,90,Probability small rice becoming wage agri,3207,1275,64,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,91,90,10,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3282,1316)|
+10,92,Rice yield loss ratio small,3516,1260,63,34,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,93,Probability small rice grows to commercial rice,3455,1010,64,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,94,93,40,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(3354,935)|
+1,95,1,40,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3125,1212)|
+1,96,1,10,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3175,1428)|
+10,97,Rice yield loss ratio commercial,3507,593,86,34,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,98,Probability commercial rice starting shrimp,3241,451,61,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,99,Probability commercial rise become landless agri wage,3965,652,104,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,100,99,54,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+1,101,98,46,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+10,102,Rice yield loss ratio commercial,2599,933,86,34,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,103,Probability commercial rice become high skilled non farm,2875,968,104,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,104,103,58,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+10,105,Rice yield loss ratio small,2881,1232,63,34,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,106,1,18,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2941,1322)|
+10,107,Loss reduction in small farm rice yield,2802,1103,73,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,108,36,46,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(3156,678)|
+1,109,36,54,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(3344,689)|
+10,110,Success probability commercial,2691,243,51,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,111,Success probability intensive,2810,176,42,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,112,110,155,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(2694,281)|
+1,113,111,155,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(2816,207)|
+10,114,probability intensive farm,2982,299,59,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,115,114,155,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(2939,333)|
+10,116,Probability commercial shrimp back to rice,2226,720,73,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,117,Probability commercial shrimp starts high skilled non farm,2208,561,94,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,118,116,70,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+1,119,117,62,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(2154,572)|
+10,120,Success probability,3181,1948,48,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,121,120,169,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+10,122,Rice yield loss ratio small,4177,1160,62,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,123,Chance small rice stops farming,4084,1302,68,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,124,Lookup chance small rice stops farming,4293,1298,60,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,125,122,123,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(4081,1233)|
+1,126,124,123,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(4220,1304)|
+10,127,Chance small rice stops farming,3409,1237,73,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,128,Chance small rice stops farming,2862,1184,73,23,8,2,0,3,-1,1,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,129,127,10,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3409,1318)|
+1,130,127,40,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(3344,1158)|
+10,131,Chance small rice stops farming,2726,1576,73,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,132,131,14,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,133,128,18,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,134,131,22,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+10,135,Probability high skilled small rice farmer,4152,1468,63,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,136,Skill level small rice farmers,4360,1536,44,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,137,136,135,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(4318,1470)|
+10,138,Probability high skilled small rice farmer,2536,1227,66,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,139,138,14,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,140,138,18,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,141,86,18,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+10,142,Chance commercial rice stops farming,4049,849,61,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,143,Lookup chance commercial rice stops farming,4289,932,61,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,144,Rice yield loss ratio commercial,4236,762,70,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,145,143,142,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+1,146,144,142,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+10,147,Chance commercial rice stops farming,3529,582,61,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,148,Chance commercial rice stops farming,2591,958,61,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,149,148,58,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+1,150,147,54,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(3688,637)|
+1,151,147,46,1,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(3384,519)|
+1,152,42,70,0,0,0,0,1,64,0,128-0-255,|||0-0-0,1|(0,0)|
+1,153,42,62,1,0,0,0,1,64,0,128-0-255,|||0-0-0,1|(2226,364)|
+1,154,36,58,0,0,0,0,1,64,0,128-0-255,|||0-0-0,1|(0,0)|
+10,155,Expected commercial shrimp farm failures,2784,343,73,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,156,155,50,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+1,157,41,155,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+10,158,Commercial shrimp farm failed,3867,1186,53,34,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+12,159,48,2411,208,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,160,162,42,100,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(2411,372)|
+1,161,162,159,4,0,0,22,1,192,0,128-0-255,|||0-0-0,1|(2411,268)|
+11,162,0,2411,320,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,163,Commercial shrimp farm becomes agri wage,2492,320,73,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,164,Commercial shrimp farm becomes agri wage,3812,1305,81,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,165,164,2,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3812,1373)|
+10,166,Probability commercial shrimp starts agri wage,2549,145,73,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,167,166,163,0,0,0,0,1,192,0,128-0-255,|||0-0-0,1|(0,0)|
+1,168,42,163,0,0,0,0,1,64,0,128-0-255,|||0-0-0,1|(0,0)|
+10,169,Expected small shrimp farmers to fail,3395,1888,68,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,170,169,26,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,171,5,169,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(3262,1860)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Small rice farmer
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,61,2
+10,1,Rice yield per ha,890,-56,54,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,Total rice yield,678,84,58,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3,Land size small rice farmers,1089,233,59,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,4,Salt exposure loss,1393,-38,61,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,5,Rice yield loss ratio small,1215,68,72,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,6,Loss reduction in small farm rice yield,1452,85,68,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,7,Threshold salinity rice,1526,-193,44,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,8,Slope rice,1664,-103,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,9,Salinity levels,1594,27,52,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,10,Lookup salinity,1789,-3,60,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,11,Savings small rice farmers,1000,451,53,23,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,12,48,717,445,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,13,15,12,100,0,0,22,0,192,0,-1--1--1,,1|(790,445)|
+1,14,15,11,4,0,0,22,0,192,0,-1--1--1,,1|(898,445)|
+11,15,0,844,445,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,16,Income small rice farmers,844,476,52,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,17,48,1263,451,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,18,20,11,100,0,0,22,0,192,0,-1--1--1,,1|(1096,451)|
+1,19,20,17,4,0,0,22,0,192,0,-1--1--1,,1|(1194,451)|
+11,20,0,1145,451,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,21,Costs small rice farmers,1145,482,62,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,22,Profit small rice farmers,1023,327,61,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,23,"Rice yield/small rice household",933,97,61,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,24,3,23,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,25,1,23,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,26,23,16,1,0,0,0,0,192,0,-1--1--1,,1|(836,267)|
+10,27,Small family rice farms,473,59,53,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,28,27,2,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,29,4,5,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,30,9,4,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,31,7,4,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,32,8,4,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,33,10,9,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,34,Time,1619,101,32,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,35,34,9,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,36,6,5,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,37,5,23,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,38,Rice costs per ha,1290,634,56,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,39,World market rice price,750,584,54,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,40,39,16,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,41,38,21,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,42,16,22,1,0,0,0,0,192,0,-1--1--1,,1|(901,394)|
+1,43,21,22,1,0,0,0,0,192,0,-1--1--1,,1|(1114,405)|
+10,44,Skill level small rice farmers,1579,205,59,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,45,44,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,46,23,2,1,0,0,0,0,192,0,-1--1--1,,1|(808,124)|
+1,47,3,21,1,0,0,0,0,192,0,-1--1--1,,1|(1172,316)|
+10,48,yield cost changes,1297,214,68,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,49,48,21,1,0,0,0,0,192,0,-1--1--1,,1|(1256,372)|
+1,50,5,48,1,0,0,0,0,192,0,-1--1--1,,1|(1248,94)|
+12,51,48,1000,640,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,52,54,11,100,0,0,22,0,192,0,-1--1--1,,1|(1000,510)|
+1,53,54,51,4,0,0,22,0,192,0,-1--1--1,,1|(1000,592)|
+11,54,0,1000,553,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,55,Small farmers investments,1061,553,53,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,56,11,55,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,57,Equipment level small rice farmer,1960,401,64,23,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,58,48,1751,400,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,59,61,58,100,0,0,22,0,192,0,-1--1--1,,1|(1799,400)|
+1,60,61,57,4,0,0,22,0,192,0,-1--1--1,,1|(1865,400)|
+11,61,0,1828,400,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,62,Equipment increase small rice farmer,1828,442,70,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,63,Lookup for equipment level,2013,595,65,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,64,55,62,1,0,0,0,0,192,0,-1--1--1,,1|(1586,708)|
+1,65,63,62,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,66,57,44,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,67,Training level small rice farmers,1559,399,73,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,68,67,44,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Commercial rice farmer
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,61,2
+10,1,Savings commercial rice farmers,763,-10,61,34,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,2,48,1061,-14,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,3,5,1,100,0,0,22,0,192,0,-1--1--1,,1|(886,-14)|
+1,4,5,2,4,0,0,22,0,192,0,-1--1--1,,1|(998,-14)|
+11,5,0,955,-14,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,6,Costs commercial rice farmer,955,17,70,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,7,48,423,-20,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,8,10,7,100,0,0,22,0,192,0,-1--1--1,,1|(503,-20)|
+1,9,10,1,4,0,0,22,0,192,0,-1--1--1,,1|(636,-20)|
+11,10,0,565,-20,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,11,Income commercial rice farmers,565,22,61,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,12,Profit commerical rice farms,756,-169,69,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,13,"Rice yield/commercial rice farm",586,-503,65,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,14,Rice yield loss ratio commercial,912,-597,72,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,15,Loss in commercial farm rice yield,1171,-577,65,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,16,Skill level commercial rice farmers,1368,-455,61,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,17,Land size commercial rice farms,894,-306,61,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,18,Total commercial rice yield,267,-563,67,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,19,Commercial rice farm,40,-659,53,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,20,Rice yield per ha,648,-691,59,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,21,Salt exposure loss,1160,-716,69,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,22,Rice costs per ha,1105,129,62,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,23,World market rice price,481,147,59,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,24,19,18,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,25,13,11,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,26,17,13,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,27,13,18,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,28,20,13,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,29,14,13,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,30,15,14,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,31,16,15,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,32,21,14,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,33,23,11,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,34,11,12,1,0,0,0,0,192,0,-1--1--1,,1|(636,-92)|
+1,35,6,12,1,0,0,0,0,192,0,-1--1--1,,1|(891,-95)|
+1,36,22,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,37,17,6,1,0,0,0,0,192,0,-1--1--1,,1|(988,-90)|
+10,38,Lookup training commercial rice,1134,-471,61,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,39,38,15,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,40,Wage worker costs,1218,51,52,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,41,40,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,42,Training level commercial rice farmers,1350,-179,61,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,43,42,16,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+12,44,48,735,240,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,45,47,1,100,0,0,22,0,192,0,-1--1--1,,1|(735,74)|
+1,46,47,44,4,0,0,22,0,192,0,-1--1--1,,1|(735,181)|
+11,47,0,735,131,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,48,Investment in machines,795,131,52,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,49,Lookup for equipment level,1568,-111,60,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,50,Investment in machines,1873,-67,57,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,51,50,57,1,1,0,0,0,192,0,-1--1--1,,1|(1846,-145)|
+10,52,Equipment level commercial rice farmer,1792,-306,61,34,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,53,48,1542,-305,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,54,56,53,100,0,0,22,0,192,0,-1--1--1,,1|(1605,-305)|
+1,55,56,52,4,0,0,22,0,192,0,-1--1--1,,1|(1693,-305)|
+11,56,0,1649,-305,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,57,Equipment increase commercial rice,1649,-263,61,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,58,49,57,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,59,52,16,1,0,0,0,0,192,0,-1--1--1,,1|(1627,-439)|
+1,60,1,48,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,61,Commercial yield cost changes,1079,-344,67,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,62,14,61,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,63,61,6,1,0,0,0,0,192,0,-1--1--1,,1|(1072,-123)|
+1,64,48,57,1,0,0,0,0,192,0,-1--1--1,,1|(1552,173)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Small shrimp farmer
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,43,2
+10,1,Savings small shrimp farm with disease,849,339,89,28,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,Savings small shrimp farm without disease,1779,343,59,34,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,3,48,1176,339,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,4,6,1,100,0,0,22,0,192,0,-1--1--1,,1|(988,339)|
+1,5,6,3,4,0,0,22,0,192,0,-1--1--1,,1|(1100,339)|
+11,6,0,1044,339,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,7,Costs small shrimp farm with disease,1044,370,74,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,8,48,2141,343,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,9,11,2,100,0,0,22,0,192,0,-1--1--1,,1|(1904,343)|
+1,10,11,8,4,0,0,22,0,192,0,-1--1--1,,1|(2049,343)|
+11,11,0,1977,343,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,12,Costs small shrimp farm without disease,1977,385,74,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,13,48,1383,343,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,14,16,13,100,0,0,22,0,192,0,-1--1--1,,1|(1483,343)|
+1,15,16,2,4,0,0,22,0,192,0,-1--1--1,,1|(1645,343)|
+11,16,0,1564,343,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,17,Income small shrimp farm without disease,1564,385,59,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,18,48,469,331,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,19,21,18,100,0,0,22,0,192,0,-1--1--1,,1|(557,331)|
+1,20,21,1,4,0,0,22,0,192,0,-1--1--1,,1|(696,331)|
+11,21,0,627,331,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,22,Income small shrimp farm with disease,627,373,65,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,23,Profit small shrimp farm with disease,852,515,67,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,24,World market price shrimp,544,524,54,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,25,Extensive costs per ha,1110,491,60,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,26,"Diseaseless small shrimp yield / hh",1533,165,73,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,27,"Small disease shrimp farm yield / hh",675,126,72,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,28,24,22,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,29,22,23,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,30,7,23,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,31,25,7,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,32,Profit small shrimp farm without disease,1780,495,73,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,33,World market price shrimp,1529,491,59,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,34,Extensive costs per ha,2034,543,57,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,35,Disease reduction factor,526,-34,62,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,36,35,27,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,37,27,22,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,38,26,17,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,39,Small shrimp farm land size,1307,302,54,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,40,"PERFECT extensive shrimp farm yield / hh",1422,-71,71,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,41,40,26,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,42,Total small shrimp yield,1938,110,48,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,43,Small shrimp farmers,1884,-98,56,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,44,26,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,45,Diseaseless shrimp farm,1654,-89,47,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,46,Disease shrimp farm,2108,-71,59,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,47,43,45,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,48,43,46,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,49,Success probability,1874,-218,42,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,50,49,45,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,51,49,46,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,52,Education level,1824,-400,59,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,53,52,49,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,54,45,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,55,46,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,56,"Small disease shrimp farm yield / hh",2186,156,72,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,57,56,42,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,58,33,17,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,59,17,32,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,60,12,32,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,61,34,12,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+12,62,48,877,174,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,63,65,1,100,0,0,22,0,192,0,-1--1--1,,1|(877,278)|
+1,64,65,62,4,0,0,22,0,192,0,-1--1--1,,1|(877,211)|
+11,65,0,877,240,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,66,Pay off debt,934,240,49,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,67,48,1738,176,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,68,70,2,100,0,0,22,0,192,0,-1--1--1,,1|(1738,282)|
+1,69,70,67,4,0,0,22,0,192,0,-1--1--1,,1|(1738,217)|
+11,70,0,1738,250,8,6,33,3,0,0,2,0,0,0,0,0,0,0,0,0
+10,71,Pay off debt shrimp farms,1679,250,51,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,72,39,26,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,73,26,27,1,0,0,0,0,192,0,-1--1--1,,1|(1061,66)|
+1,74,39,7,1,0,0,0,0,192,0,-1--1--1,,1|(1155,263)|
+1,75,39,12,1,0,0,0,0,192,0,-1--1--1,,1|(1724,639)|
+10,76,Average small shrimp farm savings,1227,871,87,39,3,3,0,5,-1,0,0,0,255-128-128,255-255-255,|||0-0-0,0,0,0,0,0,0
+12,77,48,1225,611,25,15,3,3,0,5,-1,0,0,0,255-128-128,255-255-255,|||0-0-0,0,0,0,0,0,0
+1,78,80,77,100,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(1225,695)|
+1,79,80,76,4,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(1225,804)|
+11,80,0,1225,770,8,6,1,3,0,5,4,0,0,0,255-128-128,255-255-255,|||0-0-0,0,0,0,0,0,0
+10,81,profits small shrimp without disease,1295,714,58,34,8,3,0,5,-1,0,0,0,255-128-128,255-255-255,|||0-0-0,0,0,0,0,0,0
+12,82,48,908,870,25,15,3,3,0,5,-1,0,0,0,255-128-128,255-255-255,|||0-0-0,0,0,0,0,0,0
+1,83,85,82,100,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(981,870)|
+1,84,85,76,4,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(1091,870)|
+11,85,0,1036,870,6,8,2,3,0,5,1,0,0,0,255-128-128,255-255-255,|||0-0-0,0,0,0,0,0,0
+10,86,Profits small shrimp with disease,1025,912,49,34,8,3,0,5,-1,0,0,0,255-128-128,255-255-255,|||0-0-0,0,0,0,0,0,0
+10,87,Diseaseless shrimp farm,1457,895,53,23,8,2,0,7,-1,0,0,0,255-128-128,255-255-255,|||128-128-128,0,0,0,0,0,0
+10,88,Disease shrimp farm,1332,1011,53,23,8,2,0,7,-1,0,0,0,255-128-128,255-255-255,|||128-128-128,0,0,0,0,0,0
+1,89,88,76,1,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(1220,936)|
+1,90,87,76,1,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(1403,855)|
+1,91,23,86,1,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(986,762)|
+1,92,32,81,1,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(1507,589)|
+1,93,86,76,0,0,0,0,1,64,0,255-128-128,|||0-0-0,1|(0,0)|
+1,94,81,76,0,0,0,0,1,64,0,255-128-128,|||0-0-0,1|(0,0)|
+10,95,Small shrimp farmers,1476,804,56,23,8,2,0,7,-1,0,0,0,255-128-128,255-255-255,|||128-128-128,0,0,0,0,0,0
+1,96,95,76,1,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(1375,795)|
+10,97,Water quality,2063,-355,52,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,98,Equipment level,2597,-185,61,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,99,48,2353,-184,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,100,102,99,100,0,0,22,0,192,0,-1--1--1,,1|(2410,-184)|
+1,101,102,98,4,0,0,22,0,192,0,-1--1--1,,1|(2495,-184)|
+11,102,0,2449,-184,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,103,Shrimp farmers invest in equipment,2449,-153,74,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,104,98,97,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,105,97,49,1,0,0,0,0,192,0,-1--1--1,,1|(1946,-314)|
+12,106,48,1779,183,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,107,109,2,100,0,0,22,0,192,0,-1--1--1,,1|(1779,282)|
+1,108,109,106,4,0,0,22,0,192,0,-1--1--1,,1|(1779,221)|
+11,109,0,1779,250,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,110,Invest in equipment,1829,250,42,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,111,2,110,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,112,110,103,1,0,0,0,0,192,0,-1--1--1,,1|(2378,125)|
+10,113,Lookup investment shrimp farmers in equipment,2620,-2,74,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,114,113,103,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,115,Small shrimp farmers,2077,-482,56,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,116,98,35,1,0,0,0,0,192,0,-1--1--1,,1|(1370,-488)|
+10,117,Lookup water quality,2092,-240,54,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,118,117,97,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Commercial shrimp farms
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,28,2
+10,1,Savings commercial intensive shrimp farm with,1218,1281,94,26,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,Savings commerical extensive shrimp farm with disease,1244,871,84,34,3,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,3,Savings commercial extensive shrimp farm without disease,2229,875,84,34,3,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,4,Savings commerical intensive shrimp farm without disease,2209,1276,82,34,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,5,48,2551,875,25,15,0,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+1,6,8,3,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2362,875)|
+1,7,8,5,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2475,875)|
+11,8,0,2418,875,6,8,34,3,0,1,1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,9,Costs commercial extensive without disease,2418,917,82,34,40,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+12,10,48,2585,1276,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,11,13,4,100,0,0,22,0,192,0,-1--1--1,,1|(2355,1276)|
+1,12,13,10,4,0,0,22,0,192,0,-1--1--1,,1|(2495,1276)|
+11,13,0,2425,1276,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,14,Cost commercial intensive without disease,2425,1318,66,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,15,48,1791,1277,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,16,18,15,100,0,0,22,0,192,0,-1--1--1,,1|(1891,1277)|
+1,17,18,4,4,0,0,22,0,192,0,-1--1--1,,1|(2052,1277)|
+11,18,0,1971,1277,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,19,Income commercial intensive without disease,1971,1319,76,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,20,48,1787,868,25,15,0,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+1,21,23,20,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(1893,868)|
+1,22,23,3,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2065,868)|
+11,23,0,1979,868,6,8,34,3,0,1,1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,24,Income commercial extensive without disease,1979,910,76,34,40,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+12,25,48,1568,871,25,15,0,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+1,26,28,2,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(1390,871)|
+1,27,28,25,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(1503,871)|
+11,28,0,1457,871,6,8,34,3,0,1,1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,29,Costs commercial extensive with disease,1457,913,70,34,40,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+12,30,48,1604,1277,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,31,33,1,100,0,0,22,0,192,0,-1--1--1,,1|(1387,1277)|
+1,32,33,30,4,0,0,22,0,192,0,-1--1--1,,1|(1526,1277)|
+11,33,0,1467,1277,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,34,Cost commercial intensive with disease,1467,1319,66,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,35,48,823,1277,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,36,38,35,100,0,0,22,0,192,0,-1--1--1,,1|(902,1277)|
+1,37,38,1,4,0,0,22,0,192,0,-1--1--1,,1|(1046,1277)|
+11,38,0,962,1277,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,39,Income commerical intensive with disease,962,1308,84,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,40,48,838,864,25,15,0,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+1,41,43,40,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(945,864)|
+1,42,43,2,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(1100,864)|
+11,43,0,1033,864,6,8,34,3,0,1,1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,44,Income commercial extensive with disease,1033,906,76,34,40,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,45,"Commercial with disease extensive farm yield / hh",1420,642,66,34,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,46,"Diseaseless commercial extensive shrimp yield / hh",2087,676,82,34,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,47,Disease reduction factor,1283,488,74,23,8,2,1,3,-1,0,0,0,0-166-214,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,48,"PERFECT extensive shrimp farm yield / hh",1733,483,64,34,8,2,0,3,-1,0,0,0,0-166-214,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,49,Commercial shrimp farm land size,1748,1078,65,34,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,50,Total commercial extensive shrimp yield,2486,554,67,34,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,51,Disease extensive shrimp farmers,2664,418,67,23,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,52,Diseaseless extensive shrimp farmers,2310,455,64,34,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,53,Success probability commercial,2539,285,45,34,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,54,probability intensive farm,2419,317,54,23,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,55,Education level commercial farmers,2520,115,59,34,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,56,Commercial shrimp farm,2495,439,53,23,8,2,0,3,-1,0,0,0,0-166-214,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,57,45,44,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,58,48,46,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,59,49,46,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(1744,857)|
+1,60,46,45,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,61,46,24,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,62,46,50,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,63,52,50,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,64,51,50,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,65,55,53,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,66,54,51,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,67,53,51,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,68,56,51,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+10,69,"Commercial with disease extensive farm yield / hh",2686,649,71,34,8,2,0,3,-1,0,0,0,0-166-214,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,70,69,50,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+10,71,Profit commercial extensive with disease,1245,1060,69,34,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,72,Prfit commercial extensive without disease,2244,1043,66,34,8,3,0,1,-1,0,0,0,0-166-214,0-0-0,|||0-0-0,0,0,0,0,0,0
+10,73,Profit commercial intensive without disease,2220,1135,69,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,74,Profit commercial intensive with disease,1222,1175,69,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,75,World market price shrimp,904,1114,59,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,76,World market price shrimp,1907,1102,59,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,77,Extensive costs per ha,2453,1054,57,23,8,2,0,3,-1,0,0,0,0-166-214,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,78,Extensive costs per ha,1468,1060,57,23,8,2,0,3,-1,0,0,0,0-166-214,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,79,Intensive shrimp costs per ha,1492,1165,66,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,80,Intensive shrimp costs per ha,2441,1166,69,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,81,75,44,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,82,75,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,83,39,74,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,84,34,74,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,85,79,34,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,86,78,29,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,87,29,71,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,88,44,71,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,89,76,24,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,90,76,19,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,91,19,73,1,0,0,0,0,192,0,-1--1--1,,1|(2056,1214)|
+1,92,14,73,1,0,0,0,0,192,0,-1--1--1,,1|(2349,1211)|
+1,93,24,72,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2086,996)|
+1,94,9,72,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2342,985)|
+1,95,77,9,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,96,80,14,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,97,49,29,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,98,49,34,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,99,Commercial shrimp farm land size,2658,1115,65,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,100,99,9,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2623,999)|
+1,101,99,14,1,0,0,0,0,192,0,-1--1--1,,1|(2583,1220)|
+10,102,"Commercial with disease intensive farm yield / hh",1342,1517,65,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,103,"Diseaseless commercial intensive shrimp yield / hh",2050,1511,80,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,104,Total commercial intensive shrimp yield,2461,1687,67,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,105,Disease intensive shrimp farmers,2669,1922,65,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,106,Diseaseless intensive shrimp farmers,2230,1915,62,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,107,Success probability intensive,2583,2127,42,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,108,Education level,2507,2262,45,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,109,Education level commercial farmers,2477,2287,64,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,110,probability intensive farm,2436,1923,59,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,111,Commercial shrimp farm,2466,2025,53,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,112,102,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,113,103,102,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,114,"PERFECT intensive shrimp yield / ha",1767,1727,62,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,115,114,103,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,116,103,19,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,117,103,104,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,118,106,104,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,119,105,104,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,120,110,105,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,121,111,105,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,122,107,105,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,123,"Commercial with disease intensive farm yield / hh",2727,1617,66,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,124,123,104,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,125,49,103,1,0,0,0,0,192,0,-1--1--1,,1|(1762,1321)|
+1,126,56,52,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2365,412)|
+1,127,54,52,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2362,358)|
+1,128,53,52,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2323,273)|
+10,129,Disease reduction factor intensive shrimp farming,1128,1642,68,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,130,129,102,1,0,0,0,0,192,0,-1--1--1,,1|(1172,1553)|
+1,131,110,106,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,132,111,106,1,0,0,0,0,192,0,-1--1--1,,1|(2318,2007)|
+1,133,107,106,1,0,0,0,0,192,0,-1--1--1,,1|(2323,2094)|
+10,134,Average commercial extensive shrimp farm savings,768,94,84,34,3,3,0,1,-1,0,0,0,255-128-128,0-0-0,|||0-0-0,0,0,0,0,0,0
+12,135,48,443,89,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,136,138,135,100,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(519,89)|
+1,137,138,134,4,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(633,89)|
+11,138,0,576,89,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,139,Profits commercial extensive with disease,576,131,73,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,140,48,771,-98,25,15,3,3,0,1,-1,0,0,0,255-128-128,0-0-0,|||0-0-0,0,0,0,0,0,0
+1,141,143,140,100,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(771,-50)|
+1,142,143,134,4,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(771,27)|
+11,143,0,771,-12,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,144,Profits commercial extensive without disease,852,-12,73,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,145,Diseaseless extensive shrimp farmers,1078,95,64,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,146,Disease extensive shrimp farmers,918,213,73,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,147,145,134,1,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(949,77)|
+1,148,146,134,1,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(891,153)|
+1,149,139,134,1,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(720,174)|
+1,150,144,134,0,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(0,0)|
+10,151,Profits commercial extensive with disease,818,61,78,34,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,152,Prfit commercial extensive without disease,1107,-69,69,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,153,Profit commercial extensive with disease,534,-72,74,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,154,153,139,0,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(0,0)|
+1,155,152,144,0,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(0,0)|
+10,156,Average savings intensive commercial shrimp farm,1333,2047,80,34,3,3,0,1,-1,0,0,0,255-128-128,0-0-0,|||0-0-0,0,0,0,0,0,0
+12,157,48,1326,1808,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,158,160,157,100,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(1326,1867)|
+1,159,160,156,4,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(1326,1968)|
+11,160,0,1326,1918,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,161,profits commercial intensive without disease,1406,1918,72,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,162,48,951,2045,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,163,165,162,100,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(1042,2045)|
+1,164,165,156,4,0,0,22,1,192,0,255-128-128,|||0-0-0,1|(1187,2045)|
+11,165,0,1114,2045,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,166,profits commercial intensive with disease,1114,2087,72,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,167,Profit commercial intensive with disease,1053,1953,87,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,168,Profit commercial intensive without disease,1639,1995,74,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,169,Diseaseless intensive shrimp farmers,1619,2117,62,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,170,Disease intensive shrimp farmers,1376,2209,71,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,171,168,161,0,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(0,0)|
+1,172,169,156,0,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(0,0)|
+1,173,170,156,0,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(0,0)|
+1,174,167,166,0,0,0,0,1,192,0,255-128-128,|||0-0-0,1|(0,0)|
+10,175,extensive yield with disease,1286,440,70,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,176,175,45,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+10,177,Equipment level commercial shrimp farms,3343,441,73,34,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,178,48,2878,437,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,179,181,178,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2982,437)|
+1,180,181,177,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(3172,437)|
+11,181,0,3068,437,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,182,Shrimp farms investing in equipment,3068,479,53,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,183,Water quality commercial,2772,204,52,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,184,177,183,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,185,183,53,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+12,186,48,2229,708,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,187,189,3,100,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2229,812)|
+1,188,189,186,4,0,0,22,1,192,0,0-166-214,|||0-0-0,1|(2229,747)|
+11,189,0,2229,778,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,190,Commercial without disease invests,2296,778,59,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,191,190,182,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2945,684)|
+12,192,48,2209,1443,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,193,195,4,100,0,0,22,0,192,0,-1--1--1,,1|(2209,1338)|
+1,194,195,192,4,0,0,22,0,192,0,-1--1--1,,1|(2209,1403)|
+11,195,0,2209,1372,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,196,Commercial intensive without disease invests,2281,1372,64,34,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,197,196,182,1,0,0,0,1,192,0,0-0-255,|||0-0-0,1|(3069,1365)|
+1,198,3,190,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+10,199,Lookup investment shrimp farmers in equipment,2813,546,79,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,200,199,182,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+10,201,Lookup water quality,2781,322,60,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,202,201,183,0,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(0,0)|
+1,203,177,175,1,0,0,0,1,192,0,0-166-214,|||0-0-0,1|(2584,13)|
+1,204,4,196,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,205,Equipment level commercial shrimp farms,1382,1691,73,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,206,205,129,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,207,Success probability commercial,2863,2093,51,34,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,208,109,107,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,209,Water quality commercial,2864,2042,57,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,210,Water quality intensive shrimp farm lookup,3038,1767,62,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,211,Water quality intensive shrimp farm,3048,1945,62,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,212,210,211,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,213,177,211,1,0,0,0,0,192,0,-1--1--1,,1|(3507,1873)|
+1,214,211,107,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 6
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,100,2
+10,1,Commercial rice farm,1082,307,53,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+///---\\\
+:GRAPH Rice_farmers
+:TITLE Number of rice farmers
+:SCALE
+:VAR Commercial rice farm
+:DATASET 
+:LINE-COLOR 128-255-0
+:LINE-WIDTH 2
+:SCALE
+:VAR Small family rice farms
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 2
+
+:GRAPH Shrimp_farmers
+:TITLE Number of shrimp farmers
+:SCALE
+:VAR Commercial shrimp farm
+:DATASET 
+:LINE-COLOR 0-0-255
+:LINE-WIDTH 2
+:SCALE
+:VAR Small shrimp farmers
+:DATASET 
+:LINE-COLOR 0-166-214
+:LINE-WIDTH 2
+
+:GRAPH Savings_rice_farmers
+:TITLE Savings rice farmers
+:SCALE
+:VAR Savings commercial rice farmers
+:DATASET 
+:LINE-COLOR 128-255-0
+:LINE-WIDTH 2
+:SCALE
+:VAR Savings small rice farmers
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 2
+
+:GRAPH profit_rice_farmers
+:TITLE Profit rice farmers
+:SCALE
+:VAR Profit commerical rice farms
+:DATASET 
+:LINE-COLOR 128-255-0
+:LINE-WIDTH 2
+:SCALE
+:VAR Profit small rice farmers
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 2
+
+:GRAPH Profit_disease_shrimp_farmers
+:TITLE Profit disease shrimp farmers
+:SCALE
+:VAR Profit commercial intensive with disease
+:DATASET 
+:LINE-WIDTH 1
+:SCALE
+:VAR Profit commercial extensive with disease
+:DATASET 
+:LINE-WIDTH 1
+:L<%^E!@
+1:current.vdfx
+4:Time
+5:Shrimp farms investing in equipment
+9:current
+19:25,0
+24:2014
+25:2050
+26:2050
+23:0
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:0
+72:0
+73:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:0
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Times New Roman|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1
