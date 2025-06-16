@@ -185,8 +185,8 @@ def calculate_farming_costs(crop, land_area):
 def calculate_yield_shrimp(land_area, disease, use_antibiotics):
     """Function to calculate the shrimp yield.
 
-    If a disease happened, and no antibiotics is used, the shrimp yield will be less
-    The yield is multiplied by land size for shrimp on the farm
+    If a disease happened, and no antibiotics are used, the shrimp yield will be less
+    The yield is multiplied by land size for shrimp per farm
     """
     if disease == 1 and use_antibiotics == 0:
         # this is in kg, based on paper joffre et al., 2015
@@ -695,9 +695,9 @@ def transfer_land(land_size, node_id, model, crops_and_land):
             best_neighbor.savings -= land_costs
 
             # Check in which category the agent now falls
-            if 0 <= land_size <= 0.5:
+            if 0 <= best_neighbor.land_area <= 0.5:
                 best_neighbor.land_category = "small"
-            elif 0.5 < land_size <= 2:
+            elif 0.5 < best_neighbor.land_area <= 2:
                 best_neighbor.land_category = "medium"
             else:
                 best_neighbor.land_category = "large"

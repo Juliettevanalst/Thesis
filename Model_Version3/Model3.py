@@ -31,14 +31,14 @@ correct_path = path + "\\Data\\model_input_data_824.xlsx"
 class RiverDeltaModel(Model):
     def __init__(
         self,
-        seed=20,
+        seed=None,
         salinity_low = False,
         salinity_high = False,
         district='Gò Công Đông', 
         num_agents=1000,
         excel_path=correct_path,
         salinity_shock_step=[
-            25,27,49,52,145,181,217,253,289]):
+            25,27,73,75,145,181,217,253,289]):
         super().__init__(seed=seed)
         self.seed = seed
         random.seed(20)
@@ -170,81 +170,227 @@ class RiverDeltaModel(Model):
         # Number of work days per month
         self.work_days_per_month = 20
 
+        from statistics import mean
+
+        def safe_mean(values):
+            vals = [v for v in values if v is not None]
+            return mean(vals) if vals else None
+
+        def household_stat(attr, crop, land):
+            return lambda model: safe_mean(
+                getattr(agent, attr, None)
+                for agent in model.agents
+                if getattr(agent, "agent_type", None) == "Household"
+                and getattr(agent, "crop_type", None) == crop
+                and getattr(agent, "land_category", None) == land
+                and hasattr(agent, attr)
+            )
+
+        def household_dict_stat(dict_attr, key, crop, land):
+            return lambda model: safe_mean(
+                getattr(agent, dict_attr, {}).get(key, None)
+                for agent in model.agents
+                if getattr(agent, "agent_type", None) == "Household"
+                and getattr(agent, "crop_type", None) == crop
+                and getattr(agent, "land_category", None) == land
+                and hasattr(agent, dict_attr)
+            )
+
+        def household_count(crop, land):
+            return lambda model: sum(
+                1 for agent in model.agents
+                if getattr(agent, "agent_type", None) == "Household"
+                and getattr(agent, "crop_type", None) == crop
+                and getattr(agent, "land_category", None) == land
+            )
+
+        # Mapping: interne crop type → key voor dicts
+        crops = {
+            "Rice": "Rice",
+            "Annual crops": "Maize",
+            "Perennial crops": "Coconut",
+            "Aquaculture": "Shrimp"
+        }
+        lands = ["small", "medium", "large"]
+
+        model_metrics = {}
+
+        for crop_type, crop_key in crops.items():
+            for land in lands:
+                label = f"{crop_key} {land}"
+                model_metrics[f"Savings {label}"] = household_stat("savings", crop_type, land)
+                model_metrics[f"Yield {label}"] = household_dict_stat("yield_", crop_key, crop_type, land)
+                model_metrics[f"Income {label}"] = household_dict_stat("total_income_", crop_key, crop_type, land)
+                model_metrics[f"Wage costs {label}"] = household_dict_stat("wage_costs_", crop_key, crop_type, land)
+                model_metrics[f"Debt ratio {label}"] = household_stat("debt_ratio", crop_type, land)
+                model_metrics[f"Count {label}"] = household_count(crop_type, land)
+
+        # Totale gemiddelde aantal wage workers (alle households met attribuut aanwezig)
+        model_metrics["Number_of_wage_workers"] = lambda model: safe_mean(
+            getattr(agent, "wage_workers", None)
+            for agent in model.agents
+            if getattr(agent, "agent_type", None) == "Household"
+            and hasattr(agent, "wage_workers")
+        )
+
+
        
-        model_metrics = model_metrics = {
-            "Average_Livelihood": lambda model: mean(
-                [
-                    agent.livelihood['Average'] for agent in self.agents if hasattr(
-                        agent,
-                        'livelihood')]) if self.agents else 0,
-            "Num_household_members": lambda model: sum(
-                1 for agent in model.agents if getattr(
-                    agent,
-                    "agent_type",
-                    None) == "Household_member"),
-            "Migrated_households": lambda model: sum(
-                1 for agent in model.agents if getattr(
-                    agent,
-                    "agent_type",
-                    None) == "Migrated"),
-            "Migrated_members": lambda model: sum(
-                1 for agent in model.agents if getattr(
-                    agent,
-                    "agent_type",
-                    None) == "Migrated_member"),
-            "Migrated_individuals": lambda model: sum(
-                1 for agent in model.agents if getattr(
-                    agent,
-                    "agent_type",
-                    None) == "Migrated_member_young_adult"),
-            "Died agents": lambda model: self.death_agents,
-            "Child births": lambda model: self.child_births,
-            "Rice agents": lambda model: sum(
-                1 for agent in model.agents if getattr(
-                    agent, 
-                    "crop_type", 
-                    None)=="Rice"),
-            "Annual crops agents": lambda model: sum(1 for agent in model.agents if getattr(agent, "crop_type", None)=="Annual crops")}
+        # model_metrics = {
+        #     # "Average_Livelihood": lambda model: mean(
+        #     #     [
+        #     #         agent.livelihood['Average'] for agent in self.agents if hasattr(
+        #     #             agent,
+        #     #             'livelihood')]) if self.agents else 0,
+        #     # "Num_household_members": lambda model: sum(
+        #     #     1 for agent in model.agents if getattr(
+        #     #         agent,
+        #     #         "agent_type",
+        #     #         None) == "Household_member"),
+        #     "Migrated_households": lambda model: sum(
+        #         1 for agent in model.agents if getattr(
+        #             agent,
+        #             "agent_type",
+        #             None) == "Migrated"),
+        #     "Migrated_members": lambda model: sum(
+        #         1 for agent in model.agents if getattr(
+        #             agent,
+        #             "agent_type",
+        #             None) == "Migrated_member"),
+        #     "Migrated_individuals": lambda model: sum(
+        #         1 for agent in model.agents if getattr(
+        #             agent,
+        #             "agent_type",
+        #             None) == "Migrated_member_young_adult"),
+        #     "Died agents": lambda model: self.death_agents,
+        #     "Child births": lambda model: self.child_births,
+        #     "Rice agents": lambda model: sum(
+        #         1 for agent in model.agents if getattr(
+        #             agent, 
+        #             "crop_type", 
+        #             None)=="Rice"),
+        #     "Rice small": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Rice"
+        #         and getattr(agent, "land_category", None) == "small"
+        #     ),
+        #     "Rice medium": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Rice"
+        #         and getattr(agent, "land_category", None) == "medium"
+        #     ),
+        #     "Rice large": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Rice"
+        #         and getattr(agent, "land_category", None) == "large"
+        #     ),
+        #     "Annual crops small": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Annual crops"
+        #         and getattr(agent, "land_category", None) == "small"
+        #     ),
+        #     "Annual crops medium": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Annual crops"
+        #         and getattr(agent, "land_category", None) == "medium"
+        #     ),
+        #     "Annual crops large": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Annual crops"
+        #         and getattr(agent, "land_category", None) == "large"
+        #     ),
+        #     "Coconut small": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Perennial crops"
+        #         and getattr(agent, "land_category", None) == "small"
+        #     ),
+        #     "Coconut medium": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Perennial crops"
+        #         and getattr(agent, "land_category", None) == "medium"
+        #     ),
+        #     "Coconut large": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Perennial crops"
+        #         and getattr(agent, "land_category", None) == "large"
+        #     ),
+        #     "Shrimp small": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Aquaculture"
+        #         and getattr(agent, "land_category", None) == "small"
+        #     ),
+        #     "Shrimp medium": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Aquaculture"
+        #         and getattr(agent, "land_category", None) == "medium"
+        #     ),
+        #     "Shrimp large": lambda model: sum(
+        #         1 for agent in model.agents
+        #         if getattr(agent, "crop_type", None) == "Aquaculture"
+        #         and getattr(agent, "land_category", None) == "large"
+        #     )
+
+        #     "Low_skilled_agri": lambda m: sum(isinstance(a, Low_skilled_agri_worker) for a in m.agents),
+        #     "Skilled_agri": lambda m: sum(isinstance(a, Skilled_agri_worker) for a in m.agents)
+        # }
 
         agent_metrics = {
-            "Crop_type": lambda a: getattr(
-                a,
-                "crop_type",
-                None) if getattr(
-                a,
-                "agent_type",
-                None) == "Household" else None,
-            "Land_category": lambda a: getattr(
-                a,
-                "land_category",
-                None) if getattr(
-                    a,
-                    "agent_type",
-                    None) == "Household" else None,
-            "Savings": lambda a: getattr(
-                a,
-                "savings",
-                None) if getattr(
-                a,
-                "agent_type",
-                None) == "Household" else None,
-            "too low income": lambda a: getattr(
-                a,
-                "income_too_low",
-                None) if hasattr(
-                a,
-                "income_too_low") else None,
-            "Number_of_wage_workers": lambda a: getattr(
-                a,
-                "wage_workers", 
-                None) if hasattr(
-                    a,
-                    "wage_workers") else None,
-            "Debt ratio": lambda a: getattr(
-                a,
-                "debt_ratio",
-                None) if hasattr(a, "debt_ratio") else None
-            }
+        #     "Crop_type": lambda a: getattr(
+        #         a,
+        #         "crop_type",
+        #         None) if getattr(
+        #         a,
+        #         "agent_type",
+        #         None) == "Household" else None,
+        #     "Land_category": lambda a: getattr(
+        #         a,
+        #         "land_category",
+        #         None) if getattr(
+        #             a,
+        #             "agent_type",
+        #             None) == "Household" else None,
+        #     "Savings": lambda a: getattr(
+        #         a,
+        #         "savings",
+        #         None) if getattr(
+        #         a,
+        #         "agent_type",
+        #         None) == "Household" else None,
+        #     "too low income": lambda a: getattr(
+        #         a,
+        #         "income_too_low",
+        #         None) if hasattr(
+        #         a,
+        #         "income_too_low") else None,
+        #     "Number_of_wage_workers": lambda a: getattr(
+        #         a,
+        #         "wage_workers", 
+        #         None) if hasattr(
+        #             a,
+        #             "wage_workers") else None,
+        #     "Debt ratio": lambda a: getattr(
+        #         a,
+        #         "debt_ratio",
+        #         None) if hasattr(a, "debt_ratio") else None,
+        #     "ww_costs_rice": lambda a: getattr(a, "wage_costs_", {}).get("Rice", None),
+        #     "ww_costs_maize": lambda a: getattr(a, "wage_costs_", {}).get("Maize", None),
+        #     "ww_costs_coconut": lambda a: getattr(a, "wage_costs_", {}).get("Coconut", None),
+        #     "ww_costs_shrimp": lambda a: getattr(a, "wage_costs_", {}).get("Shrimp", None),
+        #     "total_income_rice": lambda a: getattr(a, "total_income_", {}).get("Rice", None),
+        #     "total_income_maize": lambda a: getattr(a, "total_income_", {}).get("Maize", None),
+        #     "total_income_coconut": lambda a: getattr(a, "total_income_", {}).get("Coconut", None),
+        #     "total_income_shrimp": lambda a: getattr(a, "total_income_", {}).get("Shrimp", None),
+        #     "yield_rice": lambda a: getattr(a, "yield_", {}).get("Rice", None),
+        #     "yield_maize": lambda a: getattr(a, "yield_", {}).get("Maize", None),
+        #     "yield_coconut": lambda a: getattr(a, "yield_", {}).get("Coconut", None),
+        #     "yield_shrimp": lambda a: getattr(a, "yield_", {}).get("Shrimp", None),
+        #     "land_size": lambda a: getattr(
+        #         a,
+        #         "land_area",
+        #         None) if getattr(
+        #             a,
+        #             "agent_type",
+        #             None) == "Household" else None,
+             }
                 
             
         self.datacollector = DataCollector(
