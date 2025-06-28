@@ -4,12 +4,14 @@ import numpy as np
 import random
 import statistics
 
+
 from Functions3 import get_education_levels, get_experience, get_dissabilities, get_association, calculate_livelihood, calculate_yield_agri
 from Functions3 import calculate_farming_costs, calculate_yield_shrimp, calculate_cost_shrimp, calculate_wages_farm_workers, calculate_total_income
 from Functions3 import define_abilities, define_motivations, calculate_MOTA, best_MOTA, annual_loan_payment, change_crops
 from Functions3 import calculate_migration_ww, household_experience_machines, transfer_land, advice_neighbours, advice_agrocensus
 
 # Class for all working household members
+
 
 
 class Working_hh_member(Agent):
@@ -75,7 +77,7 @@ class Working_hh_member(Agent):
         self.income = 0
         # Determine if the agent has experience in its occupation, and uses machines
         self.experience, self.machines = get_experience(
-            self.agent_occupation, self.model)
+        self.agent_occupation, self.model)
 
         # Determine the dissabilities the agent has
         self.dissabilities = get_dissabilities(self.age, self.model)
@@ -787,7 +789,7 @@ class Land_household(Agent):
             self.yield_["Shrimp"] = calculate_yield_shrimp(
                 land_area, self.disease, self.use_antibiotics)
             self.total_cost_farming_["Shrimp"] = calculate_cost_shrimp(
-                land_area, self.use_antibiotics)
+                land_area, self.use_antibiotics, self.model)
 
         else:
             # Calculate yield
@@ -796,7 +798,7 @@ class Land_household(Agent):
 
             # Calculate cost farming
             self.total_cost_farming_[
-                crop] = calculate_farming_costs(crop, land_area)
+                crop] = calculate_farming_costs(crop, land_area, self.model)
 
         # Calculate costs wage costs + determine number of wage workers you had
         # during yield time
@@ -895,6 +897,7 @@ class Land_household(Agent):
 
         # If there are no savings left, you will start migrating
         if self.savings < 0 or self.farming_time_left == 0:
+            
             if self.savings < 0 and self.maximum_debt > self.expenditure: # IF YOU CAN GET A LOAN FOR A YEAR, YOU WILL NOT MIGRATE
                 self.debt += self.expenditure
                 self.maximum_debt -= self.expenditure
@@ -938,6 +941,7 @@ class Land_household(Agent):
 
         #If your income is lower than your expenditure, something needs to change. 
         if self.monthly_hh_income * 12 < self.expenditure: 
+            yearly = self.monthly_hh_income*12
             
             # We need to change!!
 
@@ -993,6 +997,8 @@ class Land_household(Agent):
                         self.motivations, self.abilities)
                     self.new_crop = best_MOTA(
                         self.MOTA_scores, current_largest_crop)
+                    
+                    
                     # Implement possible change
                     if self.new_crop not in list(self.crops_and_land.keys()) and self.new_crop is not None:
                         self.savings, self.debt, self.maximum_debt, self.crops_and_land, self.waiting_time_, self.crop_type = change_crops(
@@ -1069,6 +1075,7 @@ class Land_household(Agent):
             education_levels = [0]  
 
         self.average_hh_education = statistics.mean(education_levels)
+        
 
         # Define experience based on experiences on the land and use of
         # machines

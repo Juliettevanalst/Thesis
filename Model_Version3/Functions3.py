@@ -39,11 +39,13 @@ def get_experience(occupation, model):
     """
     experience_dict = model.excel_data['experience_occupation'][occupation]
     for key, values in experience_dict.items():
+        probability_machine = experience_dict['Machines']
+        
         if random.random() < experience_dict['Experience']:
             experience = 0
         else:
             experience = 1
-        if random.random() < experience_dict['Machines']:
+        if random.random() < probability_machine: #experience_dict['Machines']:
             machines = 0
         else:
             machines = 1
@@ -164,7 +166,7 @@ def calculate_yield_agri(
     return yield_, percentage_yield_[crop]
 
 
-def calculate_farming_costs(crop, land_area):
+def calculate_farming_costs(crop, land_area, model):
     """
     Function to calculate the farming costs of a certain crop
     The costs are based on fixed costs per ha, and the land size for the crop on the farm
@@ -172,9 +174,9 @@ def calculate_farming_costs(crop, land_area):
     
 
     cost_per_ha = {
-        "Rice": np.random.normal(15900000),
-        "Maize": 6800000,
-        "Coconut": 20000000}  # All costs are per ha,  DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD ERG LUXE.
+        "Rice": model.fixed_costs_rice,
+        "Maize": 3400000,
+        "Coconut":20000000}  # All costs are per ha,  DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD ERG LUXE.
     costs = cost_per_ha[crop]
 
     total_cost = costs * land_area
@@ -197,7 +199,7 @@ def calculate_yield_shrimp(land_area, disease, use_antibiotics):
     return yield_
 
 
-def calculate_cost_shrimp(land_size, use_antibiotics):
+def calculate_cost_shrimp(land_size, use_antibiotics, model):
     """
     Function to calculate the costs of shrimp
 
@@ -683,31 +685,31 @@ def transfer_land(land_size, node_id, model, crops_and_land):
     # agents is a list, so we need to take the first item of the list
     if agents:
         agent = agents[0]
-    if agent.livelihood['Financial'] > max_livelihood:
-        max_livelihood = agent.livelihood['Financial']
-        best_neighbor = agent
+        if agent.livelihood['Financial'] > max_livelihood:
+            max_livelihood = agent.livelihood['Financial']
+            best_neighbor = agent
 
-    if best_neighbor:
-        # Check if the best neighbor can pay for the land
-        land_costs = land_size * model.land_price_per_ha
-        if best_neighbor.savings > land_costs:
-            best_neighbor.land_area += land_size
-            best_neighbor.savings -= land_costs
+        if best_neighbor:
+            # Check if the best neighbor can pay for the land
+            land_costs = land_size * model.land_price_per_ha
+            if best_neighbor.savings > land_costs:
+                best_neighbor.land_area += land_size
+                best_neighbor.savings -= land_costs
 
-            # Check in which category the agent now falls
-            if 0 <= best_neighbor.land_area <= 0.5:
-                best_neighbor.land_category = "small"
-            elif 0.5 < best_neighbor.land_area <= 2:
-                best_neighbor.land_category = "medium"
-            else:
-                best_neighbor.land_category = "large"
-
-            # Add this to the crops_and_land
-            for crop, area in crops_and_land.items():
-                if crop in best_neighbor.crops_and_land:
-                    best_neighbor.crops_and_land[crop] += area
+                # Check in which category the agent now falls
+                if 0 <= best_neighbor.land_area <= 0.5:
+                    best_neighbor.land_category = "small"
+                elif 0.5 < best_neighbor.land_area <= 2:
+                    best_neighbor.land_category = "medium"
                 else:
-                    best_neighbor.crops_and_land[crop] = area
+                    best_neighbor.land_category = "large"
+
+                # Add this to the crops_and_land
+                for crop, area in crops_and_land.items():
+                    if crop in best_neighbor.crops_and_land:
+                        best_neighbor.crops_and_land[crop] += area
+                    else:
+                        best_neighbor.crops_and_land[crop] = area
 
 
 def annual_loan_payment(loan_size, interest_rate_loans):
