@@ -632,8 +632,7 @@ class Land_household(Agent):
         # Identify if the household has experience and machines
         self.machines, self.experience = household_experience_machines(
             self.household_members)
-        # if self.model.machines_experiment != 2:
-        #     self.machines = self.model.machines_experiment
+       
         self.average_hh_experiences = (self.experience + self.machines) / 2
 
         # For migration, did the household see an advertisement about the city?
