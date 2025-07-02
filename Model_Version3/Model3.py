@@ -32,29 +32,36 @@ class RiverDeltaModel(Model):
     def __init__(
         self,
         seed=20,
-        salinity_low = False,
-        salinity_high = False,
-        district='Gò Công Đông', 
+        salinity_low=False,
+        salinity_high=False,
+        district='Gò Công Đông',
         num_agents=1000,
+        machines_experiment=2,
+        education_level=2,
+        ww_salary_increase=1,
+        fixed_costs_rice=15900000,
+        fixed_costs_maize=3400000,
+        fixed_costs_coconut=20000000,
+        fixed_costs_shrimp=3900000,
         excel_path=correct_path,
-        fixed_costs_rice = 15900000,
         salinity_shock_step=[
-            25,27,73,75,145,181,217,253,289]):
+            25, 27, 73, 75, 145, 181, 217, 253, 289]):
         super().__init__(seed=seed)
         self.seed = seed
         random.seed(20)
         np.random.seed(20)
 
-        # Variables for experiments using batch runner
-        # self.machines_experiment = float(machines_experiment)
-        # self.education_level = float(education_level)
-        # self.ww_salary_increase = float(ww_salary_increase)
+        # Variables for sensitivity analysis using batch runner
+        self.machines_experiment = float(machines_experiment)
+        self.education_level = float(education_level)
+        self.ww_salary_increase = float(ww_salary_increase)
         self.fixed_costs_rice = float(fixed_costs_rice)
-        # self.fixed_costs_maize = float(fixed_costs_maize)
-        # self.fixed_costs_coconut = float(fixed_costs_coconut)
-        # self.fixed_costs_shrimp = float(fixed_costs_shrimp)
+        self.fixed_costs_maize = float(fixed_costs_maize)
+        self.fixed_costs_coconut = float(fixed_costs_coconut)
+        self.fixed_costs_shrimp = float(fixed_costs_shrimp)
 
-        # attributes for sensitivity analysis (the rest of the analysis is shown in the sensitivity map)
+        # attributes for sensitivity analysis (the rest of the analysis is
+        # shown in the sensitivity map)
         self.salinity_low = salinity_low
         self.salinity_high = salinity_high
 
@@ -64,9 +71,6 @@ class RiverDeltaModel(Model):
         # Generate agents
         self.num_agents = num_agents
         self.generate_agents()
-
-        
-        
 
         # Define area. This is done by:
         #   - Determining the district
@@ -81,21 +85,22 @@ class RiverDeltaModel(Model):
         for agent in self.agents:
             if agent.agent_type == "Household" and agent.land_area > 0.0:
                 households_which_need_a_node.append(agent)
-                
+
         self.G = self.initialize_network(
             self.data_salinity,
             self.polygon_districts,
-            households_which_need_a_node, # HIER WAS EERST LEN(households_which_need_a_node)
+            households_which_need_a_node,
+            # HIER WAS EERST LEN(households_which_need_a_node)
             self.seed)
         self.grid = NetworkGrid(self.G)
 
         # Connect farmer households to the grid
         available_nodes = list(self.G.nodes())
         random.shuffle(available_nodes)
-        
+
         for agent in households_which_need_a_node:
             node_id = available_nodes.pop(0)
-            salinity_level = self.G.nodes[node_id]["salinities"]  
+            salinity_level = self.G.nodes[node_id]["salinities"]
             agent.salinity = salinity_level
             if self.salinity_low:
                 agent.salinity = 0
@@ -103,8 +108,6 @@ class RiverDeltaModel(Model):
                 agent.salinity = salinity_level * 2
             agent.node_id = node_id
             self.grid.place_agent(agent, agent.node_id)
-           
-        
 
     # Below are all the parameters, which are used in the model
 
@@ -128,7 +131,7 @@ class RiverDeltaModel(Model):
 
         # possibility for migration
         self.chances_migration = [0.03, 0.01, 0.01,
-                                  0.005, 0.01, 0.005]  
+                                  0.005, 0.01, 0.005]
         self.chance_leaving_household = 0.005  # Assumption
         self.increased_chance_migration_familiarity = 0.01
 
@@ -141,8 +144,8 @@ class RiverDeltaModel(Model):
         # Distribution man_days during preparation time and yield time
         self.man_days_prep = 1 / 3
         # Assumption, average / day is 200000 based on Pedroso et al., 2017
-        self.payment_low_skilled = 190000
-        self.payment_high_skilled = 210000
+        self.payment_low_skilled = 190000 * self.ww_salary_increase
+        self.payment_high_skilled = 210000 * self.ww_salary_increase
         self.distribution_high_low_skilled = 0
 
         # Number of deceased households (all household members have died)
@@ -155,11 +158,10 @@ class RiverDeltaModel(Model):
 
         # Check the total number_of_households
         self.number_of_households = 0
-       
+
         for agent in self.agents:
             if agent.agent_type == "Household":
                 self.number_of_households += 1
-                
 
         self.start_households = self.number_of_households
         self.current_hh_left = self.number_of_households
@@ -232,224 +234,126 @@ class RiverDeltaModel(Model):
         for crop_type, crop_key in crops.items():
             for land in lands:
                 label = f"{crop_key} {land}"
-                model_metrics[f"Savings {label}"] = household_stat("savings", crop_type, land)
-                model_metrics[f"Yield {label}"] = household_dict_stat("yield_", crop_key, crop_type, land)
-                model_metrics[f"Income {label}"] = household_dict_stat("total_income_", crop_key, crop_type, land)
-                model_metrics[f"Wage costs {label}"] = household_dict_stat("wage_costs_", crop_key, crop_type, land)
-                model_metrics[f"Debt ratio {label}"] = household_stat("debt_ratio", crop_type, land)
-                model_metrics[f"Count {label}"] = household_count(crop_type, land)
+                model_metrics[f"Savings {label}"] = household_stat(
+                    "savings", crop_type, land)
+                model_metrics[f"Yield {label}"] = household_dict_stat(
+                    "yield_", crop_key, crop_type, land)
+                model_metrics[f"Income {label}"] = household_dict_stat(
+                    "total_income_", crop_key, crop_type, land)
+                model_metrics[f"Wage costs {label}"] = household_dict_stat(
+                    "wage_costs_", crop_key, crop_type, land)
+                model_metrics[f"Debt ratio {label}"] = household_stat(
+                    "debt_ratio", crop_type, land)
+                model_metrics[f"Count {label}"] = household_count(
+                    crop_type, land)
 
-        
-        # model_metrics["Number_of_wage_workers"] = lambda model: safe_mean(
-        #     getattr(agent, "wage_workers", None)
-        #     for agent in model.agents
-        #     if getattr(agent, "agent_type", None) == "Household"
-        #     and hasattr(agent, "wage_workers")
-        # )
+        model_metrics["Number_of_wage_workers"] = lambda model: safe_mean(
+            getattr(agent, "wage_workers", None)
+            for agent in model.agents
+            if getattr(agent, "agent_type", None) == "Household"
+            and hasattr(agent, "wage_workers")
+        )
 
-        # model_metrics["Income_agri_wage"] = lambda model: safe_mean(
-        #     getattr(agent, "income", None)
-        #     for agent in model.agents
-        #     if isinstance(agent, (Low_skilled_agri_worker, Skilled_agri_worker))
-        # )
+        model_metrics["Income_agri_wage"] = lambda model: safe_mean(
+            getattr(agent, "income", None)
+            for agent in model.agents
+            if isinstance(agent, (Low_skilled_agri_worker, Skilled_agri_worker))
+        )
 
-        # model_metrics["Income_service_worker"] = lambda model: safe_mean(
-        #     getattr(agent, "income", None)
-        #     for agent in model.agents
-        #     if isinstance(agent, (Skilled_service_worker))
-        # )
+        model_metrics["Income_service_worker"] = lambda model: safe_mean(
+            getattr(agent, "income", None)
+            for agent in model.agents
+            if isinstance(agent, (Skilled_service_worker))
+        )
 
-        # model_metrics["Savings_landless_hh"] = lambda model: safe_mean(
-        #     getattr(agent, "savings", None)
-        #     for agent in model.agents
-        #     if isinstance(agent, (Landless_households))
-        # )
+        model_metrics["Savings_landless_hh"] = lambda model: safe_mean(
+            getattr(agent, "savings", None)
+            for agent in model.agents
+            if isinstance(agent, (Landless_households))
+        )
 
-        # model_metrics['Average_livelihood'] = lambda model: safe_mean(
-        #     getattr(agent, "livelihood", None) 
-        #     for agent in model.agents 
-        #     if isinstance(agent, (Landless_households)))
-        
+        model_metrics['Average_livelihood'] = lambda model: safe_mean(
+            getattr(agent, "livelihood", None)
+            for agent in model.agents
+            if isinstance(agent, (Landless_households)))
+
         model_metrics['Migrated_households'] = lambda model: sum(
             1 for agent in model.agents if getattr(
                 agent,
                 "agent_type",
                 None) == "Migrated")
-        
-        # model_metrics['Migrated_individuals'] = lambda model: sum(
-        #     1 for agent in model.agents if getattr(
-        #         agent,
-        #         "agent_type",
-        #         None) == "Migrated_member_young_adult")
-        
-        # model_metrics['Total_number_nonfarmers'] = lambda m: sum(
-        #     isinstance(a, (Low_skilled_agri_worker, Low_skilled_nonAgri, Manual_worker,
-        #                    Skilled_agri_worker, Skilled_service_worker, Other))
-        #                    and (not hasattr(a, "agent_employment_type") or a.agent_employment_type != "family_worker")
-        #                    for a in m.agents)
-        
 
+        model_metrics['Migrated_individuals'] = lambda model: sum(
+            1 for agent in model.agents if getattr(
+                agent,
+                "agent_type",
+                None) == "Migrated_member_young_adult")
 
-
-       
-        # model_metrics = {
-        #     # "Average_Livelihood": lambda model: mean(
-        #     #     [
-        #     #         agent.livelihood['Average'] for agent in self.agents if hasattr(
-        #     #             agent,
-        #     #             'livelihood')]) if self.agents else 0,
-        #     # "Num_household_members": lambda model: sum(
-        #     #     1 for agent in model.agents if getattr(
-        #     #         agent,
-        #     #         "agent_type",
-        #     #         None) == "Household_member"),
-        #     "Migrated_households": lambda model: sum(
-        #         1 for agent in model.agents if getattr(
-        #             agent,
-        #             "agent_type",
-        #             None) == "Migrated"),
-        #     "Migrated_members": lambda model: sum(
-        #         1 for agent in model.agents if getattr(
-        #             agent,
-        #             "agent_type",
-        #             None) == "Migrated_member"),
-        #     "Migrated_individuals": lambda model: sum(
-        #         1 for agent in model.agents if getattr(
-        #             agent,
-        #             "agent_type",
-        #             None) == "Migrated_member_young_adult"),
-        #     "Died agents": lambda model: self.death_agents,
-        #     "Child births": lambda model: self.child_births,
-        #     "Rice agents": lambda model: sum(
-        #         1 for agent in model.agents if getattr(
-        #             agent, 
-        #             "crop_type", 
-        #             None)=="Rice"),
-        #     "Rice small": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Rice"
-        #         and getattr(agent, "land_category", None) == "small"
-        #     ),
-        #     "Rice medium": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Rice"
-        #         and getattr(agent, "land_category", None) == "medium"
-        #     ),
-        #     "Rice large": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Rice"
-        #         and getattr(agent, "land_category", None) == "large"
-        #     ),
-        #     "Annual crops small": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Annual crops"
-        #         and getattr(agent, "land_category", None) == "small"
-        #     ),
-        #     "Annual crops medium": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Annual crops"
-        #         and getattr(agent, "land_category", None) == "medium"
-        #     ),
-        #     "Annual crops large": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Annual crops"
-        #         and getattr(agent, "land_category", None) == "large"
-        #     ),
-        #     "Coconut small": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Perennial crops"
-        #         and getattr(agent, "land_category", None) == "small"
-        #     ),
-        #     "Coconut medium": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Perennial crops"
-        #         and getattr(agent, "land_category", None) == "medium"
-        #     ),
-        #     "Coconut large": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Perennial crops"
-        #         and getattr(agent, "land_category", None) == "large"
-        #     ),
-        #     "Shrimp small": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Aquaculture"
-        #         and getattr(agent, "land_category", None) == "small"
-        #     ),
-        #     "Shrimp medium": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Aquaculture"
-        #         and getattr(agent, "land_category", None) == "medium"
-        #     ),
-        #     "Shrimp large": lambda model: sum(
-        #         1 for agent in model.agents
-        #         if getattr(agent, "crop_type", None) == "Aquaculture"
-        #         and getattr(agent, "land_category", None) == "large"
-        #     )
-
-        #     "Low_skilled_agri": lambda m: sum(isinstance(a, Low_skilled_agri_worker) for a in m.agents),
-        #     "Skilled_agri": lambda m: sum(isinstance(a, Skilled_agri_worker) for a in m.agents)
-        # }
+        model_metrics['Total_number_nonfarmers'] = lambda m: sum(
+            isinstance(a, (Low_skilled_agri_worker, Low_skilled_nonAgri, Manual_worker,
+                           Skilled_agri_worker, Skilled_service_worker, Other))
+            and (not hasattr(a, "agent_employment_type") or a.agent_employment_type != "family_worker")
+            for a in m.agents)
 
         agent_metrics = {
-        #     "Crop_type": lambda a: getattr(
-        #         a,
-        #         "crop_type",
-        #         None) if getattr(
-        #         a,
-        #         "agent_type",
-        #         None) == "Household" else None,
-        #     "Land_category": lambda a: getattr(
-        #         a,
-        #         "land_category",
-        #         None) if getattr(
-        #             a,
-        #             "agent_type",
-        #             None) == "Household" else None,
-        #     "Savings": lambda a: getattr(
-        #         a,
-        #         "savings",
-        #         None) if getattr(
-        #         a,
-        #         "agent_type",
-        #         None) == "Household" else None,
-        #     "too low income": lambda a: getattr(
-        #         a,
-        #         "income_too_low",
-        #         None) if hasattr(
-        #         a,
-        #         "income_too_low") else None,
-        #     "Number_of_wage_workers": lambda a: getattr(
-        #         a,
-        #         "wage_workers", 
-        #         None) if hasattr(
-        #             a,
-        #             "wage_workers") else None,
-        #     "Debt ratio": lambda a: getattr(
-        #         a,
-        #         "debt_ratio",
-        #         None) if hasattr(a, "debt_ratio") else None,
-        #     "ww_costs_rice": lambda a: getattr(a, "wage_costs_", {}).get("Rice", None),
-        #     "ww_costs_maize": lambda a: getattr(a, "wage_costs_", {}).get("Maize", None),
-        #     "ww_costs_coconut": lambda a: getattr(a, "wage_costs_", {}).get("Coconut", None),
-        #     "ww_costs_shrimp": lambda a: getattr(a, "wage_costs_", {}).get("Shrimp", None),
-        #     "total_income_rice": lambda a: getattr(a, "total_income_", {}).get("Rice", None),
-        #     "total_income_maize": lambda a: getattr(a, "total_income_", {}).get("Maize", None),
-        #     "total_income_coconut": lambda a: getattr(a, "total_income_", {}).get("Coconut", None),
-        #     "total_income_shrimp": lambda a: getattr(a, "total_income_", {}).get("Shrimp", None),
-        #     "yield_rice": lambda a: getattr(a, "yield_", {}).get("Rice", None),
-        #     "yield_maize": lambda a: getattr(a, "yield_", {}).get("Maize", None),
-        #     "yield_coconut": lambda a: getattr(a, "yield_", {}).get("Coconut", None),
-        #     "yield_shrimp": lambda a: getattr(a, "yield_", {}).get("Shrimp", None),
-        #     "land_size": lambda a: getattr(
-        #         a,
-        #         "land_area",
-        #         None) if getattr(
-        #             a,
-        #             "agent_type",
-        #             None) == "Household" else None,
-             }
-                
-            
+            "Crop_type": lambda a: getattr(
+                a,
+                "crop_type",
+                None) if getattr(
+                a,
+                "agent_type",
+                None) == "Household" else None,
+            "Land_category": lambda a: getattr(
+                a,
+                "land_category",
+                None) if getattr(
+                    a,
+                    "agent_type",
+                    None) == "Household" else None,
+            "Savings": lambda a: getattr(
+                a,
+                "savings",
+                None) if getattr(
+                a,
+                "agent_type",
+                None) == "Household" else None,
+            "too low income": lambda a: getattr(
+                a,
+                "income_too_low",
+                None) if hasattr(
+                a,
+                "income_too_low") else None,
+            "Number_of_wage_workers": lambda a: getattr(
+                a,
+                "wage_workers",
+                None) if hasattr(
+                    a,
+                    "wage_workers") else None,
+            "Debt ratio": lambda a: getattr(
+                a,
+                "debt_ratio",
+                None) if hasattr(a, "debt_ratio") else None,
+            "ww_costs_rice": lambda a: getattr(a, "wage_costs_", {}).get("Rice", None),
+            "ww_costs_maize": lambda a: getattr(a, "wage_costs_", {}).get("Maize", None),
+            "ww_costs_coconut": lambda a: getattr(a, "wage_costs_", {}).get("Coconut", None),
+            "ww_costs_shrimp": lambda a: getattr(a, "wage_costs_", {}).get("Shrimp", None),
+            "total_income_rice": lambda a: getattr(a, "total_income_", {}).get("Rice", None),
+            "total_income_maize": lambda a: getattr(a, "total_income_", {}).get("Maize", None),
+            "total_income_coconut": lambda a: getattr(a, "total_income_", {}).get("Coconut", None),
+            "total_income_shrimp": lambda a: getattr(a, "total_income_", {}).get("Shrimp", None),
+            "yield_rice": lambda a: getattr(a, "yield_", {}).get("Rice", None),
+            "yield_maize": lambda a: getattr(a, "yield_", {}).get("Maize", None),
+            "yield_coconut": lambda a: getattr(a, "yield_", {}).get("Coconut", None),
+            "yield_shrimp": lambda a: getattr(a, "yield_", {}).get("Shrimp", None),
+            "land_size": lambda a: getattr(
+                a,
+                "land_area",
+                None) if getattr(
+                    a,
+                    "agent_type",
+                    None) == "Household" else None,
+        }
+
         self.datacollector = DataCollector(
             model_reporters=model_metrics,
             agent_reporters=agent_metrics)
@@ -670,12 +574,12 @@ class RiverDeltaModel(Model):
 
     def step(self):
         """
-        The step function of the model class determines what happens in the model. 
+        The step function of the model class determines what happens in the model.
         Each step, it is checked if a shock is happening or not.
 
         When self.steps % 12 == 0, it is time for the yearly activities of all agents
 
-        Dependend on the crop, it can be time to harvest. 
+        Dependend on the crop, it can be time to harvest.
         Three times a year, the non agri workers get paid
 
         After payment, the households will check whether their income is sufficient or not
@@ -692,7 +596,6 @@ class RiverDeltaModel(Model):
                 agent.time_since_last_savings_check += 1
             if agent.agent_type == "Household":
                 self.number_of_households += 1
-                
 
         self.current_hh_left = self.number_of_households / self.start_households
 
@@ -703,7 +606,6 @@ class RiverDeltaModel(Model):
 
         if self.steps == 1:
             self.data_at_step_1 = self.collect_household_data()
-            
 
         # It is only possible to change when 12 steps are done
         if self.steps > 6:
@@ -717,7 +619,7 @@ class RiverDeltaModel(Model):
         self.pay_other_agents()
 
         # OR CHANGE IT TO EVERY MONTH
-        if self.steps %12 == 0:
+        if self.steps % 12 == 0:
             # Collect data
             self.datacollector.collect(self)
 
@@ -811,12 +713,10 @@ class RiverDeltaModel(Model):
                             crop] == 0:
                         agent.harvest(crop)
                         agent.wage_worker_payment = 1
-                    
-                        
 
     def pay_wage_workers(self):
         """
-        All farmers who harvest, need to pay their wage workers. 
+        All farmers who harvest, need to pay their wage workers.
         This functions select those workers, calculates their income and increases the income of the individual workers
         """
         # select all wage workers
@@ -831,7 +731,6 @@ class RiverDeltaModel(Model):
         sum_high_skilled = sum(1 for agent in selected_agents if getattr(
             agent, 'agent_occupation', None) == "skilled_agri_worker")
         if sum_low_skilled == 0 and sum_high_skilled == 0:
-            print("niemand wil op de farm werken")
             self.distribution_high_low_skilled = 0
         else:
             # Calculate distribution of high and low skilled wage workers
@@ -859,10 +758,11 @@ class RiverDeltaModel(Model):
 
     def farmers_check_situation(self):
         """
-        Function for all farmers who have just harvested. 
-        The land households update their savings 
+        Function for all farmers who have just harvested.
+        The land households update their savings
         """
-        # all farm household agents that harvested check their savings to look if they need to change something.
+        # all farm household agents that harvested check their savings to look
+        # if they need to change something.
         for agent in list(self.agents):
             if isinstance(agent, Land_household):
                 if agent.wage_worker_payment == 1:
@@ -882,7 +782,7 @@ class RiverDeltaModel(Model):
     def pay_other_agents(self):
         """Three times per year, it is time to pay the non agri household members
 
-        For each occupation, the ratio of workers left in the occupation is calculated. 
+        For each occupation, the ratio of workers left in the occupation is calculated.
             As a result, when a lot of workers are leaving, you will receive more income
 
         Except for service workers, their income can also decrease
@@ -896,7 +796,7 @@ class RiverDeltaModel(Model):
         total_low_skilled_nonagri = len(selected_agents)
         for agent in selected_agents:
             income_increase = self.start_total_low_nonagri / total_low_skilled_nonagri
-            agent.income += income_increase  * self.payment_low_skilled * \
+            agent.income += income_increase * self.payment_low_skilled * \
                 self.work_days_per_month
 
         # Pay manual workers and "other" occupation
@@ -924,7 +824,7 @@ class RiverDeltaModel(Model):
         decrease_in_income = self.current_hh_left
         for agent in selected_agents:
             agent.income += increase_in_income * decrease_in_income * \
-                 self.payment_high_skilled * self.work_days_per_month
+                self.payment_high_skilled * self.work_days_per_month
 
         # Agents need to update their income and see if it is sufficient
         if self.steps % 12 == 4:
@@ -979,7 +879,7 @@ class RiverDeltaModel(Model):
         Based on the land area, the land households have a land size
         Small land size will be between 0 and 0.5 ha
         Medium land size between 0.5 - 2 ha
-        Large land size is bigger than 2 ha 
+        Large land size is bigger than 2 ha
         """
         if land_category == "small":
             return self.random.uniform(0.3, 0.5)
@@ -1006,7 +906,7 @@ class RiverDeltaModel(Model):
 
     def get_house_quality(self):
         """
-        All household agents have a housing quality. 
+        All household agents have a housing quality.
         This is based on excel data, using a mean and std dev
         """
         mean = self.excel_data['housing_quality']['mean']
@@ -1015,12 +915,12 @@ class RiverDeltaModel(Model):
 
     def number_of_members_per_type(self, number):
         """
-        When creating land households, the household needs to be filled with 
+        When creating land households, the household needs to be filled with
             self agri workers, self wage workers and self non agri workers
 
         This function takes the average number of household members in this category per land size,
             and makes this an int.
-        (it is not possible to have 1.9 farm workers on your farm, it should be 1 or 2) 
+        (it is not possible to have 1.9 farm workers on your farm, it should be 1 or 2)
         """
         int_number = int(number)
         if self.random.random() < (number - int_number):
@@ -1107,7 +1007,7 @@ class RiverDeltaModel(Model):
             employment_distribution):
         """
         Function to check the employment type of a working household member, during the creation of the agent
-        This is based on the agent sector and agent occupation, using the excel file. 
+        This is based on the agent sector and agent occupation, using the excel file.
         """
         employment_types = employment_distribution[agent_sector][agent_occupation]['employment_distribution']
         chance_employment = self.random.random()
@@ -1123,11 +1023,11 @@ class RiverDeltaModel(Model):
         This function is used to read all the excel sheets, and add all the data in a dictionary.
 
         What happens is that for each factor, e.g. age distribution,
-            the data is read using the function "self.process_age_distribution". 
+            the data is read using the function "self.process_age_distribution".
 
             Those functions process the data, and put it in the items of the dictionary.
             When using this get_excel_data function with the correct key,
-            access to the correct data is provided. 
+            access to the correct data is provided.
         """
         sheets = pd.read_excel(excel_path, sheet_name=None)
 
@@ -1161,7 +1061,7 @@ class RiverDeltaModel(Model):
     def process_work_per_agegroup(self, df):
         """
         Function to read the excel data if an individual is working or not,
-        this is based on their age group, and put in a dictionary. 
+        this is based on their age group, and put in a dictionary.
         This dictionary can be accessed using the get_excel data function
         """
         work_dict = {}
@@ -1187,7 +1087,7 @@ class RiverDeltaModel(Model):
     def process_occupation_employment_distribution(self, df):
         """
         Function to read the excel data for occupations and employment.
-        This excel sheet shows the sector, occupations with percentages, 
+        This excel sheet shows the sector, occupations with percentages,
             and employment types with percentages.
 
         The sectors, occupations and employment types are put together in a nested dictionary
@@ -1233,7 +1133,7 @@ class RiverDeltaModel(Model):
 
         In the excel sheet, there is per dominant income source and land size,
             a probiability someone works in self agri, self non agri and wage
-            in the family. 
+            in the family.
         These probabilities are placed in a nested dictionary for in the get_excel_function
         """
         land_dict = defaultdict(dict)
@@ -1311,7 +1211,7 @@ class RiverDeltaModel(Model):
         There is a nested dictionary, per age and functioning with how much,
             difficulty someone could have in percentages.
 
-        Example: {{59-85:{"Hearing":{"No_difficulty":0.87, "Unable": 0.05,... }}}} 
+        Example: {{59-85:{"Hearing":{"No_difficulty":0.87, "Unable": 0.05,... }}}}
 
         This dictionary can be loaded using the get_excel_function
         """
@@ -1347,7 +1247,7 @@ class RiverDeltaModel(Model):
     def gather_shapefiles(self, district):
         """
         This function is used to open the district-salinity gpkg file,
-            and the district boundaries gpkg file. 
+            and the district boundaries gpkg file.
 
         These two datasets are then stored in self.data_salinity, self.polygon_districts,
         to have easy and fast acces to them.
@@ -1387,10 +1287,11 @@ class RiverDeltaModel(Model):
         """
         Function to create a network for the land household agents
         """
-        
-        districts_polygon.set_crs(salinity_data.crs, inplace = True)
+
+        districts_polygon.set_crs(salinity_data.crs, inplace=True)
         # generate random points
-        candidate_points = districts_polygon.sample_points(size=len(land_agents)*50, seed=seed)
+        candidate_points = districts_polygon.sample_points(
+            size=len(land_agents) * 50, seed=seed)
         point_geoms = list(candidate_points.geometry[0].geoms)
 
         # Get salinity per point
@@ -1401,11 +1302,12 @@ class RiverDeltaModel(Model):
                 salinity = salinity_match.iloc[0]['Salinity']
                 point_data.append((pt, salinity))
             else:
-                print("geen data gevonden!")
+                print("no salinity data found!")
 
         # distinguish between low and high salinity points
         low_salinity_points = [(pt, sal) for pt, sal in point_data if sal < 4]
-        high_salinity_points = [(pt, sal) for pt, sal in point_data if sal >= 4]
+        high_salinity_points = [(pt, sal)
+                                for pt, sal in point_data if sal >= 4]
 
         # Determine high/low salinity is prefered based on crop type
         coords = []
@@ -1419,15 +1321,17 @@ class RiverDeltaModel(Model):
         }
 
         np.random.seed(seed)
-        
+
         for agent in land_agents:
             crop_type = agent.crop_type
             sal_pref = crop_type_to_salinity.get(crop_type, "low")
 
             if sal_pref == "low" and low_salinity_points:
-                pt, sal = low_salinity_points.pop(np.random.randint(len(low_salinity_points)))
+                pt, sal = low_salinity_points.pop(
+                    np.random.randint(len(low_salinity_points)))
             elif sal_pref == "high" and high_salinity_points:
-                pt, sal = high_salinity_points.pop(np.random.randint(len(high_salinity_points)))
+                pt, sal = high_salinity_points.pop(
+                    np.random.randint(len(high_salinity_points)))
             else:
                 # Fallback if there are no points available
                 pt, sal = point_data.pop(np.random.randint(len(point_data)))
@@ -1444,71 +1348,38 @@ class RiverDeltaModel(Model):
 
         G = nx.Graph()
         for i, (x, y) in enumerate(coords):
-            G.add_node(i, pos=(x, y), salinities=salinities[i], crop_type=land_agents[i].crop_type)
+            G.add_node(
+                i,
+                pos=(
+                    x,
+                    y),
+                salinities=salinities[i],
+                crop_type=land_agents[i].crop_type)
 
         for i, neighbors in enumerate(indices):
             for j in neighbors[1:]:
                 G.add_edge(i, j)
-        
+
         return G
-        
 
-
-
-        # If you not want to place the agents on the map based on salinity, use the lines below
-
-        # # Define number of points
-        # points = districts_polygon.sample_points(size=land_agents, seed=seed)
-
-        # points_list = list(points.geometry[0].geoms)
-        # coords = np.array([(pt.x, pt.y) for pt in points_list])
-
-        # # Create a network, three nearest nodes are supposed to be your
-        # # neighbours
-        # tree = cKDTree(coords)
-        # k = 4
-        # distances, indices = tree.query(coords, k=k)
-
-        # G = nx.Graph()
-
-        # # Add nodes
-        # for i, (x, y) in enumerate(coords):
-        #     point = Point(x, y)
-        #     # Add salinity to the point, this is the salinity for the household
-        #     get_salinity = salinity_data[salinity_data.contains(point)]
-        #     if not get_salinity.empty:
-        #         salinities = get_salinity.iloc[0]['Salinity']
-        #     else:
-        #         salinities = None
-        #         print("Something went wrong")
-        #     G.add_node(i, pos=(x, y), salinities=salinities)
-
-        # # Add edges
-        # for i, neighbors in enumerate(indices):
-        #     for j in neighbors[1:]:  # skip the first one, that is the point itself
-        #         G.add_edge(i, j)
-
-        # return G
     def collect_household_data(self):
         data = []
 
         for household in self.agents:  # assuming self.agents are LandHousehold instances
-            # Controleer dat dit een LandHousehold is (optioneel)
+
             if not isinstance(household, Land_household):
                 continue
 
-            # Basiseigenschappen huishouden
             land_area = household.land_area
             household_size = household.household_size
             association = household.association
             livelihood = household.livelihood
             crops_and_land = household.crops_and_land
 
-            # Voor elk lid van het huishouden, pak de agent_occupation
-            for member in household.household_members:  # aanname: 'members' is lijst van agent-objecten
+            for member in household.household_members:
                 if hasattr(member, 'agent_occupation'):
                     occupation = member.agent_occupation
-                
+
                 else:
                     occupation = None
 
@@ -1522,8 +1393,61 @@ class RiverDeltaModel(Model):
                     'agent_occupation': occupation,
                 })
 
-        # Maak dataframe
+        # create dataframe
         df = pd.DataFrame(data)
         return df
 
+    def get_household_member_counts(self):
+        """Function to get the houehold composition per occupation for the verification of the model"""
+        # Define the classes
+        agent_classes = [
+            "Low_skilled_agri_worker",
+            "Skilled_agri_worker",
+            "Low_skilled_nonAgri",
+            "Manual_worker",
+            "Skilled_service_worker",
+            "Other",
+            "Non_labourer"
+        ]
 
+        data = []
+
+        # Define households
+        households = [a for a in self.agents if a.agent_type == "Household"]
+
+        # Loop through all households, count the occupations per member by
+        # looking at their class
+        for hh in households:
+            hh_type = type(hh).__name__
+            counts = {cls: 0 for cls in agent_classes}
+
+            # Count members by class
+            for member in hh.household_members:
+                member_class = type(member).__name__
+
+                # Combine some classes if needed:
+                if member_class in [
+                    "Low_skilled_agri_worker",
+                        "Skilled_agri_worker"]:
+                    # combine agri workers here
+                    counts["Low_skilled_agri_worker"] += 1
+                elif member_class in ["Manual_worker", "Low_skilled_nonAgri", "Other"]:
+                    # combine these as manual workers
+                    counts["Manual_worker"] += 1
+                elif member_class in agent_classes:
+                    counts[member_class] += 1
+                else:
+                    # If you want to count unknown classes separately, you can
+                    # add here
+                    pass
+
+            # Add household info and count to the row
+            row = {
+                "household_type": hh_type,
+                "household_size": hh.household_size,
+                "land_area": getattr(hh, 'land_area', 0),
+            }
+            row.update(counts)
+            data.append(row)
+
+        return pd.DataFrame(data)

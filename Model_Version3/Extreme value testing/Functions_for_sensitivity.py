@@ -33,7 +33,7 @@ def get_education_levels(age, model):
 
 
 def get_experience(occupation, model):
-    """ 
+    """
     For the individual agents, it is checked if they have 3+ years experience and if they  use machines
     This is based on their occupation, and the excel file
     """
@@ -52,7 +52,7 @@ def get_experience(occupation, model):
 
 
 def household_experience_machines(household_members):
-    """ 
+    """
     For all land households, the average experience levels are checked
     Furthermore, it is checked if someone in the family is familiar with machines, then machines == 1
 
@@ -76,7 +76,7 @@ def get_dissabilities(age, model):
     This is based on data in the excel file
 
     If someone has "very_difficulty" with something, its dissabilities level is0.75
-    If someone is unable to do something, its dissabilities level is 1. 
+    If someone is unable to do something, its dissabilities level is 1.
     Otherewise, its dissabilities level is equal to the average of their dissabilities
     """
     if 0 <= age <= 15:
@@ -115,7 +115,7 @@ def get_dissabilities(age, model):
 
 def get_association(model):
     """
-    This function determines, based on the excel data, 
+    This function determines, based on the excel data,
     if a land household is member of the association or not
     """
     chance_member = model.excel_data['association']
@@ -131,9 +131,9 @@ def calculate_yield_agri(
         salinity,
         human_livelihood,
         percentage_yield_):
-    """ 
+    """
     Function to calculate the yield in agriculture.
-    First, it is checked what the yield reduction is due to salinity, while using the FAO formula. 
+    First, it is checked what the yield reduction is due to salinity, while using the FAO formula.
         (Only rice and Maize are impacted by salinity)
     The total yield is calculated, based on yield per ha, multiplied by land size and the yield reduction of salinity
     When the household is smarter, the household is less impacted by salinity. This is based on the human_livelihood
@@ -170,7 +170,6 @@ def calculate_farming_costs(crop, land_area, model):
     The costs are based on fixed costs per ha, and the land size for the crop on the farm
     """
 
-    
     if model.production_costs_scenario == "Low":
         multiplier = 0.5
     elif model.production_costs_scenario == "Medium":
@@ -179,9 +178,12 @@ def calculate_farming_costs(crop, land_area, model):
         multiplier = 2
 
     cost_per_ha = {
-        "Rice": np.random.normal(15900000)*multiplier,
-        "Maize": 6800000*multiplier,
-        "Coconut": 20000000*multiplier}  # All costs are per ha,  DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD ERG LUXE.
+        "Rice": np.random.normal(15900000) *
+        multiplier,
+        "Maize": 6800000 *
+        multiplier,
+        "Coconut": 20000000 *
+        multiplier}  # All costs are per ha,  DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD ERG LUXE.
     costs = cost_per_ha[crop]
 
     total_cost = costs * land_area
@@ -236,13 +238,22 @@ def calculate_wages_farm_workers(
     6. Determine the costs of the wage workers, based on the distribution of high and low skilled workers
     """
     # Based on different papers, see documentation
-    man_days_per_ha = {"Rice": 48 * model.wage_workers_required, "Coconut": 8 * model.wage_workers_required, "Maize": 106*model.wage_workers_required, "Shrimp": 33*model.wage_workers_required}
+    man_days_per_ha = {
+        "Rice": 48 *
+        model.wage_workers_required,
+        "Coconut": 8 *
+        model.wage_workers_required,
+        "Maize": 106 *
+        model.wage_workers_required,
+        "Shrimp": 33 *
+        model.wage_workers_required}
     # THIS IS AN ASSUMPTION, IN TWO WEEKS YOU WANT TO HAVE YOUR SEEDS PLANTED.
     # for coconut the trees are already there, so prep time is long
     preparation_time = {"Rice": 14, "Coconut": 45, "Maize": 14, "Shrimp": 14}
     cultivation_time = {"Rice": 7, "Coconut": 2,
                         "Maize": 14, "Shrimp": 14}  # THESE ARE ASSUMPTIONS
-    loan_per_day = 200000*model.wage_of_ww  # Based on paper by Pedroso et al., (2017)
+    # Based on paper by Pedroso et al., (2017)
+    loan_per_day = 200000 * model.wage_of_ww
     required_man_days = man_days_per_ha[crop] * land_area
 
     # If you have machines and experience as a farm, you will only need 1/3 of
@@ -288,8 +299,7 @@ def calculate_wages_farm_workers(
         wage_workers += 0
 
     cost_wage_workers = wage_workers * model.payment_low_skilled * model.distribution_high_low_skilled + \
-        wage_workers * model.payment_high_skilled * \
-        (1 - model.distribution_high_low_skilled)
+        wage_workers * model.payment_high_skilled * (1 - model.distribution_high_low_skilled)
 
     return cost_wage_workers, wage_workers
 
@@ -457,7 +467,7 @@ def define_abilities(
                         item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Rice") * 0.5 * land_size
 
             # Financial Ability
-            possible_debt_left = maximum_loans 
+            possible_debt_left = maximum_loans
             if current_crop == crop['name']:
                 # You already have the crop! Therefore, there won't be a
                 # switching price
@@ -529,7 +539,7 @@ def define_motivations(
     """
     To determine the best next crop, MOTA framework is used.
     This function determines the motivation for each possible next crop
-    Motivation is based on financial ability, 
+    Motivation is based on financial ability,
         and if the profit over five years is higher than the current profit of the household
     """
 
@@ -622,7 +632,7 @@ def change_crops(
         current_crop,
         waiting_time_):
     """
-    When the next crop of a land household is not the same as the current crop, 
+    When the next crop of a land household is not the same as the current crop,
     the household needs to implement changes,
 
     This function checks if a loan is required for the land change, and decreases savings,
@@ -677,7 +687,7 @@ def transfer_land(land_size, node_id, model, crops_and_land):
     Second, it is checked if the neighbor can pay for the land or not.
         If this is the case, the land is added to the neighbors land
     """
-    from Agents3 import Small_land_households, Middle_land_households, Large_land_households
+    from Agents_for_sensitivity import Small_land_households, Middle_land_households, Large_land_households
     # Define neighbors
     neighbors = model.G.neighbors(node_id)
     max_livelihood = 0
@@ -698,7 +708,6 @@ def transfer_land(land_size, node_id, model, crops_and_land):
         if best_neighbor.savings > land_costs:
             best_neighbor.land_area += land_size
             best_neighbor.savings -= land_costs
-            print("neighbor is rijk en neemt land over")
 
             # Check in which category the agent now falls
             if 0 <= land_size <= 0.5:
@@ -717,7 +726,7 @@ def transfer_land(land_size, node_id, model, crops_and_land):
 
 
 def annual_loan_payment(loan_size, interest_rate_loans):
-    """ 
+    """
     When a household has a loan, it needs to pay this back in 5 years.
     There is also an interest rate on the loan
 
@@ -734,7 +743,7 @@ def calculate_migration_ww(
         contacts_in_city,
         facilities_in_neighbourhood):
     """
-    There is a possibility that the landless households are migrating. 
+    There is a possibility that the landless households are migrating.
     This function determines how big this chance is.
     """
     chances = model.chances_migration

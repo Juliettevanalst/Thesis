@@ -33,28 +33,33 @@ def get_education_levels(age, model):
 
 
 def get_experience(occupation, model):
-    """ 
+    """
     For the individual agents, it is checked if they have 3+ years experience and if they  use machines
     This is based on their occupation, and the excel file
     """
     experience_dict = model.excel_data['experience_occupation'][occupation]
     for key, values in experience_dict.items():
-        probability_machine = experience_dict['Machines']
-        
+        if model.machines_experiment != 2:
+            probability_machine = model.machines_experiment
+        else:
+            probability_machine = experience_dict['Machines']
+
         if random.random() < experience_dict['Experience']:
             experience = 0
         else:
             experience = 1
-        if random.random() < probability_machine: #experience_dict['Machines']:
+        # experience_dict['Machines']:
+        if random.random() < probability_machine:
             machines = 0
         else:
             machines = 1
+
         experience_dict['Machines'] = machines
     return experience, machines
 
 
 def household_experience_machines(household_members):
-    """ 
+    """
     For all land households, the average experience levels are checked
     Furthermore, it is checked if someone in the family is familiar with machines, then machines == 1
 
@@ -78,7 +83,7 @@ def get_dissabilities(age, model):
     This is based on data in the excel file
 
     If someone has "very_difficulty" with something, its dissabilities level is0.75
-    If someone is unable to do something, its dissabilities level is 1. 
+    If someone is unable to do something, its dissabilities level is 1.
     Otherewise, its dissabilities level is equal to the average of their dissabilities
     """
     if 0 <= age <= 15:
@@ -117,7 +122,7 @@ def get_dissabilities(age, model):
 
 def get_association(model):
     """
-    This function determines, based on the excel data, 
+    This function determines, based on the excel data,
     if a land household is member of the association or not
     """
     chance_member = model.excel_data['association']
@@ -133,9 +138,9 @@ def calculate_yield_agri(
         salinity,
         human_livelihood,
         percentage_yield_):
-    """ 
+    """
     Function to calculate the yield in agriculture.
-    First, it is checked what the yield reduction is due to salinity, while using the FAO formula. 
+    First, it is checked what the yield reduction is due to salinity, while using the FAO formula.
         (Only rice and Maize are impacted by salinity)
     The total yield is calculated, based on yield per ha, multiplied by land size and the yield reduction of salinity
     When the household is smarter, the household is less impacted by salinity. This is based on the human_livelihood
@@ -171,12 +176,13 @@ def calculate_farming_costs(crop, land_area, model):
     Function to calculate the farming costs of a certain crop
     The costs are based on fixed costs per ha, and the land size for the crop on the farm
     """
-    
 
+    # All costs are per ha,  DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD
+    # ERG LUXE.
     cost_per_ha = {
         "Rice": model.fixed_costs_rice,
-        "Maize": 3400000,
-        "Coconut":20000000}  # All costs are per ha,  DEZE WAREN EERST GEDEELD DOOR 6, MAAR DAT WERD ERG LUXE.
+        "Maize": model.fixed_costs_maize,
+        "Coconut": model.fixed_costs_coconut}
     costs = cost_per_ha[crop]
 
     total_cost = costs * land_area
@@ -207,7 +213,7 @@ def calculate_cost_shrimp(land_size, use_antibiotics, model):
     The costs are per ha, and need to be multiplied by the land size
     """
     # based on joffre et al., (2015)
-    costs = 3900000 * land_size
+    costs = model.fixed_costs_shrimp * land_size
     if use_antibiotics == 1:
         costs += 1000000 * land_size  # Based on Viet Khai et al., (2018)
 
@@ -283,8 +289,7 @@ def calculate_wages_farm_workers(
         wage_workers += 0
 
     cost_wage_workers = wage_workers * model.payment_low_skilled * model.distribution_high_low_skilled + \
-        wage_workers * model.payment_high_skilled * \
-        (1 - model.distribution_high_low_skilled)
+        wage_workers * model.payment_high_skilled * (1 - model.distribution_high_low_skilled)
 
     return cost_wage_workers, wage_workers
 
@@ -293,7 +298,7 @@ def calculate_total_income(crop, yield_, total_cost_farming):
     """Calculate total income per crop, based on income in vnd per kg and crop yield, minus total costs of farming"""
     # Based on different papers, see documentation
     income_per_kg = {"Rice": 6049, "Coconut": 17500,
-                     "Maize": 6900, "Shrimp": 42838*9}
+                     "Maize": 6900, "Shrimp": 42838 * 9}
     total_income = income_per_kg[crop] * yield_ - total_cost_farming
     return total_income
 
@@ -454,7 +459,7 @@ def define_abilities(
                         item["profit_over_five_years"] for item in requirements_per_crop if item["name"] == "Rice") * 0.5 * land_size
 
             # Financial Ability
-            possible_debt_left = maximum_loans 
+            possible_debt_left = maximum_loans
             if current_crop == crop['name']:
                 # You already have the crop! Therefore, there won't be a
                 # switching price
@@ -526,7 +531,7 @@ def define_motivations(
     """
     To determine the best next crop, MOTA framework is used.
     This function determines the motivation for each possible next crop
-    Motivation is based on financial ability, 
+    Motivation is based on financial ability,
         and if the profit over five years is higher than the current profit of the household
     """
 
@@ -604,7 +609,7 @@ def best_MOTA(MOTA_scores, current_crop):
         most_suitable_crop.remove(current_crop)
     most_suitable_crop = np.random.choice(most_suitable_crop)
     # If the highest MOTA score is below 0.2 (ASSUMPTION), the agent will
-    # change nothing 
+    # change nothing
     change = most_suitable_crop if highest_score > 0.2 else None
     return change
 
@@ -619,7 +624,7 @@ def change_crops(
         current_crop,
         waiting_time_):
     """
-    When the next crop of a land household is not the same as the current crop, 
+    When the next crop of a land household is not the same as the current crop,
     the household needs to implement changes,
 
     This function checks if a loan is required for the land change, and decreases savings,
@@ -713,7 +718,7 @@ def transfer_land(land_size, node_id, model, crops_and_land):
 
 
 def annual_loan_payment(loan_size, interest_rate_loans):
-    """ 
+    """
     When a household has a loan, it needs to pay this back in 5 years.
     There is also an interest rate on the loan
 
@@ -730,7 +735,7 @@ def calculate_migration_ww(
         contacts_in_city,
         facilities_in_neighbourhood):
     """
-    There is a possibility that the landless households are migrating. 
+    There is a possibility that the landless households are migrating.
     This function determines how big this chance is.
     """
     chances = model.chances_migration
@@ -745,5 +750,5 @@ def calculate_migration_ww(
     elif facilities_in_neighbourhood < 0.5:
         chance = chances[4]
     else:
-        chance = chances[5]  
+        chance = chances[5]
     return chance

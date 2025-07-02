@@ -13,9 +13,9 @@ from Functions_for_sensitivity import calculate_migration_ww, household_experien
 
 
 class Working_hh_member(Agent):
-    """Class that represents all the working household members. 
+    """Class that represents all the working household members.
 
-    This class is composed of the classes 'Low-skilled agri worker', 'Low-skilled non-agri worker', 'Manual worker', 
+    This class is composed of the classes 'Low-skilled agri worker', 'Low-skilled non-agri worker', 'Manual worker',
     'Skilled agri worker', 'Skilled service worker', and 'Other'.
 
     Attributes:
@@ -31,7 +31,7 @@ class Working_hh_member(Agent):
     - experience = If the agent has experience in its profession
     - machines = Is this agent working with machines?
     - dissabilities = what level of dissabilities does the agent has on a scale of 0-1. e.g. difficulty with hearing or walking
-    - time since last income = how long ago did I receive my salary? 
+    - time since last income = how long ago did I receive my salary?
 
   """
 
@@ -59,10 +59,8 @@ class Working_hh_member(Agent):
 
         # Determine the age the agent will die.
         self.death_age = np.random.normal(
-            loc=self.model.excel_data["population_statistics"]['Mean_death_age'],
-            scale=(
-                self.model.excel_data["population_statistics"]['Std_dev_death_age']) /
-            3)
+            loc=self.model.excel_data["population_statistics"]['Mean_death_age'], scale=(
+                self.model.excel_data["population_statistics"]['Std_dev_death_age']) / 3)
         # If they are older than their death age, they will die somewhere in
         # the next five  years
         self.death_age = max(
@@ -73,7 +71,8 @@ class Working_hh_member(Agent):
                 5))
 
         self.income = 0
-        # Determine if the agent has experience in its occupation, and uses machines
+        # Determine if the agent has experience in its occupation, and uses
+        # machines
         self.experience, self.machines = get_experience(
             self.agent_occupation, self.model)
 
@@ -106,7 +105,8 @@ class Working_hh_member(Agent):
             if self in self.model.agents:
                 print("het verwijderen van de dode ging mis")
 
-        # Check if the agent is still working, even if they are past 59 years old.
+        # Check if the agent is still working, even if they are past 59 years
+        # old.
         if self.works:
             if self.age >= 59:
                 self.works = self.model.is_working(
@@ -326,14 +326,15 @@ class Non_labourer(Agent):
     - agent_employment_type = None
     - assigned = True, this means if the agent is assigned to a household or not
     - works = False, since the agent is a non labourer
-    - education = Education level of the household member. Education of the children will be based on their age. 
+    - education = Education level of the household member. Education of the children will be based on their age.
     - death age = Age the agent will die
     - experience = 0, since the agents are not working and therefore do not have experience
     - machines = 0, they are not working and are therefore not using machines
-    - dissabilities = what level of dissabilities does the agent has on a scale of 0-1. e.g. difficulty with hearing or walking 
+    - dissabilities = what level of dissabilities does the agent has on a scale of 0-1. e.g. difficulty with hearing or walking
 
      """
-    # These are the agents who do not work, for example because they are a child or elderly.
+    # These are the agents who do not work, for example because they are a
+    # child or elderly.
 
     def __init__(
             self,
@@ -369,10 +370,8 @@ class Non_labourer(Agent):
 
         # Determine the age the agent will die.
         self.death_age = np.random.normal(
-            loc=self.model.excel_data["population_statistics"]['Mean_death_age'],
-            scale=(
-                self.model.excel_data["population_statistics"]['Std_dev_death_age']) /
-            3)
+            loc=self.model.excel_data["population_statistics"]['Mean_death_age'], scale=(
+                self.model.excel_data["population_statistics"]['Std_dev_death_age']) / 3)
         # If they are older than their death age, they will die somewhere in
         # the next five  years
         self.death_age = max(
@@ -392,8 +391,8 @@ class Non_labourer(Agent):
         - become older
         - check if they died
         For the children:
-        - update the education level 
-        - check if it is time to start working (this happens at 15 and 17 years old) 
+        - update the education level
+        - check if it is time to start working (this happens at 15 and 17 years old)
         """
         # Each year, the agent becomes 1 year older
         self.age += 1
@@ -438,7 +437,7 @@ class Non_labourer(Agent):
     def start_working(self):
         """Function for non labourers to start working.
         This proces has four steps:
-        1. check the sector the agent will work in 
+        1. check the sector the agent will work in
         2. check their occupation, based on the sector and if their household has land or not
         3. create a new agent in the occupation class, and add agent to the model
         4. delete old agent from the model
@@ -449,7 +448,8 @@ class Non_labourer(Agent):
         ) > self.model.excel_data['sector_distribution']['Non_agri'][1]:
             # The agent will work in agri sector
             if self.household.land_area > 0:
-                # Agent will start working on the family farm, since the parents have land
+                # Agent will start working on the family farm, since the
+                # parents have land
                 working_agent = Skilled_agri_worker(
                     self.model,
                     agent_type="Household_member",
@@ -540,20 +540,20 @@ class Non_labourer(Agent):
 
 
 class Land_household(Agent):
-    """ 
+    """
     This class represents all the land households (small, medium and large).
 
     Attributes:
     - agent_type = Household
     - household_size = Household size
-    - household_members = The individual agents who are part of the household 
+    - household_members = The individual agents who are part of the household
     - land_category = small, medium, large
-    - land_area = land size (small farms: < 0.5 ha, for medium farms between 0.5-2 ha, for large farms bigger than 2 ha) 
+    - land_area = land size (small farms: < 0.5 ha, for medium farms between 0.5-2 ha, for large farms bigger than 2 ha)
     - house_quality = on a scale of 0-1, how stable is the house?
     - salinity_during_shock = when a shock happened, how high did the salinity increase?
     - possible_next_crops = list to which crops the household can switch, based on the inormation meeting and their neighbours
     - new_crop = the crop the household will cultivate next year, based on the highest MOTA score
-    - house_price = Price of the house the agent is living in 
+    - house_price = Price of the house the agent is living in
     - value_of_assets = Total value of assets of the household, consists of the land and house
     - maximum_debt = Maximum debt the household can get, based on their total value of assets and current debt
     - debt = Current debt the household has
@@ -606,8 +606,8 @@ class Land_household(Agent):
         self.new_crop = None
 
         self.house_price = np.random.normal(52000000)  # ASSUMPTION!!
-        self.value_of_assets = (self.land_area * \
-            78000000 + self.house_price ) * self.model.debt_scenario # ASSUMPTION
+        self.value_of_assets = (
+            self.land_area * 78000000 + self.house_price) * self.model.debt_scenario  # ASSUMPTION
         self.maximum_debt = self.value_of_assets
         self.debt = 0
         self.yearly_loan_payment = 0
@@ -647,7 +647,7 @@ class Land_household(Agent):
         self.average_hh_experiences = (self.experience + self.machines) / 2
 
         # For migration, did the household see an advertisement about the city?
-        self.saw_advertisement = 1 if self.random.random() > 0.5 else 0 # ASSUMPTION
+        self.saw_advertisement = 1 if self.random.random() > 0.5 else 0  # ASSUMPTION
         # Does the household have contacts in the city
         self.contacts_in_city = 0
         if self.model.scenario_facilities == "Low":
@@ -673,7 +673,7 @@ class Land_household(Agent):
         Furthermore, the household:
         - Needs to pay their debt off
         - Receives interest rate on their seavings
-        - Increases their debt by the interest rate 
+        - Increases their debt by the interest rate
 
         """
         # If the whole household is death, the household will be removed from
@@ -708,14 +708,15 @@ class Land_household(Agent):
             # Add the new child to the model and household
             self.model.agents.add(new_child)
             if new_child not in self.model.agents:
-                print("het aanmaken van de child agent ging mis")
+                print("the creation of a child went wrong")
             self.household_members.append(new_child)
             self.household_size += 1
 
         # Did you go to the meeting this year?
         if self.random.random() < self.model.chance_info_meeting:
             self.information_meeting = 1
-        # If you are part of the farmers association, you will also receive information
+        # If you are part of the farmers association, you will also receive
+        # information
         elif self.association == 1:
             self.information_meeting = 1
         else:
@@ -742,7 +743,7 @@ class Land_household(Agent):
             self.facilities_in_neighbourhood = 1
         else:
             self.facilities_in_neighbourhood = self.model.current_service_workers / \
-            self.model.start_service_workers
+                self.model.start_service_workers
 
     def harvest(self, crop):
         """
@@ -753,13 +754,13 @@ class Land_household(Agent):
         2. Is your crop shrimp?
             2a. Check if a disease happened?
             2b. If a disease happened, did you use antibiotics?
-            2c. Calculate yield 
+            2c. Calculate yield
             2d. Calculate total costs of farming
         3. For all the other crops:
             3a. Calculate yield
             3b. Calculate cost of farming
         4. Calculate wage worker costs, and determine the number of wage workers
-        5. Calculate total income based on yield and costs 
+        5. Calculate total income based on yield and costs
 
         """
         land_area = self.crops_and_land[crop]
@@ -812,22 +813,14 @@ class Land_household(Agent):
 
         if crop == "Maize":  # There is a lack of maize data
             # therefore somethings wage costs are higher than total costs in my model for maize. I decided to solve this by taking Maize,
-            # and adding "vaste kosten" of 6.8 million
+            # and adding "fixed costs" of 6.8 million
             self.total_cost_farming_[crop] = self.wage_costs_[
                 crop] + self.model.maize_fixed_costs * land_area
 
         # calculate total income based on yield and costs
         self.total_income_[crop] = calculate_total_income(
             crop, self.yield_[crop], self.total_cost_farming_[crop])
-        # if crop == "Rice":
-        #     self.yearly_income = self.total_income_[crop] * 3
-        # elif crop == "Shrimp" or crop == "Maize":
-        #     self.yearly_income = self.total_income_[crop] * 2
-        # else:
-        #     self.yearly_income = self.total_income_[crop] * 6
 
-        # Add this income to yearly income:
-        
         self.yearly_income += self.total_income_[crop]
 
     def check_savings(self):
@@ -853,14 +846,12 @@ class Land_household(Agent):
         expenditure = self.expenditure / 12 * self.time_since_last_savings_check
         self.monthly_hh_income = self.total_hh_income / self.time_since_last_savings_check
         self.savings += self.total_hh_income - expenditure
-      
 
         # Reset income of the agents for the next round of income
         for agent in self.household_members:
             agent.income = 0
 
         self.time_since_last_savings_check = 0
-
 
         self.check_changes()
 
@@ -889,7 +880,8 @@ class Land_household(Agent):
         ) and "Maize" in self.crops_and_land.keys() and self.waiting_time_['Coconut'] <= 0:
             self.crops_and_land["Maize"] = 0
 
-        # Calculate livelihood function is created to make the livelihood function easier to understand
+        # Calculate livelihood function is created to make the livelihood
+        # function easier to understand
         self.prepare_livelihood()
         # Calculate livelihood
         self.livelihood = calculate_livelihood(
@@ -907,18 +899,20 @@ class Land_household(Agent):
 
         # If there are no savings left, you will start migrating
         if self.savings < 0 or self.farming_time_left == 0:
-            if self.savings < 0 and self.maximum_debt > self.expenditure: # IF YOU CAN GET A LOAN FOR A YEAR, YOU WILL NOT MIGRATE
+            # If you can get a loan for the next year, you will not migrate
+            if self.savings < 0 and self.maximum_debt > self.expenditure:
                 self.debt += self.expenditure
                 self.maximum_debt -= self.expenditure
                 self.yearly_loan_payment = annual_loan_payment(
-                            self.debt, self.model.interest_rate_loans)
+                    self.debt, self.model.interest_rate_loans)
             else:
 
                 # Decide who will get your land
-                # If you have shrimps, no one will want your land, since there are antibiotics in it and it is useless
+                # If you have shrimps, no one will want your land, since there
+                # are antibiotics in it and it is useless
                 if "Shrimp" not in self.crops_and_land.keys():
                     transfer_land(self.land_area, self.node_id,
-                                self.model, self.crops_and_land)
+                                  self.model, self.crops_and_land)
 
                 # We are migrating
                 migrated_hh = Migrated_household(
@@ -948,8 +942,8 @@ class Land_household(Agent):
                 if self in self.model.agents:
                     print("het verwijderen van het huishouden zelf ging mis")
 
-        if  self.monthly_hh_income * 12 < self.expenditure:
-            
+        if self.monthly_hh_income * 12 < self.expenditure:
+
             # We need to change!!
 
             if self.waiting_time_[
@@ -1005,7 +999,8 @@ class Land_household(Agent):
                     self.new_crop = best_MOTA(
                         self.MOTA_scores, current_largest_crop)
                     # Implement possible change
-                    if self.new_crop not in list(self.crops_and_land.keys()) and self.new_crop is not None:
+                    if self.new_crop not in list(
+                            self.crops_and_land.keys()) and self.new_crop is not None:
                         self.savings, self.debt, self.maximum_debt, self.crops_and_land, self.waiting_time_, self.crop_type = change_crops(
                             self.new_crop, self.savings, self.debt, self.maximum_debt, self.land_area, current_largest_crop, current_crops, self.waiting_time_)
 
@@ -1019,7 +1014,8 @@ class Land_household(Agent):
         if len(possible_migrated_members) > 0:
             chance_migrating = self.model.chance_leaving_household
 
-            # If they saw an advertisement and have contacts in the city, the migration chance is higher
+            # If they saw an advertisement and have contacts in the city, the
+            # migration chance is higher
             if self.saw_advertisement == 1 and self.contacts_in_city == 1:
                 chance_migrating += self.model.increased_chance_migration_familiarity  # ASSUMPTION
 
@@ -1054,8 +1050,8 @@ class Land_household(Agent):
             self.crop_history[crop] += 1
 
     def prepare_livelihood(self):
-        """Function to prepare the variables for the livelihood calculation. 
-        To prevent that the livelihood function is a mess. 
+        """Function to prepare the variables for the livelihood calculation.
+        To prevent that the livelihood function is a mess.
 
         - For all agents above 15 years old, education level is checked and the average education is calculated
         - Determine whether the household has experience and uses machines
@@ -1287,15 +1283,15 @@ class Large_land_households(Land_household):
 
 
 class Landless_households(Agent):
-    """Class for all land households without a land 
+    """Class for all land households without a land
 
      Attributes:
         - agent_type = Household
         - household_size = Household size
-        - household_members = The individual agents who are part of the household 
+        - household_members = The individual agents who are part of the household
         - land_area = zero, since these are the landless households
         - house_quality = on a scale of 0-1, how stable is the house?
-        - house_price = Price of the house the agent is living in 
+        - house_price = Price of the house the agent is living in
         - value_of_assets = Total value of assets of the household, consists of the  house value
         - maximum_debt = Maximum debt the household can get, based on their total value of assets and current debt
         - debt = Current debt the household has
@@ -1341,16 +1337,15 @@ class Landless_households(Agent):
             self.facilities_in_neighbourhood = 0
         else:
             self.facilities_in_neighbourhood = 1
-        
-        
+
         self.migrating = False
         self.saw_advertisement = 1 if self.random.random() > 0.5 else 0
 
     def yearly_activities(self):
         """
-        Yearly activities of the landless households. 
+        Yearly activities of the landless households.
         Each year, it is checked if all household members died, then the household should be removed from the model
-        There is also a possibility for birth 
+        There is also a possibility for birth
 
         Furthermore, the agents:
         - Receive interest rate on their savings
@@ -1358,10 +1353,12 @@ class Landless_households(Agent):
         - Check number of facilities in the neighbourhood, based on the number of service workers left
 
         """
-        # If all household members died, the agent should be removed from the model
+        # If all household members died, the agent should be removed from the
+        # model
         if not self.household_members:
             self.model.deceased_households += 1
-            # Remove the possible household member agents from the model (do not think they exist, but to be sure)
+            # Remove the possible household member agents from the model (do
+            # not think they exist, but to be sure)
             for agent in self.household_members:
                 self.model.agents.discard(agent)
                 if agent in self.model.agents:
@@ -1416,7 +1413,7 @@ class Landless_households(Agent):
             self.facilities_in_neighbourhood = 1
         else:
             self.facilities_in_neighbourhood = self.model.current_service_workers / \
-            self.model.start_service_workers
+                self.model.start_service_workers
 
     def check_income(self, time_since_income):
         """
@@ -1438,10 +1435,8 @@ class Landless_households(Agent):
 
         expenditure = self.expenditure / 12 * time_frame
         self.monthly_hh_income = self.total_hh_income / time_frame
-        # print("expenditure is ", expenditure, " total household income is ", self.total_hh_income)
-        # print("savings voor het inkomen is: ", self.savings)
+
         self.savings += self.total_hh_income - expenditure
-        # print("savings na het inkomen zijn: ", self.savings)
 
         if self.monthly_hh_income < expenditure:
             self.income_too_low = 1
@@ -1624,7 +1619,9 @@ class Landless_households(Agent):
                             agent.works = True
                             current_household = agent.household
 
-                            # Add new agent, it will be a low skilled agri worker in wage since that will be the easiest work
+                            # Add new agent, it will be a low skilled agri
+                            # worker in wage since that will be the easiest
+                            # work
                             low_skilled_farm = Low_skilled_agri_worker(
                                 self.model,
                                 agent_type="Household_member",
@@ -1657,7 +1654,8 @@ class Landless_households(Agent):
         if len(possible_migrated_members) > 0:
             # Determine the chance they are migrating
             chance_migrating = self.model.chance_leaving_household
-            # If they saw an advertisement and have contacts in the city, the chance will be higher
+            # If they saw an advertisement and have contacts in the city, the
+            # chance will be higher
             if self.saw_advertisement == 1 and self.contacts_in_city == 1:
                 chance_migrating += self.model.increased_chance_migration_familiarity  # ASSUMPTION
             if self.random.random() < chance_migrating:  # They want to leave
