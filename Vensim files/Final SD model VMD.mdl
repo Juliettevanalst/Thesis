@@ -1,0 +1,2415 @@
+{UTF-8}
+Other income[Rice,Small]=
+	"Worked self non agri (service)"[Rice,Small]*Base income for service workers*Number of work days\
+		+Worked non agri wage
+	[Rice,Small]*Base income for non agri households
+	[Low skilled] * (1-Percentage population high skilled)*Number of work days + Worked non agri wage\
+		[Rice,Small]*Base income for non agri households
+	[High skilled]*Percentage population high skilled*Number of work days+Self agri workers\
+		[Rice,Small]*Average wage worker income ~~|
+Other income[Rice,Medium]=
+	"Worked self non agri (service)"[Rice,Medium]*Base income for service workers*Number of work days\
+		+Worked non agri wage
+	[Rice,Medium]*Base income for non agri households
+	[Low skilled] *Number of work days* (1-Percentage population high skilled) + Worked non agri wage\
+		[Rice,Medium]*Base income for non agri households
+	[High skilled]*Percentage population high skilled*Number of work days+Self agri workers\
+		[Rice,Medium]*Average wage worker income ~~|
+Other income[Rice,Large]=
+	"Worked self non agri (service)"[Rice,Large]*Number of work days*Base income for service workers\
+		+Worked non agri wage
+	[Rice,Large]*Base income for non agri households
+	[Low skilled] * (1-Percentage population high skilled) *Number of work days+ Worked non agri wage\
+		[Rice,Large]*Base income for non agri households
+	[High skilled]*Percentage population high skilled*Number of work days+Self agri workers\
+		[Rice,Large]*Average wage worker income ~~|
+Other income[Maize,Small]=
+	"Worked self non agri (service)"[Maize,Small]*Number of work days*Base income for service workers\
+		+Worked non agri wage
+	[Maize,Small]*Base income for non agri households
+	[Low skilled] * (1-Percentage population high skilled)*Number of work days+ Worked non agri wage\
+		[Maize,Small]*Base income for non agri households
+	[High skilled]*Percentage population high skilled*Number of work days + Self agri workers\
+		[Maize,Small]*Average wage worker income ~~|
+Other income[Maize,Medium]=
+	"Worked self non agri (service)"[Maize,Medium]*Number of work days*Base income for service workers\
+		+Worked non agri wage
+	[Maize,Medium]*Base income for non agri households
+	[Low skilled] * (1-Percentage population high skilled)*Number of work days + Worked non agri wage\
+		[Maize,Medium]*Base income for non agri households
+	[High skilled]*Percentage population high skilled*Number of work days+Self agri workers\
+		[Maize,Medium]*Average wage worker income ~~|
+Other income[Maize,Large]=
+	"Worked self non agri (service)"[Maize,Large]*Number of work days*Base income for service workers\
+		+Worked non agri wage
+	[Maize,Large]*Base income for non agri households
+	[Low skilled] * (1-Percentage population high skilled)*Number of work days + Worked non agri wage\
+		[Maize,Large]*Base income for non agri households
+	[High skilled]*Percentage population high skilled*Number of work days+Self agri workers\
+		[Maize,Large]*Average wage worker income ~~|
+Other income[Coconut,Small]=
+	"Worked self non agri (service)"[Coconut,Small]*Number of work days*Base income for service workers\
+		+Worked non agri wage
+	[Coconut,Small]*Base income for non agri households
+	[Low skilled] * (1-Percentage population high skilled)*Number of work days + Worked non agri wage\
+		[Coconut,Small]*
+	Base income for non agri households
+	[High skilled]*Percentage population high skilled*Number of work days+Self agri workers\
+		[Coconut,Small]*Average wage worker income ~~|
+Other income[Coconut,Medium]=
+	"Worked self non agri (service)"[Coconut,Medium]*Number of work days*Base income for service workers\
+		+Worked non agri wage
+	[Coconut,Medium]*Base income for non agri households
+	[Low skilled] * (1-Percentage population high skilled)*Number of work days + Worked non agri wage\
+		[Coconut,Medium]
+	*Base income for non agri households
+	[High skilled]*Percentage population high skilled*Number of work days + Self agri workers\
+		[Coconut,Medium]*Average wage worker income ~~|
+Other income[Coconut,Large]=
+	"Worked self non agri (service)"[Coconut,Large]*Number of work days*Base income for service workers\
+		+Worked non agri wage
+	[Coconut,Large]*Base income for non agri households
+	[Low skilled] * (1-Percentage population high skilled)*Number of work days + Worked non agri wage\
+		[Coconut,Large]*
+	Base income for non agri households
+	[High skilled]*Percentage population high skilled*Number of work days + Self agri workers\
+		[Coconut,Large]*Average wage worker income
+	~	vnd
+	~		|
+
+Income other work[Small]=
+	"shrimp worked self non agri (service)"[Small]*Base income for service workers*Number of work days\
+		+shrimp worked non agri
+	[Small]*Base income for non agri households[High skilled]*Percentage population high skilled\
+		*Number of work days+shrimp worked non agri
+	[Small
+	]*Base income for non agri households[Low skilled]*(1-Percentage population high skilled\
+		)*Number of work days + Shrimp farm self agri workers
+	[Small]*Average wage worker income ~~|
+Income other work[Medium]=
+	"shrimp worked self non agri (service)"[Medium]*Base income for service workers*Number of work days\
+		+shrimp worked non agri
+	[Medium]*Base income for non agri households[High skilled]*Number of work days*Percentage population high skilled\
+		+shrimp worked non agri[Medium
+	]*Base income for non agri households[Low skilled]*(1-Percentage population high skilled\
+		)*Number of work days+ Shrimp farm self agri workers
+	[Small]*Average wage worker income ~~|
+Income other work[Large]=
+	"shrimp worked self non agri (service)"[Large]*Base income for service workers*Number of work days\
+		+shrimp worked non agri
+	[Large]*Number of work days*Base income for non agri households[High skilled]*Percentage population high skilled\
+		+shrimp worked non agri[Large
+	]*Number of work days*Base income for non agri households[Low skilled]*(1-Percentage population high skilled\
+		)+Shrimp farm self agri workers[Large]*Average wage worker income
+	~	vnd/household
+	~		|
+
+Facilities in neighborhood=
+	Current number of service workers/Start number of service workers
+	~	dml
+	~		|
+
+"Required number of man days / shrimp farm"[Small, With disease]=
+	MAX(33*0.4-Shrimp farm self agri workers[Small]*28, 0) ~~|
+"Required number of man days / shrimp farm"[Small, Without disease]=
+	MAX(33*0.4-Shrimp farm self agri workers[Small]*28, 0) ~~|
+"Required number of man days / shrimp farm"[Medium, With disease]=
+	MAX(33*1.5-Shrimp farm self agri workers[Medium]*28, 0) ~~|
+"Required number of man days / shrimp farm"[Medium, Without disease]=
+	MAX(33*2.5-Shrimp farm self agri workers[Medium]*28, 0) ~~|
+"Required number of man days / shrimp farm"[Large, With disease]=
+	MAX(33*2.5-Shrimp farm self agri workers[Large]*28, 0) ~~|
+"Required number of man days / shrimp farm"[Large, Without disease]=
+	MAX(33*2.4-Shrimp farm self agri workers[Large]*28, 0)
+	~	person
+	~		|
+
+Available number of wage workers=
+	Maize farm[Small]*Self agri workers[Maize, Small] + Maize farm[Medium]*Self agri workers\
+		[Maize, Medium] + Maize farm
+	[Large]*Self agri workers[Maize, Large] + Coconut farm[Small]*Self agri workers[Coconut\
+		, Small] + Coconut farm
+	[Medium]*Self agri workers[Coconut, Medium] + Coconut farm[Large]*Self agri workers[\
+		Coconut, Large] + Rice farm
+	[Small]*Self agri workers[Rice,Small] + Rice farm[Medium]*Self agri workers[Rice, Medium\
+		] + Rice farm[Large]*Self agri workers
+	[Rice, Large] + Shrimp farm[Small, With disease]*Shrimp farm self agri workers[Small\
+		] + Shrimp farm[Small, Without disease]*Shrimp farm self agri workers[Small] + Shrimp farm\
+		[Medium, With disease
+	]*Shrimp farm self agri workers[Medium] + Shrimp farm[Medium, Without disease]*Shrimp farm self agri workers\
+		[Medium]+ Shrimp farm[Large, With disease] *Shrimp farm self agri workers[Large]+ Shrimp farm\
+		[Large, Without disease]*Shrimp farm self agri workers[Large] + Agri wage
+	*2
+	~	people
+	~		|
+
+Income non agri household[Low skilled]=
+	start number of non agri households[Low skilled]/(Current number of agri workers*(1-\
+		Percentage population high skilled)) *(Base income for non agri households[Low skilled\
+		]*Number of work days*Working force within a household) ~~|
+Income non agri household[High skilled]=
+	start number of non agri households[High skilled]/(Current number of agri workers*(Percentage population high skilled\
+		))*(Base income for non agri households[High skilled]*Number of work days*Working force within a household\
+		) ~~|
+Income non agri household[Normal]=
+	0
+	~	vnd/household
+	~		|
+
+Percentage population high skilled=
+	0.152
+	~	
+	~	Based on district 824
+	|
+
+Income service workers=
+	(Base income for service workers*Number of work days*Working force within a household\
+		)*(Start number of service workers/Current number of service workers
+	)*Migration rate
+	~	vnd/household
+	~		|
+
+Current number of agri workers=
+	Coconut farm[Small]*Worked non agri wage[Coconut, Small]+Coconut farm[Large]*Worked non agri wage
+	[Coconut, Large]+Coconut farm[Medium]*Worked non agri wage[Coconut, Medium]+Maize farm\
+		[Medium]*Worked non agri wage
+	[Maize, Medium]+Maize farm[Small]*Worked non agri wage[Maize, Small]+Maize farm[Large\
+		]*Worked non agri wage
+	[Maize, Large]+Rice farm[Small]*Worked non agri wage[Rice,Small]+Rice farm[Medium]*Worked non agri wage
+	[Rice,Medium]+Rice farm[Large]*Worked non agri wage[Rice,Large]+Shrimp farm[Small, With disease\
+		]*shrimp worked non agri[Small]+Shrimp farm[Small, Without disease]*shrimp worked non agri\
+		[Small]+Shrimp farm[Medium, With disease
+	]*shrimp worked non agri[Medium]+Shrimp farm[Medium, Without disease]*shrimp worked non agri
+	[Medium]+Shrimp farm[Large, With disease]*shrimp worked non agri[Large]+Shrimp farm[\
+		Large, Without disease
+	]*shrimp worked non agri[Large] + Agri wage * Working force within a household
+	~	
+	~		|
+
+Shrimp farm self agri workers[Small]=
+	2.34 ~~|
+Shrimp farm self agri workers[Medium]=
+	2.67 ~~|
+Shrimp farm self agri workers[Large]=
+	3.25
+	~	
+	~		|
+
+shrimp worked non agri[Small]=
+	0.64 ~~|
+shrimp worked non agri[Medium]=
+	0.357 ~~|
+shrimp worked non agri[Large]=
+	1
+	~	
+	~		|
+
+"shrimp worked self non agri (service)"[Small]=
+	0.23 ~~|
+"shrimp worked self non agri (service)"[Medium]=
+	0.15 ~~|
+"shrimp worked self non agri (service)"[Large]=
+	0
+	~	
+	~		|
+
+"Worked self non agri (service)"[Rice, Small]=
+	0.16 ~~|
+"Worked self non agri (service)"[Rice, Medium]=
+	0.27 ~~|
+"Worked self non agri (service)"[Rice, Large]=
+	0.36 ~~|
+"Worked self non agri (service)"[Maize, Small]=
+	0.13 ~~|
+"Worked self non agri (service)"[Maize, Medium]=
+	0.16 ~~|
+"Worked self non agri (service)"[Maize, Large]=
+	0 ~~|
+"Worked self non agri (service)"[Coconut, Small]=
+	0.14 ~~|
+"Worked self non agri (service)"[Coconut, Medium]=
+	0.23 ~~|
+"Worked self non agri (service)"[Coconut, Large]=
+	0.18
+	~	
+	~	Based on distrcit 824
+	|
+
+Chance farmer stops farming[Rice,Small]=
+	IF THEN ELSE("Savings/farm"[Rice,Small]<0, 0.37 , 0) ~~|
+Chance farmer stops farming[Rice,Medium]=
+	IF THEN ELSE("Savings/farm"[Rice,Medium]<0, 0.37 , 0) ~~|
+Chance farmer stops farming[Rice,Large]=
+	IF THEN ELSE("Savings/farm"[Rice,Large]<0, 0.37 , 0) ~~|
+Chance farmer stops farming[Maize,Small]=
+	IF THEN ELSE("Savings/farm"[Maize,Small]<0, 0.37 , 0) ~~|
+Chance farmer stops farming[Maize,Medium]=
+	IF THEN ELSE("Savings/farm"[Maize, Medium]<0, 0.37 , 0) ~~|
+Chance farmer stops farming[Maize,Large]=
+	IF THEN ELSE("Savings/farm"[Maize,Large]<0, 0.37 , 0) ~~|
+Chance farmer stops farming[Coconut,Small]=
+	IF THEN ELSE("Savings/farm"[Coconut,Small]<0, 0.37 , 0) ~~|
+Chance farmer stops farming[Coconut,Medium]=
+	IF THEN ELSE("Savings/farm"[Coconut,Medium]<0, 0.37 , 0) ~~|
+Chance farmer stops farming[Coconut,Large]=
+	IF THEN ELSE("Savings/farm"[Coconut,Large]<0, 0.37 , 0)
+	~	dml
+	~	37% krijgt geen lening, 62% wel
+		
+		oud : IF THEN ELSE(Facilities in neighborhood<0.5 :AND: Number of contacts in the \
+		city>0.5, Lookup migration farmers("Savings/farm"
+		[Rice, Medium])*2 ,Lookup migration farmers("Savings/farm"[Rice, Medium]))
+	|
+
+Required number of man days per farm[Rice, Small]=
+	IF THEN ELSE(Machines>0.5, MAX(2/3*48*0.5*(1-salt exposure loss[Rice])-(Self agri workers\
+		[Rice,Small]*21), 0),MAX(48*0.5*(1-salt exposure loss[Rice])-(21*Self agri workers[\
+		Rice,Small])
+	, 0) ) ~~|
+Required number of man days per farm[Rice, Medium]=
+	IF THEN ELSE(Machines>0.5, MAX(2/3*48*1.5*(1-salt exposure loss[Rice])-(Self agri workers\
+		[Rice,Medium]*21), 0),MAX(48*1.5*(1-salt exposure loss[Rice])
+	-(21*Self agri workers[Rice,Medium]), 0) ) ~~|
+Required number of man days per farm[Rice, Large]=
+	IF THEN ELSE(Machines>0.5, MAX(2/3*48*2.5*(1-salt exposure loss[Rice])-(Self agri workers\
+		[Rice,Large]*21), 0),MAX(48*2.5*(1-salt exposure loss[Rice])-(Self agri workers[Rice\
+		,Large]*21)
+	, 0) ) ~~|
+Required number of man days per farm[Maize, Small]=
+	IF THEN ELSE(Machines>0.5, MAX(2/3*106*0.5*(1-salt exposure loss[Maize])-(Self agri workers\
+		[Maize,Small]*28), 0),MAX(106*0.5*(1-salt exposure loss[Maize
+	])-(Self agri workers[Maize,Small])*28, 0) ) ~~|
+Required number of man days per farm[Maize, Medium]=
+	IF THEN ELSE(Machines>0.5, MAX(2/3*106*1.5*(1-salt exposure loss[Maize])-(Self agri workers\
+		[Maize,Medium]*28), 0),MAX(106*1.5*(1-salt exposure loss[Maize
+	])-(Self agri workers[Maize,Medium]*28), 0) ) ~~|
+Required number of man days per farm[Maize, Large]=
+	IF THEN ELSE(Machines>0.5, MAX(2/3*106*2.5*(1-salt exposure loss[Maize])-(Self agri workers\
+		[Maize,Large]*28), 0),MAX(106*2.5*(1-salt exposure loss[Maize])-(Self agri workers[\
+		Maize,Large]*28),
+	 0) ) ~~|
+Required number of man days per farm[Coconut, Small]=
+	IF THEN ELSE(Machines>0.5, MAX(2/3*8*0.4*(1-salt exposure loss[Coconut])-(Self agri workers\
+		[Coconut, Small]*10), 0),MAX(8*0.5*(1-salt exposure loss[Coconut])-(Self agri workers\
+		[Coconut, Small]*28),
+	 0) ) ~~|
+Required number of man days per farm[Coconut, Medium]=
+	IF THEN ELSE(Machines>0.5, MAX(2/3*8*1.5*(1-salt exposure loss[Coconut])-(Self agri workers\
+		[Coconut, Medium]*10), 0),MAX(8*1.5*(1-salt exposure loss[Coconut])-(Self agri workers\
+		[Coconut, Medium]*28),
+	 0) ) ~~|
+Required number of man days per farm[Coconut, Large]=
+	IF THEN ELSE(Machines>0.5, MAX(2/3*8*2.5*(1-salt exposure loss[Coconut])-(Self agri workers\
+		[Coconut, Large]*10), 0),MAX(8*2.5*(1-salt exposure loss[Coconut])-(Self agri workers\
+		[Coconut, Large]*28),
+	 0) )
+	~	person
+	~	als machines hoger is dan 0.5 is er een reductie in wage workers die nodig \
+		is. eerst was het -42, nu -19 bij rice small
+	|
+
+Wage worker costs per shrimp farm[Small, With disease]=
+	("Required number of man days / shrimp farm"[Small,With disease])
+	*"Wage worker salary / day"[Low skilled]*(1-Percentage population high skilled)
+	+ ("Required number of man days / shrimp farm"[Small,With disease])
+	*"Wage worker salary / day"[High skilled]*Percentage population high skilled ~~|
+Wage worker costs per shrimp farm[Small, Without disease]=
+	("Required number of man days / shrimp farm"[Small,Without disease])
+	*"Wage worker salary / day"[Low skilled]*(1-Percentage population high skilled)
+	+ ("Required number of man days / shrimp farm"[Small,Without disease])
+	*"Wage worker salary / day"[High skilled]*Percentage population high skilled ~~|
+Wage worker costs per shrimp farm[Medium, With disease]=
+	("Required number of man days / shrimp farm"[Medium,With disease])
+	*"Wage worker salary / day"[Low skilled]*(1-Percentage population high skilled)
+	+ ("Required number of man days / shrimp farm"[Medium,With disease])
+	*"Wage worker salary / day"[High skilled]*Percentage population high skilled ~~|
+Wage worker costs per shrimp farm[Medium, Without disease]=
+	("Required number of man days / shrimp farm"[Medium,Without disease])
+	*"Wage worker salary / day"[Low skilled]*(1-Percentage population high skilled)
+	+ ("Required number of man days / shrimp farm"[Medium,Without disease])
+	*"Wage worker salary / day"[High skilled]*Percentage population high skilled ~~|
+Wage worker costs per shrimp farm[Large, With disease]=
+	("Required number of man days / shrimp farm"[Large,With disease])
+	*"Wage worker salary / day"[Low skilled]*(1-Percentage population high skilled)
+	+ ("Required number of man days / shrimp farm"[Large,With disease])
+	*"Wage worker salary / day"[High skilled]*Percentage population high skilled ~~|
+Wage worker costs per shrimp farm[Large, Without disease]=
+	("Required number of man days / shrimp farm"[Large,Without disease])
+	*"Wage worker salary / day"[Low skilled]*(1-Percentage population high skilled)
+	+ ("Required number of man days / shrimp farm"[Large,Without disease])
+	*"Wage worker salary / day"[High skilled]*Percentage population high skilled
+	~	vnd/household
+	~		|
+
+Start number of service workers=
+	127
+	~	household
+	~		|
+
+Worked non agri wage[Rice, Small]=
+	0.92 ~~|
+Worked non agri wage[Rice, Medium]=
+	0.75 ~~|
+Worked non agri wage[Rice, Large]=
+	0.47 ~~|
+Worked non agri wage[Maize, Small]=
+	0.94 ~~|
+Worked non agri wage[Maize, Medium]=
+	0.96 ~~|
+Worked non agri wage[Maize, Large]=
+	1 ~~|
+Worked non agri wage[Coconut, Small]=
+	0.41 ~~|
+Worked non agri wage[Coconut, Medium]=
+	0.72 ~~|
+Worked non agri wage[Coconut, Large]=
+	0.65
+	~	
+	~	Based on district 824
+	|
+
+Self agri workers[Rice, Small]=
+	1.86 ~~|
+Self agri workers[Rice, Medium]=
+	2.27 ~~|
+Self agri workers[Rice, Large]=
+	2.59 ~~|
+Self agri workers[Maize, Small]=
+	1.93 ~~|
+Self agri workers[Maize, Medium]=
+	2.46 ~~|
+Self agri workers[Maize, Large]=
+	3 ~~|
+Self agri workers[Coconut, Small]=
+	1.7 ~~|
+Self agri workers[Coconut, Medium]=
+	2.1 ~~|
+Self agri workers[Coconut, Large]=
+	2.57
+	~	
+	~		|
+
+Current number of service workers=
+	Coconut farm[Small]*"Worked self non agri (service)"[Coconut, Small]+Coconut farm[Large\
+		]*"Worked self non agri (service)"
+	[Coconut, Large]+Coconut farm[Medium]*"Worked self non agri (service)"[Coconut, Medium\
+		]+Maize farm[Medium]*"Worked self non agri (service)"
+	[Maize, Medium]+Maize farm[Small]*"Worked self non agri (service)"[Maize, Small]+Maize farm\
+		[Large]*"Worked self non agri (service)"
+	[Maize, Large]+Rice farm[Small]*"Worked self non agri (service)"[Rice,Small]+Rice farm\
+		[Medium]*"Worked self non agri (service)"
+	[Rice,Medium]+Rice farm[Large]*"Worked self non agri (service)"[Rice,Large]+Shrimp farm\
+		[Small, With disease]*"shrimp worked self non agri (service)"
+	[Small]+Shrimp farm[Small, Without disease]*"shrimp worked self non agri (service)"[\
+		Small]+Shrimp farm[Medium, With disease
+	]*"shrimp worked self non agri (service)"[Medium]+Shrimp farm[Medium, Without disease\
+		]*"shrimp worked self non agri (service)"
+	[Medium]+Shrimp farm[Large, With disease]*"shrimp worked self non agri (service)"[Large\
+		]+Shrimp farm[Large, Without disease
+	]*"shrimp worked self non agri (service)"[Large] + Service worker * Working force within a household
+	~	
+	~		|
+
+Percentage service workers in landless hh=
+	Service worker/Total landless hh
+	~	
+	~		|
+
+Average landless hh savings=
+	Average savings non agri*Percentage non agri in landless hh+Savings agri wage houshold\
+		*Percentage agri wage in landless hh+Savings service workers household*Percentage service workers in landless hh
+	~	
+	~		|
+
+Average savings non agri=
+	Savings non agri household[Low skilled] * 0.19 + Savings non agri household[High skilled\
+		]*0.81
+	~	
+	~		|
+
+Total landless hh=
+	Service worker+Non agri[Low skilled] + Non agri[High skilled] + Agri wage
+	~	
+	~		|
+
+Percentage agri wage in landless hh=
+	Agri wage/Total landless hh
+	~	
+	~		|
+
+Percentage non agri in landless hh=
+	(Non agri[Low skilled]+Non agri[High skilled])/Total landless hh
+	~	
+	~		|
+
+Total number of non farm owners=
+	Available number of wage workers+Service worker*Working force within a household+Non agri\
+		[Low skilled]*Working force within a household+Non agri[High skilled]*Working force within a household
+	~	
+	~		|
+
+Probability increase in land size=
+	0.25
+	~	dml
+	~		|
+
+Rice farm[Small]= INTEG (
+	Maize farmer starts rice[Small]-Rice farmer migrates[Small]-Rice farmer starts coconut\
+		[Small]-Rice farmer starts maize[
+	Small]-Rice farmer starts shrimp[Small],
+		40) ~~|
+Rice farm[Medium]= INTEG (
+	Maize farmer starts rice[Medium]-Rice farmer migrates[Medium]-Rice farmer starts coconut\
+		[Medium]-Rice farmer starts maize
+	[Medium]-Rice farmer starts shrimp[Medium],
+		25) ~~|
+Rice farm[Large]= INTEG (
+	Maize farmer starts rice[Large]-Rice farmer migrates[Large]-Rice farmer starts coconut\
+		[Large]-Rice farmer starts maize[
+	Large]-Rice farmer starts shrimp[Large] + Rice farm[Small]*Probability increase in land size\
+		*Chance farmer stops farming[Rice,Small],
+		5)
+	~	household
+	~		|
+
+average shrimp farm savings[Small]=
+	Current disease ratio[Small]*Savings shrimp farm[Small,With disease]+(1-Current disease ratio\
+		[Small])*Savings shrimp farm[Small,Without disease
+	] ~~|
+average shrimp farm savings[Medium]=
+	Current disease ratio[Medium]*Savings shrimp farm[Medium,With disease] + (1-Current disease ratio\
+		[Medium])*Savings shrimp farm[Medium,Without disease
+	] ~~|
+average shrimp farm savings[Large]=
+	Current disease ratio[Large]*Savings shrimp farm[Large,With disease] + (1-Current disease ratio\
+		[Large])*Savings shrimp farm[Large,Without disease
+	]
+	~	vnd/household
+	~	oud = MAX((Disease probability*Savings shrimp farm[Small,With \
+		disease]*Shrimp farm[Small,With disease] + (1-Disease probability)*Savings \
+		shrimp farm[Small,Without disease]*Shrimp farm[Small,Without disease]),0)
+	|
+
+Average shrimp farm profits[Small]=
+	Current disease ratio[Small]*Profit per shrimp farm[Small,With disease]+(1-Current disease ratio\
+		[Small])*Profit per shrimp farm[Small,Without disease
+	] ~~|
+Average shrimp farm profits[Medium]=
+	Current disease ratio[Medium]*Profit per shrimp farm[Medium,With disease]+(1-Current disease ratio\
+		[Medium])*Profit per shrimp farm[Medium,Without disease
+	] ~~|
+Average shrimp farm profits[Large]=
+	Current disease ratio[Large]*Profit per shrimp farm[Large,With disease]+(1-Current disease ratio\
+		[Large])*Profit per shrimp farm[Large,Without disease
+	]
+	~	
+	~		|
+
+Wage worker costs per farm[Rice, Small]=
+	(Required number of man days per farm[Rice,Small])*"Wage worker salary / day"[Low skilled
+	]*Education level + (Required number of man days per farm[Rice,Small])*"Wage worker salary / day"
+	[High skilled]*(1-Education level) ~~|
+Wage worker costs per farm[Rice, Medium]=
+	(Required number of man days per farm[Rice,Medium])*"Wage worker salary / day"[Low skilled
+	]*Education level + (Required number of man days per farm[Rice,Medium])*"Wage worker salary / day"
+	[High skilled]*(1-Education level) ~~|
+Wage worker costs per farm[Rice, Large]=
+	(Required number of man days per farm[Rice,Large])*"Wage worker salary / day"[Low skilled
+	]*Education level + (Required number of man days per farm[Rice,Large])*"Wage worker salary / day"
+	[High skilled]*(1-Education level) ~~|
+Wage worker costs per farm[Maize, Small]=
+	(Required number of man days per farm[Maize,Small])*"Wage worker salary / day"[Low skilled
+	]*Education level + (Required number of man days per farm[Maize,Small])*"Wage worker salary / day"
+	[High skilled]*(1-Education level) ~~|
+Wage worker costs per farm[Maize, Medium]=
+	(Required number of man days per farm[Maize,Medium])*"Wage worker salary / day"[Low skilled
+	]*Education level + (Required number of man days per farm[Maize,Medium])*"Wage worker salary / day"
+	[High skilled]*(1-Education level) ~~|
+Wage worker costs per farm[Maize, Large]=
+	(Required number of man days per farm[Maize,Large])*"Wage worker salary / day"[Low skilled
+	]*Education level + (Required number of man days per farm[Maize,Large])*"Wage worker salary / day"
+	[High skilled]*(1-Education level) ~~|
+Wage worker costs per farm[Coconut, Small]=
+	(Required number of man days per farm[Coconut,Small])*"Wage worker salary / day"[Low skilled
+	]*Education level + (Required number of man days per farm[Coconut,Small])*"Wage worker salary / day"
+	[High skilled]*(1-Education level) ~~|
+Wage worker costs per farm[Coconut, Medium]=
+	(Required number of man days per farm[Coconut,Medium])*"Wage worker salary / day"[Low skilled
+	]*Education level + (Required number of man days per farm[Coconut,Medium])*"Wage worker salary / day"
+	[High skilled]*(1-Education level) ~~|
+Wage worker costs per farm[Coconut, Large]=
+	(Required number of man days per farm[Coconut,Large])*"Wage worker salary / day"[Low skilled
+	]*Education level + (Required number of man days per farm[Coconut,Large])*"Wage worker salary / day"
+	[High skilled]*(1-Education level)
+	~	vnd/household
+	~	oud = (Required number of man days per farm[Rice,Small]/Available number of wage \
+		workers)*"Wage worker salary / day"[Low skilled
+		]*Education level + (Required number of man days per farm[Rice,Small]/Available \
+		number of wage workers)*"Wage worker salary / day"
+		[High skilled]*(1-Education level)
+	|
+
+Current disease ratio[Small]=
+	Shrimp farm[Small, With disease]/(Shrimp farm[Small,With disease] + Shrimp farm[Small\
+		,Without disease]) ~~|
+Current disease ratio[Medium]=
+	Shrimp farm[Medium, With disease]/(Shrimp farm[Medium,With disease] + Shrimp farm[Medium\
+		,Without disease]) ~~|
+Current disease ratio[Large]=
+	Shrimp farm[Large, With disease]/(Shrimp farm[Large,With disease] + Shrimp farm[Large\
+		,Without disease])
+	~	
+	~		|
+
+Netto income[Rice, Small]=
+	Other income[Rice,Small]+Revenue crop yield[Rice,Small]-Expenditure-Cost crop farming\
+		[Rice,Small] ~~|
+Netto income[Rice, Medium]=
+	-Cost crop farming[Rice,Medium]-Expenditure+Other income[Rice,Medium]+Revenue crop yield\
+		[Rice,Medium] ~~|
+Netto income[Rice, Large]=
+	-Cost crop farming[Rice,Large]-Expenditure+Other income[Rice,Large]+Revenue crop yield\
+		[Rice,Large] ~~|
+Netto income[Maize, Small]=
+	-Cost crop farming[Maize,Small]-Expenditure+Other income[Maize,Small]+Revenue crop yield\
+		[Maize,Small] ~~|
+Netto income[Maize, Medium]=
+	-Cost crop farming[Maize,Medium]-Expenditure+Other income[Maize,Medium]+Revenue crop yield\
+		[Maize,Medium] ~~|
+Netto income[Maize, Large]=
+	-Cost crop farming[Maize,Large]-Expenditure+Other income[Maize,Large]+Revenue crop yield\
+		[Maize,Large] ~~|
+Netto income[Coconut, Small]=
+	-Cost crop farming[Coconut,Small]-Expenditure+Other income[Coconut,Small]+Revenue crop yield\
+		[Coconut,Small] ~~|
+Netto income[Coconut, Medium]=
+	-Cost crop farming[Coconut,Medium]-Expenditure+Other income[Coconut,Medium]+Revenue crop yield\
+		[Coconut,Medium] ~~|
+Netto income[Coconut, Large]=
+	-Cost crop farming[Coconut,Large]-Expenditure+Other income[Coconut,Large]+Revenue crop yield\
+		[Coconut,Large]
+	~	vnd/household
+	~		|
+
+Income agri wage=
+	Average wage worker income*Working force within a household
+	~	vnd/household
+	~		|
+
+Chance farmer changes crops[Rice,Small]=
+	IF THEN ELSE(Netto income[Rice,Small]<0, 0.42 ,0 ) ~~|
+Chance farmer changes crops[Maize,Small]=
+	IF THEN ELSE(Netto income[Maize,Small]<0, 0.55 ,0 ) ~~|
+Chance farmer changes crops[Coconut,Small]=
+	IF THEN ELSE(Netto income[Coconut,Small]<0, 0 ,0 ) ~~|
+Chance farmer changes crops[Rice,Medium]=
+	IF THEN ELSE(Netto income[Rice,Medium]<0, 0.42 ,0 ) ~~|
+Chance farmer changes crops[Rice,Large]=
+	IF THEN ELSE(Netto income[Rice,Large]<0, 0.42 ,0 ) ~~|
+Chance farmer changes crops[Maize,Medium]=
+	IF THEN ELSE(Netto income[Maize,Medium]<0, 0.55 ,0 ) ~~|
+Chance farmer changes crops[Maize,Large]=
+	IF THEN ELSE(Netto income[Maize,Large]<0, 0.55 ,0 ) ~~|
+Chance farmer changes crops[Coconut,Medium]=
+	IF THEN ELSE(Netto income[Coconut,Medium]<0, 0 ,0 ) ~~|
+Chance farmer changes crops[Coconut,Large]=
+	IF THEN ELSE(Netto income[Coconut,Large]<0, 0 ,0 )
+	~	dml
+	~		|
+
+Rice farmer starts maize[Small]=
+	Rice farm[Small]*probability starting maize after rice[Small]*Chance farmer changes crops\
+		[Rice,Small] ~~|
+Rice farmer starts maize[Medium]=
+	Rice farm[Medium]*probability starting maize after rice[Medium]*Chance farmer changes crops\
+		[Rice,Medium] ~~|
+Rice farmer starts maize[Large]=
+	Rice farm[Large]*probability starting maize after rice[Large]*Chance farmer changes crops\
+		[Rice, Large]
+	~	household/Year
+	~		|
+
+Agri wage= INTEG (
+	-Agri wage migrates,
+		3)
+	~	household
+	~		|
+
+Agri wage migrates=
+	Agri wage*Chance landless households migrate[Service hh, Normal]
+	~	household/Year
+	~		|
+
+Antibiotic costs[With disease]=
+	0 ~~|
+Antibiotic costs[Without disease]=
+	1e+06
+	~	vnd
+	~		|
+
+Average wage worker income=
+	"Wage worker salary / day"[Low skilled]*Work days per wage worker*Education level+(1\
+		-Education level)*"Wage worker salary / day"[High skilled]*Work days per wage worker
+	~	vnd/people
+	~		|
+
+Base income for non agri households[Low skilled]=
+	190000 ~~|
+Base income for non agri households[High skilled]=
+	210000
+	~	vnd/person/Day
+	~		|
+
+Base income for service workers=
+	210000
+	~	vnd/person/Day
+	~		|
+
+Chance landless households migrate[Non agri hh, Low skilled]=
+	IF THEN ELSE(Savings non agri household[Low skilled]<0 :AND: Number of contacts in the city\
+		 = 1 :AND: Facilities in neighborhood < 0.5, 0.03,
+	IF THEN ELSE(Savings non agri household[Low skilled]<0 :AND: Number of contacts in the city\
+		 = 1, 0.01,
+	IF THEN ELSE(Savings non agri household[Low skilled]<0 :AND: Number of contacts in the city\
+		 = 0, 0.01,
+	IF THEN ELSE(Number of contacts in the city = 1, 0.005,
+	IF THEN ELSE(Facilities in neighborhood < 0.5, 0.01,
+	0.005))))) ~~|
+Chance landless households migrate[Non agri hh, High skilled]=
+	IF THEN ELSE(Savings non agri household[High skilled]<0 :AND: Number of contacts in the city\
+		 = 1 :AND: Facilities in neighborhood < 0.5, 0.03,
+	IF THEN ELSE(Savings non agri household[High skilled]<0 :AND: Number of contacts in the city\
+		 = 1, 0.01,
+	IF THEN ELSE(Savings non agri household[High skilled]<0 :AND: Number of contacts in the city\
+		 = 0, 0.01,
+	IF THEN ELSE(Number of contacts in the city = 1, 0.005,
+	IF THEN ELSE(Facilities in neighborhood < 0.5, 0.01,
+	0.005))))) ~~|
+Chance landless households migrate[Agri wage hh, Normal]=
+	IF THEN ELSE(Savings agri wage houshold<0 :AND: Number of contacts in the city = 1 :AND:\
+		 Facilities in neighborhood < 0.5, 0.03,
+	IF THEN ELSE(Savings agri wage houshold<0 :AND: Number of contacts in the city = 1, \
+		0.01,
+	IF THEN ELSE(Savings agri wage houshold<0 :AND: Number of contacts in the city = 0, \
+		0.01,
+	IF THEN ELSE(Number of contacts in the city = 1, 0.005,
+	IF THEN ELSE(Facilities in neighborhood < 0.5, 0.01,
+	0.005))))) ~~|
+Chance landless households migrate[Service hh, Normal]=
+	IF THEN ELSE(Savings service workers household<0 :AND: Number of contacts in the city\
+		 = 1 :AND: Facilities in neighborhood < 0.5, 0.03,
+	IF THEN ELSE(Savings service workers household<0 :AND: Number of contacts in the city\
+		 = 1, 0.01,
+	IF THEN ELSE(Savings service workers household<0 :AND: Number of contacts in the city\
+		 = 0, 0.01,
+	IF THEN ELSE(Number of contacts in the city = 1, 0.005,
+	IF THEN ELSE(Facilities in neighborhood < 0.5, 0.01,
+	0.005)))))
+	~	dml
+	~	oud = IF THEN ELSE(Facilities in neighborhood<0.5 :AND: Number of contacts \
+		in the city>0.5, Lookup migration landless hh(Savings non agri \
+		household[Low skilled])*2 ,Lookup migration landless hh(Savings non agri \
+		household[Low skilled]))
+	|
+
+Coconut farm[Small]= INTEG (
+	-Coconut farmer migrates[Small]+Maize farmer starts coconut[Small]+Rice farmer starts coconut\
+		[Small],
+		4) ~~|
+Coconut farm[Medium]= INTEG (
+	-Coconut farmer migrates[Medium]+Maize farmer starts coconut[Medium]+Rice farmer starts coconut\
+		[Medium],
+		1) ~~|
+Coconut farm[Large]= INTEG (
+	-Coconut farmer migrates[Large]+Maize farmer starts coconut[Large]+Rice farmer starts coconut\
+		[Large],
+		1)
+	~	household
+	~		|
+
+Coconut farmer migrates[Small]=
+	Coconut farm[Small]*Chance farmer stops farming[Coconut,Small] ~~|
+Coconut farmer migrates[Medium]=
+	Chance farmer stops farming[Coconut, Medium]*Coconut farm[Medium] ~~|
+Coconut farmer migrates[Large]=
+	Coconut farm[Large]*Chance farmer stops farming[Coconut, Large]
+	~	household/Year
+	~		|
+
+Cost crop farming[Rice, Small]=
+	"Fixed crop costs/ha"[Rice]*Land size[Small] ~~|
+Cost crop farming[Rice, Medium]=
+	"Fixed crop costs/ha"[Rice]*Land size[Medium] ~~|
+Cost crop farming[Rice, Large]=
+	"Fixed crop costs/ha"[Rice]*Land size[Large] ~~|
+Cost crop farming[Maize, Small]=
+	"Fixed crop costs/ha"[Maize]*Land size[Small]+Wage worker costs per farm[Maize,Small\
+		] ~~|
+Cost crop farming[Maize, Medium]=
+	"Fixed crop costs/ha"[Maize]*Land size[Medium]+Wage worker costs per farm[Maize,Medium\
+		] ~~|
+Cost crop farming[Maize, Large]=
+	"Fixed crop costs/ha"[Maize]*Land size[Large]+Wage worker costs per farm[Maize,Large\
+		] ~~|
+Cost crop farming[Coconut, Small]=
+	"Fixed crop costs/ha"[Coconut]*Land size[Small] ~~|
+Cost crop farming[Coconut, Medium]=
+	"Fixed crop costs/ha"[Coconut]*Land size[Medium] ~~|
+Cost crop farming[Coconut, Large]=
+	"Fixed crop costs/ha"[Coconut]*Land size[Large]
+	~	vnd/household
+	~	LET OP MAIS
+	|
+
+Cost shrimp farming[Small, With disease]=
+	fixed shrimp costs*Land size shrimp[Small]+Land size shrimp[Small]*Antibiotic costs[\
+		With disease] ~~|
+Cost shrimp farming[Small, Without disease]=
+	fixed shrimp costs*Land size shrimp[Small] ~~|
+Cost shrimp farming[Medium, With disease]=
+	Antibiotic costs[With disease]*Land size shrimp[Medium]+fixed shrimp costs*Land size shrimp\
+		[Medium] ~~|
+Cost shrimp farming[Medium, Without disease]=
+	fixed shrimp costs*Land size shrimp[Medium] ~~|
+Cost shrimp farming[Large, With disease]=
+	Antibiotic costs[With disease]*Land size shrimp[Large]+Land size shrimp[Large]*fixed shrimp costs\
+		 ~~|
+Cost shrimp farming[Large, Without disease]=
+	fixed shrimp costs*Land size shrimp[Large]
+	~	vnd/household
+	~		|
+
+Crop type:
+	Rice, Coconut, Maize
+	~	
+	~		|
+
+"Crop yield/farm"[Rice, Small]=
+	"Crop yield/ha"[Rice]*Land size[Small]*(1-Yield loss ratio[Rice]) ~~|
+"Crop yield/farm"[Rice, Medium]=
+	"Crop yield/ha"[Rice]*Land size[Medium]*(1-Yield loss ratio[Rice]) ~~|
+"Crop yield/farm"[Rice, Large]=
+	"Crop yield/ha"[Rice]*Land size[Large]*(1-Yield loss ratio[Rice]) ~~|
+"Crop yield/farm"[Maize, Small]=
+	"Crop yield/ha"[Maize]*Land size[Small]*(1-Yield loss ratio[Maize]) ~~|
+"Crop yield/farm"[Maize, Medium]=
+	"Crop yield/ha"[Maize]*Land size[Medium]*(1-Yield loss ratio[Maize]) ~~|
+"Crop yield/farm"[Maize, Large]=
+	"Crop yield/ha"[Maize]*Land size[Large]*(1-Yield loss ratio[Maize]) ~~|
+"Crop yield/farm"[Coconut, Small]=
+	"Crop yield/ha"[Coconut]*Land size[Small]*(1-Yield loss ratio[Coconut]) ~~|
+"Crop yield/farm"[Coconut, Medium]=
+	"Crop yield/ha"[Coconut]*Land size[Medium]*(1-Yield loss ratio[Coconut]) ~~|
+"Crop yield/farm"[Coconut, Large]=
+	"Crop yield/ha"[Coconut]*Land size[Large]*(1-Yield loss ratio[Coconut])
+	~	kg/household
+	~		|
+
+"Crop yield/ha"[Rice]=
+	5753 ~~|
+"Crop yield/ha"[Maize]=
+	4414 ~~|
+"Crop yield/ha"[Coconut]=
+	9871/6
+	~	kg/ha
+	~		|
+
+Current number of households left=
+	Start number of households-Migrated households
+	~	household
+	~		|
+
+Disease probability=
+	0.16
+	~	dml
+	~		|
+
+Education:
+	Low skilled, High skilled, Normal
+	~	
+	~		|
+
+Education level=
+	0.32
+	~	dml
+	~	Gemiddelde van district 824 is genomen, rekening houdend met \
+		leeftijdsverdeling. below primary is 0, primary education is 0.5, en hoger \
+		dan primary education krijgt een 1.
+	|
+
+Expected shrimp farmers to fail[Small, With disease]=
+	Disease probability*Shrimp farm[Small,With disease] ~~|
+Expected shrimp farmers to fail[Small, Without disease]=
+	Disease probability*Shrimp farm[Small,Without disease] ~~|
+Expected shrimp farmers to fail[Medium, With disease]=
+	Disease probability*Shrimp farm[Medium,With disease] ~~|
+Expected shrimp farmers to fail[Medium, Without disease]=
+	Disease probability*Shrimp farm[Medium,Without disease] ~~|
+Expected shrimp farmers to fail[Large, With disease]=
+	Disease probability*Shrimp farm[Large,With disease] ~~|
+Expected shrimp farmers to fail[Large, Without disease]=
+	Disease probability*Shrimp farm[Large,Without disease]
+	~	household
+	~		|
+
+Expenditure=
+	7.313e+06 + 3*1.003e+07
+	~	vnd/household
+	~	Gebaseerd op 1 kind en 3 mensen boven de 15 jaar oud in een gezin
+	|
+
+"Fixed crop costs/ha"[Rice]=
+	1.59e+07 ~~|
+"Fixed crop costs/ha"[Maize]=
+	3.4e+06 ~~|
+"Fixed crop costs/ha"[Coconut]=
+	2e+07
+	~	vnd/ha
+	~		|
+
+fixed shrimp costs=
+	3.9e+06
+	~	vnd/household
+	~		|
+
+Land size[Small]=
+	0.45 ~~|
+Land size[Medium]=
+	1.4 ~~|
+Land size[Large]=
+	3
+	~	ha/household
+	~		|
+
+Land size shrimp[Small]=
+	0.5 ~~|
+Land size shrimp[Medium]=
+	1.5 ~~|
+Land size shrimp[Large]=
+	2.5
+	~	ha/household
+	~		|
+
+Landsize:
+	Small, Medium, Large
+	~	
+	~		|
+
+Living costs=
+	7.313e+06 + 3*1.003e+07
+	~	vnd/household
+	~		|
+
+Living costs agri wage=
+	7.313e+06 + 3*1.003e+07
+	~	vnd/household
+	~		|
+
+Living costs non agri household[Low skilled]=
+	7.313e+06 + 3*1.003e+07 ~~|
+Living costs non agri household[High skilled]=
+	7.313e+06 + 3*1.003e+07
+	~	vnd/household
+	~		|
+
+Living costs service workers=
+	7.313e+06 + 3*1.003e+07
+	~	vnd/household
+	~		|
+
+Lookup change crops(
+	[(0,0)-(10,10)],(-1.04e+08,1),(0,0.5),(1e+07,0.25),(2e+07,0.25),(2.4e+07,0.1),(5e+08\
+		,0.001),(8e+09,0.001))
+	~	
+	~	DIT MOET AANGEPAST WORDEN
+	|
+
+Lookup migration farmers(
+	[(0,0)-(10,10)],(-1.02302e+18,1),(-1e+07,1),(0,0.1),(4e+06,0.2),(8e+06,0.2),(8e+07,0.15\
+		),(1e+08,0.05),(1.4e+08,0),(3e+10,0))
+	~	
+	~		|
+
+Lookup migration landless hh(
+	[(0,0)-(10,10)],(-1e+10,1),(-1e+07,1),(0,0.4),(4e+06,0.05),(1e+07,0),(3e+10,0),(9e+11\
+		,0))
+	~	
+	~	[(0,0)-(10,10)],(-1e+10,1),(-1e+07,1),(0,0.4),(4e+06,0.05),(1e+07,0),(3e+10\
+		,0),(9e+11,0)
+	|
+
+Lookup number of contacts(
+	[(0,0)-(10,10)],(0,1),(0.49,1),(0.5,0),(1,0))
+	~	dml
+	~		|
+
+Lookup salinity(
+	[(2014,0)-(2051,10)],(2014,3),(2015,3),(2016,5),(2017,3),(2019,3),(2020,5),(2021,3),\
+		(2023,3),(2025,3),(2026,5),(2027,3),(2028,3),(2029,5),(2030,3),(2031,3),(2032,5),(2033\
+		,3),(2034,3),(2035,5),(2036,3),(2037,3),(2038,5),(2039,3),(2051,3))
+	~	dml
+	~		|
+
+Machines=
+	0.1
+	~	dml
+	~	Gebaseerd op district 824, ongeveer 10 procent van de mensen heeft \
+		ervaring met machines
+	|
+
+Maize farm[Small]= INTEG (
+	-Maize farm migrates[Small]-Maize farmer starts coconut[Small]-Maize farmer starts rice\
+		[Small]-Maize farmer starts shrimp[Small]+Rice farmer starts maize[Small],
+		19) ~~|
+Maize farm[Medium]= INTEG (
+	-Maize farm migrates[Medium]-Maize farmer starts coconut[Medium]-Maize farmer starts rice\
+		[Medium]-Maize farmer starts shrimp[Medium]+Rice farmer starts maize[Medium],
+		12) ~~|
+Maize farm[Large]= INTEG (
+	-Maize farm migrates[Large]-Maize farmer starts coconut[Large]-Maize farmer starts rice\
+		[Large]-Maize farmer starts shrimp[Large]+Rice farmer starts maize[Large],
+		2)
+	~	household
+	~		|
+
+Maize farm migrates[Small]=
+	Maize farm[Small]*Chance farmer stops farming[Maize,Small] ~~|
+Maize farm migrates[Medium]=
+	Chance farmer stops farming[Maize, Medium]*Maize farm[Medium] ~~|
+Maize farm migrates[Large]=
+	Chance farmer stops farming[Maize, Large]*Maize farm[Large]
+	~	household/Year
+	~		|
+
+Maize farmer starts coconut[Small]=
+	Maize farm[Small]*probability starting coconut after maize*Chance farmer changes crops\
+		[Maize,Small] ~~|
+Maize farmer starts coconut[Medium]=
+	Maize farm[Medium]*probability starting coconut after maize*Chance farmer changes crops\
+		[Maize,Medium] ~~|
+Maize farmer starts coconut[Large]=
+	Maize farm[Large]*probability starting coconut after maize*Chance farmer changes crops\
+		[Maize,Large]
+	~	household/Year
+	~		|
+
+Maize farmer starts rice[Small]=
+	probability starting rice after maize*Maize farm[Small]*Chance farmer changes crops[\
+		Maize,Small] ~~|
+Maize farmer starts rice[Medium]=
+	probability starting rice after maize*Maize farm[Medium]*Chance farmer changes crops\
+		[Maize,Medium] ~~|
+Maize farmer starts rice[Large]=
+	probability starting rice after maize*Maize farm[Large]*Chance farmer changes crops[\
+		Maize,Large]
+	~	household/Year
+	~		|
+
+Maize farmer starts shrimp[Small]=
+	Maize farm[Small]*probability starting shrimp after maize*Chance farmer changes crops\
+		[Maize,Small] ~~|
+Maize farmer starts shrimp[Medium]=
+	Maize farm[Medium]*probability starting shrimp after maize*Chance farmer changes crops\
+		[Maize,Small] ~~|
+Maize farmer starts shrimp[Large]=
+	Maize farm[Large]*probability starting shrimp after maize*Chance farmer changes crops\
+		[Maize,Small]
+	~	household/Year
+	~		|
+
+Migrated households= INTEG (
+	Agri wage migrates+Coconut farmer migrates[Small]+Coconut farmer migrates[Medium]+Coconut farmer migrates\
+		[Large]+Maize farm migrates[Small]+Maize farm migrates[Medium]+Maize farm migrates[\
+		Large]+Non agri migrates[Low skilled]+Non agri migrates[High skilled]+Rice farmer migrates\
+		[Small]+Rice farmer migrates[Medium]+Rice farmer migrates[Large]+Service worker migrates\
+		+Shrimp farm migrates[Small,With disease]+Shrimp farm migrates[Medium,With disease]\
+		+Shrimp farm migrates[Medium,Without disease]+Shrimp farm migrates[Small,Without disease\
+		]+Shrimp farm migrates[Large,With disease]+Shrimp farm migrates[Large,Without disease\
+		],
+		0)
+	~	households
+	~		|
+
+Migration rate=
+	Current number of households left/Start number of households
+	~	dml
+	~		|
+
+Non agri[Low skilled]= INTEG (
+	-Non agri migrates[Low skilled],
+		32) ~~|
+Non agri[High skilled]= INTEG (
+	-Non agri migrates[High skilled],
+		67)
+	~	household
+	~		|
+
+Non agri migrates[Low skilled]=
+	Non agri[Low skilled]*Chance landless households migrate[Non agri hh,Low skilled] ~~|
+Non agri migrates[High skilled]=
+	Chance landless households migrate[Non agri hh,High skilled]*Non agri[High skilled]
+	~	household/Year
+	~		|
+
+Number of contacts in the city=
+	Lookup number of contacts(Migration rate)
+	~	dml
+	~		|
+
+Number of work days=
+	120
+	~	days
+	~	(It is important to notice that 1 crop cylcle is modelled in this model. \
+		this 120 is based on 20/month, same as abm)
+	|
+
+occupation types:
+	Non agri hh, Agri wage hh, Service hh
+	~	
+	~		|
+
+probability starting coconut after maize=
+	0.06
+	~	dml
+	~		|
+
+probability starting coconut after rice=
+	0.138
+	~	dml
+	~		|
+
+probability starting maize after rice[Small]=
+	0.86 ~~|
+probability starting maize after rice[Medium]=
+	0.5 ~~|
+probability starting maize after rice[Large]=
+	0
+	~	dml
+	~		|
+
+probability starting rice after maize=
+	0.94
+	~	dml
+	~	0.66
+	|
+
+probability starting shrimp after maize=
+	0.01
+	~	dml
+	~		|
+
+probability starting shrimp after rice=
+	0.01
+	~	dml
+	~		|
+
+Profit per shrimp farm[Small, With disease]=
+	Revenue shrimp farming[Small,With disease]-Cost shrimp farming[Small,With disease] ~~|
+Profit per shrimp farm[Small, Without disease]=
+	Revenue shrimp farming[Small,Without disease]-Cost shrimp farming[Small,Without disease\
+		] ~~|
+Profit per shrimp farm[Medium, With disease]=
+	Revenue shrimp farming[Medium,With disease]-Cost shrimp farming[Medium,With disease]\
+		 ~~|
+Profit per shrimp farm[Medium, Without disease]=
+	Revenue shrimp farming[Medium,Without disease]-Cost shrimp farming[Medium,Without disease\
+		] ~~|
+Profit per shrimp farm[Large, With disease]=
+	Revenue shrimp farming[Large,With disease]-Cost shrimp farming[Large,With disease] ~~|
+Profit per shrimp farm[Large, Without disease]=
+	Revenue shrimp farming[Large,Without disease]-Cost shrimp farming[Large,Without disease\
+		]
+	~	vnd/household
+	~		|
+
+"Profit/farm"[Rice, Small]=
+	Revenue crop yield[Rice,Small]-Cost crop farming[Rice,Small] ~~|
+"Profit/farm"[Rice, Medium]=
+	Revenue crop yield[Rice,Medium]-Cost crop farming[Rice,Medium] ~~|
+"Profit/farm"[Rice, Large]=
+	Revenue crop yield[Rice,Large]-Cost crop farming[Rice,Large] ~~|
+"Profit/farm"[Maize, Small]=
+	Revenue crop yield[Maize,Small]-Cost crop farming[Maize,Small] ~~|
+"Profit/farm"[Maize, Medium]=
+	Revenue crop yield[Maize,Medium]-Cost crop farming[Maize,Medium] ~~|
+"Profit/farm"[Maize, Large]=
+	Revenue crop yield[Maize,Large]-Cost crop farming[Maize,Large] ~~|
+"Profit/farm"[Coconut, Small]=
+	Revenue crop yield[Coconut,Small]-Cost crop farming[Coconut,Small] ~~|
+"Profit/farm"[Coconut, Medium]=
+	Revenue crop yield[Coconut,Medium]-Cost crop farming[Coconut,Medium] ~~|
+"Profit/farm"[Coconut, Large]=
+	Revenue crop yield[Coconut,Large]-Cost crop farming[Coconut,Large]
+	~	vnd/household
+	~		|
+
+Revenue crop yield[Rice, Small]=
+	World market price[Rice]*"Crop yield/farm"[Rice,Small] ~~|
+Revenue crop yield[Rice, Medium]=
+	World market price[Rice]*"Crop yield/farm"[Rice,Medium] ~~|
+Revenue crop yield[Rice, Large]=
+	World market price[Rice]*"Crop yield/farm"[Rice,Large] ~~|
+Revenue crop yield[Maize, Small]=
+	World market price[Maize]*"Crop yield/farm"[Maize,Small] ~~|
+Revenue crop yield[Maize, Medium]=
+	World market price[Maize]*"Crop yield/farm"[Maize,Medium] ~~|
+Revenue crop yield[Maize, Large]=
+	"Crop yield/farm"[Maize,Large]*World market price[Maize] ~~|
+Revenue crop yield[Coconut, Small]=
+	World market price[Coconut]*"Crop yield/farm"[Coconut,Small] ~~|
+Revenue crop yield[Coconut, Medium]=
+	World market price[Coconut]*"Crop yield/farm"[Coconut,Medium] ~~|
+Revenue crop yield[Coconut, Large]=
+	World market price[Coconut]*"Crop yield/farm"[Coconut,Large]
+	~	vnd/household
+	~		|
+
+Revenue shrimp farming[Small, With disease]=
+	World market price shrimp*"Shrimp yield/farm"[Small,With disease] ~~|
+Revenue shrimp farming[Medium, With disease]=
+	World market price shrimp*"Shrimp yield/farm"[Medium,With disease] ~~|
+Revenue shrimp farming[Large, With disease]=
+	"Shrimp yield/farm"[Large,With disease]*World market price shrimp ~~|
+Revenue shrimp farming[Small, Without disease]=
+	"Shrimp yield/farm"[Small,Without disease]*World market price shrimp ~~|
+Revenue shrimp farming[Medium, Without disease]=
+	"Shrimp yield/farm"[Medium,Without disease]*World market price shrimp ~~|
+Revenue shrimp farming[Large, Without disease]=
+	"Shrimp yield/farm"[Large,Without disease]*World market price shrimp
+	~	vnd/household
+	~		|
+
+Rice farmer migrates[Small]=
+	Rice farm[Small]*Chance farmer stops farming[Rice,Small] ~~|
+Rice farmer migrates[Medium]=
+	Chance farmer stops farming[Rice,Medium]*Rice farm[Medium] ~~|
+Rice farmer migrates[Large]=
+	Chance farmer stops farming[Rice,Large]*Rice farm[Large]
+	~	household/Year
+	~		|
+
+Rice farmer starts coconut[Small]=
+	Chance farmer changes crops[Rice,Small]*probability starting coconut after rice*Rice farm\
+		[Small] ~~|
+Rice farmer starts coconut[Medium]=
+	Chance farmer changes crops[Rice,Medium]*probability starting coconut after rice*Rice farm\
+		[Medium] ~~|
+Rice farmer starts coconut[Large]=
+	Chance farmer changes crops[Rice,Large]*probability starting coconut after rice*Rice farm\
+		[Large]
+	~	households/Year
+	~		|
+
+Rice farmer starts shrimp[Small]=
+	Rice farm[Small]*probability starting shrimp after rice*Chance farmer changes crops[\
+		Rice,Small] ~~|
+Rice farmer starts shrimp[Medium]=
+	Rice farm[Medium]*probability starting shrimp after rice*Chance farmer changes crops\
+		[Rice,Medium] ~~|
+Rice farmer starts shrimp[Large]=
+	Rice farm[Large]*probability starting shrimp after rice*Chance farmer changes crops[\
+		Rice,Large]
+	~	household/Year
+	~		|
+
+Salinity levels=
+	Lookup salinity(Time)
+	~	dml
+	~		|
+
+salt exposure loss[Rice]=
+	MAX((Slope[Rice]*(Salinity levels-Threshold[Rice]))/100, 0) ~~|
+salt exposure loss[Maize]=
+	MAX((Slope[Maize]*(Salinity levels-Threshold[Maize]))/100, 0) ~~|
+salt exposure loss[Coconut]=
+	MAX((Slope[Coconut]*(Salinity levels-Threshold[Coconut]))/100, 0)
+	~	dml
+	~	MAX((Slope rice*(Salinity levels-Threshold salinity rice))/100, 0)
+	|
+
+Savings agri wage houshold= INTEG (
+	Income agri wage-Living costs agri wage,
+		1e+07)
+	~	vnd/household
+	~		|
+
+Savings non agri household[Low skilled]= INTEG (
+	Income non agri household[Low skilled]-Living costs non agri household[Low skilled],
+		1e+07) ~~|
+Savings non agri household[High skilled]= INTEG (
+	Income non agri household[High skilled]-Living costs non agri household[Low skilled]\
+		,
+		1e+07)
+	~	vnd/household
+	~		|
+
+Savings service workers household= INTEG (
+	Income service workers-Living costs service workers,
+		1e+07)
+	~	vnd/household
+	~		|
+
+Savings shrimp farm[Small, With disease]= INTEG (
+	Income other work[Small]+Revenue shrimp farming[Small,With disease]-Cost shrimp farming\
+		[Small,With disease]-Living costs,
+		1e+07) ~~|
+Savings shrimp farm[Small, Without disease]= INTEG (
+	Income other work[Small]+Revenue shrimp farming[Small,Without disease]-Living costs-\
+		Cost shrimp farming[Small,Without disease],
+		1e+07) ~~|
+Savings shrimp farm[Medium, With disease]= INTEG (
+	Income other work[Medium]+Revenue shrimp farming[Medium,With disease]-Living costs-Cost shrimp farming\
+		[Medium,With disease],
+		1e+07) ~~|
+Savings shrimp farm[Medium, Without disease]= INTEG (
+	Income other work[Medium]+Revenue shrimp farming[Medium,Without disease]-Living costs\
+		-Cost shrimp farming[Medium,Without disease],
+		1e+07) ~~|
+Savings shrimp farm[Large, With disease]= INTEG (
+	Income other work[Large]+Revenue shrimp farming[Large,With disease]-Living costs-Cost shrimp farming\
+		[Large,With disease],
+		1e+07) ~~|
+Savings shrimp farm[Large, Without disease]= INTEG (
+	Income other work[Large]+Revenue shrimp farming[Large,Without disease]-Living costs-\
+		Cost shrimp farming[Large,Without disease],
+		1e+07)
+	~	vnd/household
+	~		|
+
+"Savings/farm"[Rice, Small]= INTEG (
+	Other income[Rice,Small]+Revenue crop yield[Rice,Small]*1.5-Cost crop farming[Rice,Small\
+		]*1.5-Expenditure,
+		2e+07) ~~|
+"Savings/farm"[Rice, Medium]= INTEG (
+	-Cost crop farming[Rice,Medium]*1.5-Expenditure+Other income[Rice,Medium]+Revenue crop yield\
+		[Rice,Medium]*1.5,
+		2e+07) ~~|
+"Savings/farm"[Rice, Large]= INTEG (
+	-Cost crop farming[Rice,Large]*1.5-Expenditure+Other income[Rice,Large]+Revenue crop yield\
+		[Rice,Large]*1.5,
+		2e+07) ~~|
+"Savings/farm"[Maize, Small]= INTEG (
+	-Cost crop farming[Maize,Small]-Expenditure+Other income[Maize,Small]+Revenue crop yield\
+		[Maize,Small],
+		2e+07) ~~|
+"Savings/farm"[Maize, Medium]= INTEG (
+	-Cost crop farming[Maize,Medium]-Expenditure+Other income[Maize,Medium]+Revenue crop yield\
+		[Maize,Medium],
+		2e+07) ~~|
+"Savings/farm"[Maize, Large]= INTEG (
+	-Cost crop farming[Maize,Large]-Expenditure+Other income[Maize,Large]+Revenue crop yield\
+		[Maize,Large],
+		2e+07) ~~|
+"Savings/farm"[Coconut, Small]= INTEG (
+	-Cost crop farming[Coconut,Small]*3-Expenditure+Other income[Coconut,Small]+Revenue crop yield\
+		[Coconut,Small]*3,
+		2e+07) ~~|
+"Savings/farm"[Coconut, Medium]= INTEG (
+	-Cost crop farming[Coconut,Medium]*3-Expenditure+Other income[Coconut,Medium]+Revenue crop yield\
+		[Coconut,Medium]*3,
+		2e+07) ~~|
+"Savings/farm"[Coconut, Large]= INTEG (
+	-Cost crop farming[Coconut,Large]*3-Expenditure+Other income[Coconut,Large]+Revenue crop yield\
+		[Coconut,Large]*3,
+		2e+07)
+	~	vnd/household
+	~		|
+
+Service worker= INTEG (
+	-Service worker migrates,
+		53)
+	~	household
+	~		|
+
+Service worker migrates=
+	Service worker*Chance landless households migrate[Service hh, Normal]
+	~	
+	~		|
+
+Shrimp diseases:
+	Without disease, With disease
+	~	
+	~		|
+
+Shrimp farm[Small, With disease]= INTEG (
+	Maize farmer starts shrimp[Small]+Rice farmer starts shrimp[Small]-(MIN(Shrimp farm migrates\
+		[Small,With disease],Shrimp farm[Small,With disease])),
+		0) ~~|
+Shrimp farm[Small, Without disease]= INTEG (
+	Maize farmer starts shrimp[Small]+Rice farmer starts shrimp[Small]-(MIN(Shrimp farm migrates\
+		[Small,Without disease],Shrimp farm[Small,Without disease])),
+		2) ~~|
+Shrimp farm[Medium, With disease]= INTEG (
+	Maize farmer starts shrimp[Medium]+Rice farmer starts shrimp[Medium]-(MIN(Shrimp farm migrates\
+		[Medium,With disease],Shrimp farm[Medium,With disease])),
+		0) ~~|
+Shrimp farm[Medium, Without disease]= INTEG (
+	Maize farmer starts shrimp[Medium]+Rice farmer starts shrimp[Medium]-(MIN(Shrimp farm migrates\
+		[Medium,Without disease],Shrimp farm[Medium,Without disease])),
+		2) ~~|
+Shrimp farm[Large, With disease]= INTEG (
+	Maize farmer starts shrimp[Large]+Rice farmer starts shrimp[Large]-(MIN(Shrimp farm migrates\
+		[Large,With disease],Shrimp farm[Large,With disease])
+	),
+		0) ~~|
+Shrimp farm[Large, Without disease]= INTEG (
+	MAX(Maize farmer starts shrimp[Large]+Rice farmer starts shrimp[Large]-Shrimp farm migrates\
+		[Large,Without disease],0),
+		1)
+	~	household
+	~		|
+
+Shrimp farm migrates[Small, With disease]= DELAY FIXED (
+	Expected shrimp farmers to fail[Small,With disease], 5, 0) ~~|
+Shrimp farm migrates[Small, Without disease]=
+	DELAY FIXED(MAX(Expected shrimp farmers to fail[Small,Without disease], 0.0001), 5, \
+		1e-05 ) ~~|
+Shrimp farm migrates[Medium, With disease]=
+	DELAY FIXED(MAX(Expected shrimp farmers to fail[Medium,With disease], 0.0001), 5, 1e-05\
+		 ) ~~|
+Shrimp farm migrates[Medium, Without disease]=
+	DELAY FIXED(MAX(Expected shrimp farmers to fail[Medium,Without disease], 0.0001), 5,\
+		 1e-05 ) ~~|
+Shrimp farm migrates[Large, With disease]=
+	DELAY FIXED(MAX(Expected shrimp farmers to fail[Large,With disease], 0.0001), 5, 1e-05\
+		 ) ~~|
+Shrimp farm migrates[Large, Without disease]=
+	DELAY FIXED(MAX(Expected shrimp farmers to fail[Large,Without disease], 0.0001), 5, \
+		1e-05 )
+	~	household/Year
+	~		|
+
+"Shrimp yield/farm"[Small, With disease]=
+	Land size shrimp[Small]*"shrimp yield/ha"[With disease] ~~|
+"Shrimp yield/farm"[Medium, With disease]=
+	Land size shrimp[Medium]*"shrimp yield/ha"[With disease] ~~|
+"Shrimp yield/farm"[Large, With disease]=
+	Land size shrimp[Large]*"shrimp yield/ha"[With disease] ~~|
+"Shrimp yield/farm"[Small, Without disease]=
+	Land size shrimp[Small]*"shrimp yield/ha"[Without disease] ~~|
+"Shrimp yield/farm"[Medium, Without disease]=
+	Land size shrimp[Medium]*"shrimp yield/ha"[Without disease] ~~|
+"Shrimp yield/farm"[Large, Without disease]=
+	Land size shrimp[Large]*"shrimp yield/ha"[Without disease]
+	~	kg/household
+	~		|
+
+"shrimp yield/ha"[With disease]=
+	37 ~~|
+"shrimp yield/ha"[Without disease]=
+	140
+	~	kg/ha
+	~		|
+
+Slope[Rice]=
+	12 ~~|
+Slope[Maize]=
+	12 ~~|
+Slope[Coconut]=
+	1000
+	~	dml
+	~		|
+
+Start number of households=
+	250
+	~	household
+	~		|
+
+start number of non agri households[Low skilled]=
+	85 ~~|
+start number of non agri households[High skilled]=
+	15
+	~	household
+	~		|
+
+Threshold[Rice]=
+	3 ~~|
+Threshold[Maize]=
+	1.7 ~~|
+Threshold[Coconut]=
+	3
+	~	dml
+	~		|
+
+total man days required=
+	Required number of man days per farm[Rice,Small]*Rice farm[Small] + Required number of man days per farm\
+		[Rice,Medium]*Rice farm[Medium]+ Required number of man days per farm[Rice,Large]*Rice farm\
+		[Large]+ Required number of man days per farm[Maize,Small]*Maize farm[Small]+ Required number of man days per farm\
+		[Maize,Medium]*Maize farm[Medium]+ Required number of man days per farm[Maize,Large\
+		]*Maize farm[Large]+ Required number of man days per farm[Coconut,Small]*Coconut farm\
+		[Small]+ Required number of man days per farm[Coconut,Medium]*Coconut farm[Medium]+\
+		 Required number of man days per farm[Coconut,Large]*Coconut farm[Large] + Shrimp farm\
+		[Small,With disease]*"Required number of man days / shrimp farm"[Small,With disease\
+		]
+	+ Shrimp farm[Small,Without disease]*"Required number of man days / shrimp farm"[Small\
+		,Without disease]
+	+ Shrimp farm[Medium,With disease]*"Required number of man days / shrimp farm"[Medium\
+		,With disease]
+	+ Shrimp farm[Medium,Without disease]*"Required number of man days / shrimp farm"[Medium\
+		,Without disease]
+	+ Shrimp farm[Large,With disease]*"Required number of man days / shrimp farm"[Large,\
+		With disease]
+	+ Shrimp farm[Large,Without disease]*"Required number of man days / shrimp farm"[Large\
+		,Without disease]
+	~	person
+	~		|
+
+"Wage worker salary / day"[Low skilled]=
+	190000 ~~|
+"Wage worker salary / day"[High skilled]=
+	210000
+	~	vnd/person
+	~		|
+
+Work days per wage worker=
+	total man days required/Available number of wage workers
+	~	days
+	~	MAX(total man days required/Available number of wage workers, 120)
+	|
+
+Working force within a household=
+	2
+	~	people/household
+	~		|
+
+World market price[Rice]=
+	6049 ~~|
+World market price[Maize]=
+	6900 ~~|
+World market price[Coconut]=
+	17500
+	~	vnd/kg
+	~		|
+
+World market price shrimp=
+	42838*9
+	~	vnd/kg
+	~	dit heb ik in mijn abm * 9 gedaan??
+	|
+
+Yield loss ratio[Rice]=
+	IF THEN ELSE(Education level>0.5, salt exposure loss[Rice]-0.1, salt exposure loss[Rice\
+		]) ~~|
+Yield loss ratio[Maize]=
+	IF THEN ELSE(Education level>0.5, salt exposure loss[Maize]-0.1, salt exposure loss[\
+		Maize]) ~~|
+Yield loss ratio[Coconut]=
+	0
+	~	dml
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 2040
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 2014
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.5
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*All occupations
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,65,2
+10,1,Rice farm,1228,469,68,32,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,Maize farm,1876,474,72,29,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3,Coconut farm,1226,169,54,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,4,Shrimp farm,1241,792,60,26,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,5,Migrated households,608,456,76,36,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,6,Agri wage,531,34,59,29,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,7,Non agri,134,450,56,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,8,Service worker,547,987,58,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,9,11,1,100,0,0,22,0,192,0,-1--1--1,,1|(1421,464)|
+1,10,11,2,4,0,0,22,0,192,0,-1--1--1,,1|(1681,464)|
+11,11,0,1552,464,6,8,34,3,0,0,3,0,0,0,0,0,0,0,0,0
+10,12,Rice farmer starts maize,1552,433,46,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,13,15,2,100,0,0,22,0,192,0,-1--1--1,,1|(1671,486)|
+1,14,15,1,4,0,0,22,0,192,0,-1--1--1,,1|(1411,486)|
+11,15,0,1532,486,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,16,Maize farmer starts rice,1532,517,51,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,17,19,1,100,0,0,22,0,192,0,-1--1--1,,1|(1207,384)|
+1,18,19,3,4,0,0,22,0,192,0,-1--1--1,,1|(1207,255)|
+11,19,0,1207,325,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,20,Rice farmer starts coconut,1270,325,55,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,21,23,1,100,0,0,22,0,192,0,-1--1--1,,1|(1232,573)|
+1,22,23,4,4,0,0,22,0,192,0,-1--1--1,,1|(1232,711)|
+11,23,0,1232,651,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,24,Rice farmer starts shrimp,1290,651,50,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,25,27,2,100,0,0,22,0,192,0,-1--1--1,,1|(1832,568)|
+1,26,27,4,4,0,0,22,0,192,0,-1--1--1,,1|(1832,792)|
+11,27,0,1832,640,8,6,33,3,0,0,2,0,0,0,0,0,0,0,0,0
+10,28,Maize farmer starts shrimp,1773,640,51,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,29,31,2,100,0,0,22,0,192,0,-1--1--1,,1|(1866,312)|
+1,30,31,3,4,0,0,22,0,192,0,-1--1--1,,1|(1569,174)|
+11,31,0,1866,174,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,32,Maize farmer starts coconut,1929,174,55,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,33,35,1,100,0,0,22,0,192,0,-1--1--1,,1|(1036,466)|
+1,34,35,5,4,0,0,22,0,192,0,-1--1--1,,1|(792,466)|
+11,35,0,907,466,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,36,Rice farmer migrates,907,497,46,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,37,39,3,100,0,0,22,0,192,0,-1--1--1,,1|(919,165)|
+1,38,39,5,4,0,0,22,0,192,0,-1--1--1,,1|(658,295)|
+11,39,0,658,165,8,6,33,3,0,0,3,0,0,0,0,0,0,0,0,0
+10,40,Coconut farmer migrates,658,134,61,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,41,43,6,100,0,0,22,0,192,0,-1--1--1,,1|(567,123)|
+1,42,43,5,4,0,0,22,0,192,0,-1--1--1,,1|(567,307)|
+11,43,0,567,189,8,6,33,3,0,0,2,0,0,0,0,0,0,0,0,0
+10,44,Agri wage migrates,517,189,42,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,45,47,7,100,0,0,22,0,192,0,-1--1--1,,1|(261,454)|
+1,46,47,5,4,0,0,22,0,192,0,-1--1--1,,1|(438,454)|
+11,47,0,339,454,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,48,Non agri migrates,339,485,42,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,49,51,8,100,0,0,22,0,192,0,-1--1--1,,1|(574,859)|
+1,50,51,5,4,0,0,22,0,192,0,-1--1--1,,1|(574,616)|
+11,51,0,574,747,8,6,33,3,0,0,2,0,0,0,0,0,0,0,0,0
+10,52,Service worker migrates,508,747,58,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,53,55,2,100,0,0,22,0,192,0,-1--1--1,,1|(1876,684)|
+1,54,55,5,4,0,0,22,0,192,0,-1--1--1,,1|(608,874)|
+11,55,0,1876,874,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,56,Maize farm migrates,1876,905,44,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,57,59,4,100,0,0,22,0,192,0,-1--1--1,,1|(663,792)|
+1,58,59,5,4,0,0,22,0,192,0,-1--1--1,,1|(663,592)|
+11,59,0,663,698,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,60,Shrimp farm migrates,720,698,49,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,61,Chance farmer stops farming,1104,1198,57,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,62,"Savings/farm",1150,1332,62,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,63,Savings shrimp farm,1169,1330,53,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,64,62,61,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,65,Lookup migration farmers,889,1184,69,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,66,Number of contacts in the city,1329,1227,56,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,67,Facilities in neighborhood,1281,1125,60,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,68,Chance farmer stops farming,2112,909,62,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,69,Chance farmer stops farming,883,293,62,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,70,69,36,1,0,0,0,0,192,0,-1--1--1,,1|(921,389)|
+1,71,69,40,1,0,0,0,0,192,0,-1--1--1,,1|(796,209)|
+1,72,68,56,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,73,2,56,1,0,0,0,0,192,0,-1--1--1,,1|(2006,730)|
+1,74,3,40,1,0,0,0,0,192,0,-1--1--1,,1|(947,100)|
+1,75,1,36,1,0,0,0,0,192,0,-1--1--1,,1|(1093,533)|
+10,76,Chance landless households migrate,31,829,74,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,77,Facilities in neighborhood,-261,796,60,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,78,Number of contacts in the city,263,844,56,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,79,Savings agri wage houshold,-43,992,74,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,80,Savings non agri household,194,974,69,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,81,Savings service workers household,-251,933,65,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,82,77,76,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,83,81,76,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,84,79,76,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,85,80,76,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,86,78,76,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,87,76,48,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,88,76,52,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,89,8,52,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,90,7,48,1,0,0,0,0,192,0,-1--1--1,,1|(188,496)|
+1,91,76,44,1,0,0,0,0,192,0,-1--1--1,,1|(45,299)|
+1,92,6,44,1,0,0,0,0,192,0,-1--1--1,,1|(458,85)|
+10,93,Chance farmer changes crops,1774,1176,57,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,94,"Profit/farm",1793,1304,54,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,95,Profit per shrimp farm,2029,1167,53,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,96,Lookup change crops,1625,1250,60,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,97,Chance farmer changes crops,1522,622,62,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,98,97,24,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,99,97,16,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,100,97,28,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,101,Chance farmer changes crops,1503,324,62,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,102,101,20,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,103,101,12,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,104,101,32,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,105,probability starting rice after maize,1716,558,72,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,106,probability starting coconut after maize,2106,279,72,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,107,probability starting shrimp after maize,1717,733,72,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,108,107,28,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,109,106,32,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,110,105,16,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,111,probability starting maize after rice,1746,354,72,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,112,probability starting coconut after rice,1386,213,72,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,113,probability starting shrimp after rice,1087,651,72,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,114,112,20,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,115,111,12,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,116,113,24,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,117,1,12,1,0,0,0,0,192,0,-1--1--1,,1|(1378,417)|
+1,118,2,16,1,0,0,0,0,192,0,-1--1--1,,1|(1736,509)|
+1,119,1,24,1,0,0,0,0,192,0,-1--1--1,,1|(1287,570)|
+1,120,1,20,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,121,2,32,1,0,0,0,0,192,0,-1--1--1,,1|(1921,303)|
+1,122,2,28,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,123,Disease probability,799,596,42,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,124,Expected shrimp farmers to fail,890,715,65,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,125,123,124,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,126,4,124,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,127,124,60,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,128,Lookup migration landless hh,-176,642,69,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,129,Netto income,1992,1127,35,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,130,129,93,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,131,Probability increase in land size,1067,333,59,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,132,69,1,1,0,0,0,0,192,0,-1--1--1,,1|(978,384)|
+1,133,131,1,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Crop yield
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,84,2
+10,1,"Savings/farm",572,264,51,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,2,48,565,17,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,3,5,2,100,0,0,22,0,192,0,-1--1--1,,1|(565,81)|
+1,4,5,1,4,0,0,22,0,192,0,-1--1--1,,1|(565,192)|
+11,5,0,565,137,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,6,Revenue crop yield,627,137,54,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,7,48,282,264,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,8,10,7,100,0,0,22,0,192,0,-1--1--1,,1|(357,264)|
+1,9,10,1,4,0,0,22,0,192,0,-1--1--1,,1|(470,264)|
+11,10,0,414,264,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,11,Other income,414,294,53,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,12,48,572,508,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,13,15,1,100,0,0,22,0,192,0,-1--1--1,,1|(572,334)|
+1,14,15,12,4,0,0,22,0,192,0,-1--1--1,,1|(572,444)|
+11,15,0,572,389,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,16,Expenditure,627,389,47,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,17,48,929,264,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,18,20,1,100,0,0,22,0,192,0,-1--1--1,,1|(690,264)|
+1,19,20,17,4,0,0,22,0,192,0,-1--1--1,,1|(836,264)|
+11,20,0,763,264,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,21,Cost crop farming,763,294,51,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,22,"Profit/farm",782,185,43,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,23,Land size,881,121,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,24,"Crop yield/farm",787,-123,61,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,25,"Crop yield/ha",699,-291,53,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,26,Yield loss ratio,1060,-175,58,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,27,Education level,1095,-48,59,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,28,salt exposure loss,1294,-234,51,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,29,Salinity levels,1447,-168,52,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,30,Slope,1482,-289,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,31,Threshold,1366,-381,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,32,Lookup salinity,1667,-177,60,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,33,Time,1545,-71,32,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,34,World market price,417,67,54,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,35,"Fixed crop costs/ha",795,403,43,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,36,Wage worker costs per farm,978,346,56,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,37,Required number of man days per farm,1298,101,67,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,38,"Wage worker salary / day",827,543,52,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,39,Available number of wage workers,1044,496,67,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,40,Average wage worker income,508,640,58,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,41,34,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,42,6,22,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,43,21,22,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,44,23,21,1,0,0,0,0,192,0,-1--1--1,,1|(862,213)|
+1,45,24,6,1,0,0,0,0,192,0,-1--1--1,,1|(686,-22)|
+1,46,25,24,1,0,0,0,0,192,0,-1--1--1,,1|(760,-217)|
+1,47,26,24,1,0,0,0,0,192,0,-1--1--1,,1|(896,-196)|
+1,48,23,24,1,0,0,0,0,192,0,-1--1--1,,1|(887,-5)|
+1,49,27,26,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,50,28,26,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,51,31,28,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,52,30,28,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,53,29,28,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,54,32,29,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,55,33,29,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,56,35,21,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,57,36,21,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,58,37,36,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,59,38,36,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,60,Machines,1545,-10,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,61,60,37,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,62,total man days required,1742,402,72,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,63,Work days per wage worker,1360,781,58,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,64,62,63,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,65,39,63,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,66,37,62,1,0,0,0,0,192,0,-1--1--1,,1|(1660,287)|
+10,67,Rice farm,1379,427,50,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,68,Maize farm,1305,302,55,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,69,Coconut farm,1402,510,40,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,70,Shrimp farm,1353,368,60,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,71,67,62,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,72,70,62,1,0,0,0,0,192,0,-1--1--1,,1|(1543,366)|
+1,73,68,62,1,0,0,0,0,192,0,-1--1--1,,1|(1537,311)|
+1,74,69,62,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,75,38,40,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,76,63,40,1,0,0,0,0,192,0,-1--1--1,,1|(750,743)|
+1,77,28,37,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,78,"Required number of man days / shrimp farm",1852,519,72,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,79,78,62,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,80,68,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,81,70,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,82,67,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,83,69,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,84,Agri wage,1373,610,51,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,85,84,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,86,27,36,1,0,0,0,0,192,0,-1--1--1,,1|(1087,135)|
+10,87,Education level,333,662,45,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,88,87,40,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,89,Netto income,280,-31,52,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,90,6,89,1,0,0,0,0,192,0,-1--1--1,,1|(461,-13)|
+10,91,Expenditure,191,-145,58,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,92,Other income,109,-15,35,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,93,91,89,1,0,0,0,0,192,0,-1--1--1,,1|(264,-95)|
+10,94,Cost crop farming,108,-3,46,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,95,94,89,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,96,11,89,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,97,Worked non agri wage,59,274,54,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,98,"Worked self non agri (service)",488,172,65,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,99,Base income for non agri households,133,200,69,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,100,Base income for service workers,421,467,69,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,101,99,11,1,0,0,0,0,192,0,-1--1--1,,1|(264,303)|
+1,102,97,11,1,0,0,0,0,192,0,-1--1--1,,1|(213,339)|
+1,103,98,11,1,0,0,0,0,192,0,-1--1--1,,1|(410,249)|
+1,104,100,11,1,0,0,0,0,192,0,-1--1--1,,1|(430,398)|
+10,105,Self agri workers,1186,274,42,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,106,105,37,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,107,105,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,108,Shrimp farm self agri workers,1016,646,64,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,109,108,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,110,Education level,480,386,45,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,111,Percentage population high skilled,357,546,60,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,112,111,11,1,0,0,0,0,192,0,-1--1--1,,1|(345,438)|
+10,113,Work days per wage worker,495,364,64,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,114,Self agri workers,101,423,38,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,115,Self agri workers,107,437,38,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,116,Work days per wage worker,253,421,64,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,117,Number of work days,239,516,48,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,118,117,11,1,0,0,0,0,192,0,-1--1--1,,1|(290,414)|
+1,119,115,11,1,0,0,0,0,192,0,-1--1--1,,1|(235,401)|
+1,120,40,11,1,0,0,0,0,192,0,-1--1--1,,1|(522,457)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Shrimp yield
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,71,2
+10,1,Savings shrimp farm,1018,742,59,23,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,2,48,649,736,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,3,5,2,100,0,0,22,0,192,0,-1--1--1,,1|(742,736)|
+1,4,5,1,4,0,0,22,0,192,0,-1--1--1,,1|(890,736)|
+11,5,0,816,736,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,6,Income other work,816,767,52,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,7,48,993,502,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,8,10,7,100,0,0,22,0,192,0,-1--1--1,,1|(993,558)|
+1,9,10,1,4,0,0,22,0,192,0,-1--1--1,,1|(993,665)|
+11,10,0,993,605,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,11,Revenue shrimp farming,1063,605,62,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,12,48,1439,749,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,13,15,1,100,0,0,22,0,192,0,-1--1--1,,1|(1159,749)|
+1,14,15,12,4,0,0,22,0,192,0,-1--1--1,,1|(1334,749)|
+11,15,0,1248,749,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,16,Cost shrimp farming,1248,780,48,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,17,48,1004,1028,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,18,20,1,100,0,0,22,0,192,0,-1--1--1,,1|(1004,833)|
+1,19,20,17,4,0,0,22,0,192,0,-1--1--1,,1|(1004,963)|
+11,20,0,1004,907,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,21,Living costs,1060,907,48,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,22,"Shrimp yield/farm",1330,463,42,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,23,"shrimp yield/ha",1277,299,59,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,24,Land size shrimp,1390,606,58,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,25,24,22,1,0,0,0,0,192,0,-1--1--1,,1|(1415,539)|
+1,26,24,16,1,0,0,0,0,192,0,-1--1--1,,1|(1378,678)|
+1,27,23,22,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,28,World market price,817,496,59,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,29,Average wage worker income,893,870,63,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,30,"Profit/farm",1217,640,54,13,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,31,Profit per shrimp farm,1248,640,47,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,32,11,31,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,33,16,31,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,34,22,11,1,0,0,0,0,192,0,-1--1--1,,1|(1152,521)|
+10,35,fixed shrimp costs,1210,917,70,31,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,36,Wage worker costs per shrimp farm,1416,873,65,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,37,"Wage worker salary / day",1425,1027,58,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,38,Available number of wage workers,1629,941,72,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,39,"Required number of man days / shrimp farm",1620,812,67,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,40,35,16,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,41,37,36,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,42,39,36,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,43,World market price shrimp,800,487,54,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,44,43,11,1,0,0,0,0,192,0,-1--1--1,,1|(905,607)|
+10,45,Antibiotic costs,1287,1021,61,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,46,45,16,1,0,0,0,0,192,0,-1--1--1,,1|(1313,896)|
+10,47,Education level,1599,1018,45,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,48,average shrimp farm savings,1124,1085,58,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,49,1,48,1,0,0,0,0,192,0,-1--1--1,,1|(1141,928)|
+10,50,Disease probability,947,1145,48,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,51,Shrimp farm,647,1163,60,13,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,52,Average shrimp farm profits,1157,1205,61,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,53,Profit per shrimp farm,1356,1205,53,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,54,53,52,1,0,0,0,0,192,0,-1--1--1,,1|(1300,1136)|
+10,55,Shrimp farm,1145,1363,60,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,56,55,57,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,57,Current disease ratio,939,1333,60,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,58,57,52,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,59,57,48,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,60,Shrimp farm self agri workers,1704,704,70,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,61,60,39,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,62,Percentage population high skilled,1663,944,60,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,63,62,36,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,64,Worked non agri wage,511,763,55,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,65,"shrimp worked self non agri (service)",447,813,74,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,66,shrimp worked non agri,500,908,58,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,67,Work days per wage worker,696,940,64,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,68,Base income for non agri households,515,656,69,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,69,Base income for service workers,756,665,69,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,70,69,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,71,68,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,72,65,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,73,66,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,74,Education level,855,859,45,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,75,Percentage population high skilled,887,899,60,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,76,75,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,77,Shrimp farm self agri workers,890,646,70,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,78,Number of work days,825,983,48,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,79,78,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,80,77,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,81,Average wage worker income,746,1098,63,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,82,81,6,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Landless incomes
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,80,2
+10,1,Start number of households,267,-146,61,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,Current number of households left,553,-235,71,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3,Migration rate,551,-96,54,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,4,Migrated households,408,-364,50,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,5,4,2,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,6,1,2,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,7,1,3,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,8,2,3,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,9,Savings service workers household,1433,131,73,23,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,10,48,1069,127,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,11,13,10,100,0,0,22,0,192,0,-1--1--1,,1|(1157,127)|
+1,12,13,9,4,0,0,22,0,192,0,-1--1--1,,1|(1296,127)|
+11,13,0,1227,127,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,14,Income service workers,1227,158,59,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,15,48,1879,131,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,16,18,9,100,0,0,22,0,192,0,-1--1--1,,1|(1590,131)|
+1,17,18,15,4,0,0,22,0,192,0,-1--1--1,,1|(1770,131)|
+11,18,0,1680,131,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,19,Living costs service workers,1680,162,61,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,20,Service worker,1677,-234,35,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,21,Start number of service workers,1385,-36,61,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,22,3,14,1,0,0,0,0,192,0,-1--1--1,,1|(1082,5)|
+1,23,21,14,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,24,Base income for service workers,954,38,63,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,25,24,14,1,0,0,0,0,192,0,-1--1--1,,1|(1096,71)|
+10,26,Savings non agri household,526,283,70,22,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,27,48,213,283,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,28,30,27,100,0,0,22,0,192,0,-1--1--1,,1|(281,283)|
+1,29,30,26,4,0,0,22,0,192,0,-1--1--1,,1|(396,283)|
+11,30,0,330,283,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,31,Income non agri household,330,314,57,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,32,48,933,287,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,33,35,26,100,0,0,22,0,192,0,-1--1--1,,1|(662,287)|
+1,34,35,32,4,0,0,22,0,192,0,-1--1--1,,1|(824,287)|
+11,35,0,735,287,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,36,Living costs non agri household,735,318,64,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,37,Agri wage,429,87,51,13,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,38,start number of non agri households,266,153,59,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,39,Base income for non agri households,507,173,63,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,40,39,31,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,41,38,31,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,42,Savings agri wage houshold,1416,522,69,23,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,43,48,1036,523,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,44,46,43,100,0,0,22,0,192,0,-1--1--1,,1|(1126,523)|
+1,45,46,42,4,0,0,22,0,192,0,-1--1--1,,1|(1275,523)|
+11,46,0,1197,523,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,47,Income agri wage,1197,554,46,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,48,48,1854,523,25,15,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,49,51,42,100,0,0,22,0,192,0,-1--1--1,,1|(1564,523)|
+1,50,51,48,4,0,0,22,0,192,0,-1--1--1,,1|(1742,523)|
+11,51,0,1650,523,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,52,Living costs agri wage,1650,554,53,23,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,53,Working force within a household,1329,339,72,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,54,Average wage worker income,1128,649,63,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,55,54,47,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,56,53,47,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,57,Facilities in neighborhood,1683,-67,54,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,58,21,57,1,0,0,0,0,192,0,-1--1--1,,1|(1510,17)|
+10,59,Number of contacts in the city,661,52,72,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,60,Lookup number of contacts,452,-11,73,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,61,3,59,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,62,60,59,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,63,53,31,1,0,0,0,0,192,0,-1--1--1,,1|(655,454)|
+1,64,53,14,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,65,Number of work days,1081,245,43,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,66,65,14,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,67,65,31,1,0,0,0,0,192,0,-1--1--1,,1|(704,190)|
+10,68,Non agri,403,113,45,13,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,69,Percentage non agri in landless hh,224,597,68,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,70,Percentage agri wage in landless hh,309,785,74,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,71,Percentage service workers in landless hh,710,805,73,34,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,72,Total landless hh,548,659,54,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,73,Non agri,493,499,45,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,74,Agri wage,516,799,51,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,75,Service worker,827,649,35,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,76,73,72,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,77,74,72,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,78,75,72,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,79,75,71,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,80,72,71,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,81,74,70,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,82,72,70,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,83,72,69,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,84,73,69,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,85,Average landless hh savings,573,1014,65,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,86,70,85,1,0,0,0,0,192,0,-1--1--1,,1|(390,932)|
+1,87,71,85,1,0,0,0,0,192,0,-1--1--1,,1|(709,910)|
+1,88,69,85,1,0,0,0,0,192,0,-1--1--1,,1|(162,921)|
+1,89,42,85,1,0,0,0,0,192,0,-1--1--1,,1|(1300,885)|
+10,90,Savings non agri household,895,922,69,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,91,Savings service workers household,597,1201,65,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,92,91,85,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,93,Average savings non agri,999,779,63,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,94,26,93,1,0,0,0,0,192,0,-1--1--1,,1|(829,507)|
+1,95,93,85,1,0,0,0,0,192,0,-1--1--1,,1|(893,985)|
+10,96,Total number of non farm owners,2128,1009,65,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,97,Available number of wage workers,1896,903,72,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,98,Service worker,2169,828,35,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,99,Non agri,1836,1091,45,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,100,Working force within a household,2048,1149,62,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,101,98,96,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,102,97,96,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,103,99,96,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,104,100,96,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,105,"Worked self non agri (service)",1381,213,70,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,106,Worked non agri wage,186,406,55,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,107,Rice farm,1594,-188,50,13,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,108,Maize farm,1611,-131,55,13,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,109,Coconut farm,1624,-79,40,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,110,Shrimp farm,1634,-5,60,13,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,111,"Worked self non agri (service)",1500,-241,70,23,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,112,"shrimp worked self non agri (service)",1629,64,64,34,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,113,Current number of service workers,2744,-307,71,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,114,Coconut farm,2878,-376,58,10,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,115,114,113,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,116,Maize farm,2618,-358,50,10,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,117,116,113,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,118,Rice farm,2433,-323,45,10,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,119,118,113,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,120,Service worker,2759,-137,33,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,121,120,113,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,122,Shrimp farm,3251,-303,54,10,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,123,122,113,1,0,0,0,0,64,0,-1--1--1,,1|(3011,-162)|
+10,124,"shrimp worked self non agri (service)",2467,-163,73,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,125,124,113,1,0,0,0,0,64,0,-1--1--1,,1|(2686,-173)|
+10,126,"Worked self non agri (service)",2357,-248,64,18,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,127,126,113,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,128,Working force within a household,3052,-307,62,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,129,128,113,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,130,Current number of service workers,1250,-167,66,34,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,131,130,14,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,132,Current number of agri workers,2727,-475,61,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,133,116,132,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,134,114,132,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,135,118,132,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,136,128,132,1,0,0,0,0,192,0,-1--1--1,,1|(2971,-447)|
+1,137,122,132,1,0,0,0,0,192,0,-1--1--1,,1|(3138,-512)|
+10,138,Agri wage,2687,-622,51,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,139,Worked non agri wage,2400,-410,55,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,140,139,132,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,141,138,132,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,142,shrimp worked non agri,2412,-509,64,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,143,142,132,1,0,0,0,0,192,0,-1--1--1,,1|(2608,-512)|
+10,144,"Worked self non agri (service)",3119,-763,64,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,145,Current number of agri workers,81,210,66,23,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,146,145,31,1,0,0,0,0,192,0,-1--1--1,,1|(221,225)|
+10,147,Non agri,396,412,41,10,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+10,148,Percentage population high skilled,290,486,56,27,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,149,148,31,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+1,150,130,57,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+///---\\\
+:GRAPH number_of_farms_small
+:TITLE Number of farms over time, small land
+:SCALE
+:VAR Rice farm
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 2
+:VAR Coconut farm[Small]
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 2
+:VAR Maize farm
+:DATASET 
+:LINE-COLOR 247-200-89
+:LINE-WIDTH 2
+:VAR Shrimp farm
+:Y-MIN 0
+:DATASET 
+:LINE-COLOR 0-91-183
+:LINE-WIDTH 2
+
+:GRAPH Number_of_farms_medium
+:TITLE Number of farms over time, medium land
+:SCALE
+:VAR Rice farm[Medium]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 2
+:VAR Maize farm[Medium]
+:DATASET 
+:LINE-COLOR 251-205-68
+:LINE-WIDTH 2
+:VAR Coconut farm[Medium]
+:DATASET 
+:LINE-COLOR 0-128-64
+:LINE-WIDTH 2
+:VAR Shrimp farm[Small,Without disease]
+:Y-MIN 0
+:DATASET 
+:LINE-COLOR 0-75-151
+:LINE-WIDTH 2
+
+:GRAPH Number_of_farms_large
+:TITLE Number of farms over time, large land
+:SCALE
+:VAR Rice farm[Large]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 2
+:VAR Maize farm[Large]
+:DATASET 
+:LINE-COLOR 252-198-35
+:LINE-WIDTH 2
+:VAR Coconut farm[Large]
+:DATASET 
+:LINE-COLOR 0-128-64
+:LINE-WIDTH 2
+:VAR Shrimp farm[Large,Without disease]
+:DATASET 
+:LINE-COLOR 0-65-130
+:LINE-WIDTH 2
+
+:GRAPH Migrated_households
+:TITLE Migrated households
+:SCALE
+:VAR Migrated households
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 2
+:VAR Start number of households
+:Y-MAX 270
+:DATASET 
+:LINE-COLOR 0-128-64
+:LINE-STYLE DASHDOT
+:LINE-WIDTH 1
+
+:GRAPH Savings_over_time_small
+:TITLE Savings over time - Small land
+:SCALE
+:VAR "Savings/farm"[Rice,Small]
+:Y-MAX 9e+08
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 2
+:VAR "Savings/farm"[Maize,Small]
+:DATASET 
+:LINE-COLOR 252-203-101
+:LINE-WIDTH 2
+:VAR "Savings/farm"[Coconut,Small]
+:DATASET 
+:LINE-COLOR 0-128-64
+:LINE-WIDTH 2
+:VAR average shrimp farm savings[Small]
+:DATASET 
+:LINE-WIDTH 1
+
+:GRAPH Savings_over_time_medium
+:TITLE Savings_over_time_medium
+:SCALE
+:VAR "Savings/farm"[Rice,Medium]
+:Y-MAX 6e+09
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 1
+:VAR "Savings/farm"[Maize,Medium]
+:DATASET 
+:LINE-COLOR 255-128-0
+:LINE-WIDTH 1
+:VAR "Savings/farm"[Coconut,Medium]
+:DATASET 
+:LINE-COLOR 0-128-64
+:LINE-WIDTH 1
+:VAR average shrimp farm savings[Medium]
+:DATASET 
+:LINE-COLOR 0-0-255
+:LINE-WIDTH 1
+
+:GRAPH wage_costs_over_time_small
+:TITLE wage_costs_over_time
+:SCALE
+:VAR Wage worker costs per farm[Rice,Small]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 1
+:VAR Wage worker costs per farm[Maize,Small]
+:DATASET 
+:LINE-COLOR 252-196-3
+:LINE-WIDTH 1
+:VAR Wage worker costs per farm[Coconut,Small]
+:DATASET 
+:LINE-COLOR 0-128-64
+:LINE-WIDTH 1
+:VAR Wage worker costs per shrimp farm[Small,Without disease]
+:DATASET 
+:LINE-WIDTH 1
+
+:GRAPH wage_costs_over_time_medium
+:TITLE Wage workers costs medium land size
+:SCALE
+:VAR Wage worker costs per farm[Rice,Medium]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 1
+:VAR Wage worker costs per farm[Maize,Medium]
+:DATASET 
+:LINE-COLOR 252-197-67
+:LINE-WIDTH 1
+:VAR Wage worker costs per farm[Coconut,Medium]
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 1
+:VAR Wage worker costs per shrimp farm[Medium,Without disease]
+:DATASET 
+:LINE-WIDTH 1
+
+:GRAPH wage_costs_large
+:TITLE Wage worker costs large land size
+:SCALE
+:VAR Wage worker costs per farm[Rice,Large]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 1
+:VAR Wage worker costs per farm[Maize,Large]
+:DATASET 
+:LINE-COLOR 237-188-18
+:LINE-WIDTH 1
+:VAR Wage worker costs per farm[Coconut,Large]
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 1
+:VAR Wage worker costs per shrimp farm[Large,Without disease]
+:DATASET 
+:LINE-WIDTH 1
+
+:GRAPH yield_small
+:TITLE Yield over time small
+:SCALE
+:VAR "Crop yield/farm"[Rice,Small]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 1
+:VAR "Crop yield/farm"[Maize,Small]
+:DATASET 
+:LINE-COLOR 252-187-67
+:LINE-WIDTH 1
+:VAR "Crop yield/farm"[Coconut,Small]
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 1
+:VAR "Shrimp yield/farm"[Small,Without disease]
+:DATASET 
+:LINE-COLOR 0-0-255
+:LINE-WIDTH 1
+:VAR "Shrimp yield/farm"[Small,With disease]
+:DATASET 
+:LINE-COLOR 0-0-255
+:LINE-STYLE DASH
+:LINE-WIDTH 1
+
+:GRAPH yield_medium
+:TITLE yield over time medium
+:SCALE
+:VAR "Crop yield/farm"[Rice,Medium]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 1
+:VAR "Crop yield/farm"[Maize,Medium]
+:DATASET 
+:LINE-COLOR 250-189-5
+:LINE-WIDTH 1
+:VAR "Crop yield/farm"[Coconut,Medium]
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 1
+:VAR "Shrimp yield/farm"[Medium,Without disease]
+:DATASET 
+:LINE-WIDTH 1
+:VAR "Shrimp yield/farm"[Medium,With disease]
+:DATASET 
+:LINE-COLOR 0-0-255
+:LINE-STYLE DASH
+:LINE-WIDTH 1
+
+:GRAPH yield_large
+:TITLE yield over time large land
+:SCALE
+:VAR "Crop yield/farm"[Rice,Large]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 1
+:VAR "Crop yield/farm"[Maize,Large]
+:DATASET 
+:LINE-COLOR 247-169-9
+:LINE-WIDTH 1
+:VAR "Crop yield/farm"[Coconut,Large]
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 1
+:VAR "Shrimp yield/farm"[Large,Without disease]
+:DATASET 
+:LINE-WIDTH 1
+:VAR "Shrimp yield/farm"[Large,With disease]
+:DATASET 
+:LINE-COLOR 0-0-255
+:LINE-STYLE DASH
+:LINE-WIDTH 1
+
+:GRAPH farm_income_over_time_small_(profit)
+:TITLE Farm income over time small (profit)
+:SCALE
+:VAR "Profit/farm"[Rice,Small]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 1
+:VAR "Profit/farm"[Maize,Small]
+:DATASET 
+:LINE-COLOR 247-203-72
+:LINE-WIDTH 1
+:VAR "Profit/farm"[Coconut,Small]
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 1
+:VAR Average shrimp farm profits
+:DATASET 
+:LINE-WIDTH 1
+
+:GRAPH farm_income_over_time_medium
+:TITLE Income over time medium farm (profit)
+:SCALE
+:VAR "Profit/farm"[Rice,Medium]
+:DATASET 
+:LINE-COLOR 255-0-0
+:LINE-WIDTH 1
+:VAR "Profit/farm"[Maize,Medium]
+:DATASET 
+:LINE-COLOR 252-177-3
+:LINE-WIDTH 1
+:VAR "Profit/farm"[Coconut,Medium]
+:DATASET 
+:LINE-COLOR 0-128-0
+:LINE-WIDTH 1
+:VAR Average shrimp farm profits[Medium]
+:DATASET 
+:LINE-WIDTH 1
+
+:GRAPH farm_income_over_time_large
+:TITLE Farm income over time large (profit)
+:SCALE
+:VAR "Profit/farm"[Rice,Large]
+:DATASET 
+:LINE-WIDTH 1
+:VAR "Profit/farm"[Maize,Large]
+:DATASET 
+:LINE-WIDTH 1
+:VAR "Profit/farm"[Coconut,Large]
+:DATASET 
+:LINE-WIDTH 1
+:VAR Average shrimp farm profits[Large]
+:DATASET 
+:LINE-WIDTH 1
+
+:GRAPH Savings_over_time_large
+:TITLE Savings over time large
+:SCALE
+:VAR "Savings/farm"[Maize,Large]
+:Y-MAX 2.5e+10
+:DATASET 
+:LINE-WIDTH 1
+:VAR "Savings/farm"[Rice,Large]
+:DATASET 
+:LINE-WIDTH 1
+:VAR "Savings/farm"[Coconut,Large]
+:DATASET 
+:LINE-WIDTH 1
+:VAR average shrimp farm savings[Large]
+:DATASET 
+:LINE-WIDTH 1
+:L<%^E!@
+1:26juni2015.vdfx
+4:Time
+5:Required number of man days per farm[Crop type,Landsize]
+6:Agri wage hh
+6:Coconut
+6:High skilled
+6:Large
+6:Low skilled
+6:Maize
+6:Medium
+6:Non agri hh
+6:Normal
+6:Rice
+6:Service hh
+6:Small
+6:With disease
+6:Without disease
+9:26juni2015
+19:84,1
+24:2014
+25:2040
+26:2040
+57:1
+54:0
+55:0
+82:1
+86:0
+59:0
+56:0
+58:0
+71:0
+110:0
+111:0
+44:0
+46:0
+45:7
+49:0
+50:0
+51:
+52:
+53:
+43:C:\Users\sjuul\OneDrive\Documenten\EPA\THESIS\Brain dumps thesis\Vensim\26juni2015.xlsx
+47:
+48:
+23:0
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:0
+72:0
+73:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:0
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:C:\Users\sjuul\OneDrive\Documenten\EPA\THESIS\Brain dumps thesis\Vensim\26juni2015.xlsx
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Times New Roman|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1
